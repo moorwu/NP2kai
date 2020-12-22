@@ -1,6 +1,6 @@
 /**
  * @file	d_screen.cpp
- * @brief	ÉXÉNÉäÅ[Éìê›íËÉ_ÉCÉAÉçÉO
+ * @brief	„Çπ„ÇØ„É™„Éº„É≥Ë®≠ÂÆö„ÉÄ„Ç§„Ç¢„É≠„Ç∞
  */
 
 #include "compiler.h"
@@ -11,6 +11,9 @@
 #include "np2class.h"
 #include "np2.h"
 #include "scrnmng.h"
+#ifdef SUPPORT_SCRN_DIRECT3D
+#include "scrnmng_d3d.h"
+#endif
 #include "sysmng.h"
 #include "misc\PropProc.h"
 #include "pccore.h"
@@ -19,8 +22,10 @@
 #include "vram\scrndraw.h"
 #include "vram\palettes.h"
 
+static int resetScreen = 0;
+
 /**
- * @brief Video ÉyÅ[ÉW
+ * @brief Video „Éö„Éº„Ç∏
  */
 class ScrOptVideoPage : public CPropPageProc
 {
@@ -35,11 +40,11 @@ protected:
 	virtual LRESULT WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam);
 
 private:
-	CSliderValue m_skiplight;		//!< ÉXÉLÉbÉvÉâÉCÉì
+	CSliderValue m_skiplight;		//!< „Çπ„Ç≠„ÉÉ„Éó„É©„Ç§„É≥
 };
 
 /**
- * ÉRÉìÉXÉgÉâÉNÉ^
+ * „Ç≥„É≥„Çπ„Éà„É©„ÇØ„Çø
  */
 ScrOptVideoPage::ScrOptVideoPage()
 	: CPropPageProc(IDD_SCROPT1)
@@ -47,16 +52,16 @@ ScrOptVideoPage::ScrOptVideoPage()
 }
 
 /**
- * ÉfÉXÉgÉâÉNÉ^
+ * „Éá„Çπ„Éà„É©„ÇØ„Çø
  */
 ScrOptVideoPage::~ScrOptVideoPage()
 {
 }
 
 /**
- * Ç±ÇÃÉÅÉ\ÉbÉhÇÕ WM_INITDIALOG ÇÃÉÅÉbÉZÅ[ÉWÇ…âûìöÇµÇƒåƒÇ—èoÇ≥ÇÍÇ‹Ç∑
- * @retval TRUE ç≈èâÇÃÉRÉìÉgÉçÅ[ÉãÇ…ì¸óÕÉtÉHÅ[ÉJÉXÇê›íË
- * @retval FALSE ä˘Ç…ê›íËçœ
+ * „Åì„ÅÆ„É°„ÇΩ„ÉÉ„Éâ„ÅØ WM_INITDIALOG „ÅÆ„É°„ÉÉ„Çª„Éº„Ç∏„Å´ÂøúÁ≠î„Åó„Å¶Âëº„Å≥Âá∫„Åï„Çå„Åæ„Åô
+ * @retval TRUE ÊúÄÂàù„ÅÆ„Ç≥„É≥„Éà„É≠„Éº„É´„Å´ÂÖ•Âäõ„Éï„Ç©„Éº„Ç´„Çπ„ÇíË®≠ÂÆö
+ * @retval FALSE Êó¢„Å´Ë®≠ÂÆöÊ∏à
  */
 BOOL ScrOptVideoPage::OnInitDialog()
 {
@@ -66,8 +71,6 @@ BOOL ScrOptVideoPage::OnInitDialog()
 
 	CheckDlgButton(IDC_SKIPLINE, (np2cfg.skipline) ? BST_CHECKED : BST_UNCHECKED);
 	
-	CheckDlgButton(IDC_SOFTWARERENDERING, (np2oscfg.emuddraw) ? BST_CHECKED : BST_UNCHECKED);
-
 	m_skiplight.SubclassDlgItem(IDC_SKIPLIGHT, this);
 	m_skiplight.SetStaticId(IDC_LIGHTSTR);
 	m_skiplight.SetRange(0, 255);
@@ -76,7 +79,7 @@ BOOL ScrOptVideoPage::OnInitDialog()
 }
 
 /**
- * ÉÜÅ[ÉUÅ[Ç™ OK ÇÃÉ{É^Éì (IDOK ID Ç™ÇÃÉ{É^Éì) ÇÉNÉäÉbÉNÇ∑ÇÈÇ∆åƒÇ—èoÇ≥ÇÍÇ‹Ç∑
+ * „É¶„Éº„Ç∂„Éº„Åå OK „ÅÆ„Éú„Çø„É≥ (IDOK ID „Åå„ÅÆ„Éú„Çø„É≥) „Çí„ÇØ„É™„ÉÉ„ÇØ„Åô„Çã„Å®Âëº„Å≥Âá∫„Åï„Çå„Åæ„Åô
  */
 void ScrOptVideoPage::OnOK()
 {
@@ -114,14 +117,6 @@ void ScrOptVideoPage::OnOK()
 		pal_makelcdpal();
 		bUpdated = true;
 	}
-	cMode = (IsDlgButtonChecked(IDC_SOFTWARERENDERING) != BST_UNCHECKED);
-	if (!!cMode == !np2oscfg.emuddraw)
-	{
-		np2oscfg.emuddraw = cMode;
-		scrnmng_destroy();
-		scrnmng_create(g_scrnmode);
-		bUpdated = true;
-	}
 	if (bUpdated)
 	{
 		::scrndraw_redraw();
@@ -130,10 +125,10 @@ void ScrOptVideoPage::OnOK()
 }
 
 /**
- * ÉÜÅ[ÉUÅ[Ç™ÉÅÉjÉÖÅ[ÇÃçÄñ⁄ÇëIëÇµÇΩÇ∆Ç´Ç…ÅAÉtÉåÅ[ÉÄÉèÅ[ÉNÇ…ÇÊÇ¡ÇƒåƒÇ—èoÇ≥ÇÍÇ‹Ç∑
- * @param[in] wParam ÉpÉâÉÅÉ^
- * @param[in] lParam ÉpÉâÉÅÉ^
- * @retval TRUE ÉAÉvÉäÉPÅ[ÉVÉáÉìÇ™Ç±ÇÃÉÅÉbÉZÅ[ÉWÇèàóùÇµÇΩ
+ * „É¶„Éº„Ç∂„Éº„Åå„É°„Éã„É•„Éº„ÅÆÈ†ÖÁõÆ„ÇíÈÅ∏Êäû„Åó„Åü„Å®„Åç„Å´„ÄÅ„Éï„É¨„Éº„É†„ÉØ„Éº„ÇØ„Å´„Çà„Å£„Å¶Âëº„Å≥Âá∫„Åï„Çå„Åæ„Åô
+ * @param[in] wParam „Éë„É©„É°„Çø
+ * @param[in] lParam „Éë„É©„É°„Çø
+ * @retval TRUE „Ç¢„Éó„É™„Ç±„Éº„Ç∑„Éß„É≥„Åå„Åì„ÅÆ„É°„ÉÉ„Çª„Éº„Ç∏„ÇíÂá¶ÁêÜ„Åó„Åü
  */
 BOOL ScrOptVideoPage::OnCommand(WPARAM wParam, LPARAM lParam)
 {
@@ -147,11 +142,11 @@ BOOL ScrOptVideoPage::OnCommand(WPARAM wParam, LPARAM lParam)
 }
 
 /**
- * CWndProc ÉIÉuÉWÉFÉNÉgÇÃ Windows ÉvÉçÉVÅ[ÉWÉÉ (WindowProc) Ç™ópà”Ç≥ÇÍÇƒÇ¢Ç‹Ç∑
- * @param[in] nMsg èàóùÇ≥ÇÍÇÈ Windows ÉÅÉbÉZÅ[ÉWÇéwíËÇµÇ‹Ç∑
- * @param[in] wParam ÉÅÉbÉZÅ[ÉWÇÃèàóùÇ≈égÇ§ïtâ¡èÓïÒÇíÒãüÇµÇ‹Ç∑ÅBÇ±ÇÃÉpÉâÉÅÅ[É^ÇÃílÇÕÉÅÉbÉZÅ[ÉWÇ…àÀë∂ÇµÇ‹Ç∑
- * @param[in] lParam ÉÅÉbÉZÅ[ÉWÇÃèàóùÇ≈égÇ§ïtâ¡èÓïÒÇíÒãüÇµÇ‹Ç∑ÅBÇ±ÇÃÉpÉâÉÅÅ[É^ÇÃílÇÕÉÅÉbÉZÅ[ÉWÇ…àÀë∂ÇµÇ‹Ç∑
- * @return ÉÅÉbÉZÅ[ÉWÇ…àÀë∂Ç∑ÇÈílÇï‘ÇµÇ‹Ç∑
+ * CWndProc „Ç™„Éñ„Ç∏„Çß„ÇØ„Éà„ÅÆ Windows „Éó„É≠„Ç∑„Éº„Ç∏„É£ (WindowProc) „ÅåÁî®ÊÑè„Åï„Çå„Å¶„ÅÑ„Åæ„Åô
+ * @param[in] nMsg Âá¶ÁêÜ„Åï„Çå„Çã Windows „É°„ÉÉ„Çª„Éº„Ç∏„ÇíÊåáÂÆö„Åó„Åæ„Åô
+ * @param[in] wParam „É°„ÉÉ„Çª„Éº„Ç∏„ÅÆÂá¶ÁêÜ„Åß‰Ωø„ÅÜ‰ªòÂä†ÊÉÖÂ†±„ÇíÊèê‰æõ„Åó„Åæ„Åô„ÄÇ„Åì„ÅÆ„Éë„É©„É°„Éº„Çø„ÅÆÂÄ§„ÅØ„É°„ÉÉ„Çª„Éº„Ç∏„Å´‰æùÂ≠ò„Åó„Åæ„Åô
+ * @param[in] lParam „É°„ÉÉ„Çª„Éº„Ç∏„ÅÆÂá¶ÁêÜ„Åß‰Ωø„ÅÜ‰ªòÂä†ÊÉÖÂ†±„ÇíÊèê‰æõ„Åó„Åæ„Åô„ÄÇ„Åì„ÅÆ„Éë„É©„É°„Éº„Çø„ÅÆÂÄ§„ÅØ„É°„ÉÉ„Çª„Éº„Ç∏„Å´‰æùÂ≠ò„Åó„Åæ„Åô
+ * @return „É°„ÉÉ„Çª„Éº„Ç∏„Å´‰æùÂ≠ò„Åô„ÇãÂÄ§„ÇíËøî„Åó„Åæ„Åô
  */
 LRESULT ScrOptVideoPage::WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -174,7 +169,7 @@ LRESULT ScrOptVideoPage::WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam)
 
 // ----
 /**
- * @brief Chip ÉyÅ[ÉW
+ * @brief Chip „Éö„Éº„Ç∏
  */
 class ScrOptChipPage : public CPropPageProc
 {
@@ -187,26 +182,27 @@ protected:
 };
 
 /**
- * ÉRÉìÉXÉgÉâÉNÉ^
+ * „Ç≥„É≥„Çπ„Éà„É©„ÇØ„Çø
  */
 ScrOptChipPage::ScrOptChipPage()
 	: CPropPageProc(IDD_SCROPT2)
 {
 }
 
-//! GDC É`ÉbÉv
+//! GDC „ÉÅ„ÉÉ„Éó
 static const UINT s_gdcchip[4] = {IDC_GRCGNON, IDC_GRCG, IDC_GRCG2, IDC_EGC};
 
 /**
- * Ç±ÇÃÉÅÉ\ÉbÉhÇÕ WM_INITDIALOG ÇÃÉÅÉbÉZÅ[ÉWÇ…âûìöÇµÇƒåƒÇ—èoÇ≥ÇÍÇ‹Ç∑
- * @retval TRUE ç≈èâÇÃÉRÉìÉgÉçÅ[ÉãÇ…ì¸óÕÉtÉHÅ[ÉJÉXÇê›íË
- * @retval FALSE ä˘Ç…ê›íËçœ
+ * „Åì„ÅÆ„É°„ÇΩ„ÉÉ„Éâ„ÅØ WM_INITDIALOG „ÅÆ„É°„ÉÉ„Çª„Éº„Ç∏„Å´ÂøúÁ≠î„Åó„Å¶Âëº„Å≥Âá∫„Åï„Çå„Åæ„Åô
+ * @retval TRUE ÊúÄÂàù„ÅÆ„Ç≥„É≥„Éà„É≠„Éº„É´„Å´ÂÖ•Âäõ„Éï„Ç©„Éº„Ç´„Çπ„ÇíË®≠ÂÆö
+ * @retval FALSE Êó¢„Å´Ë®≠ÂÆöÊ∏à
  */
 BOOL ScrOptChipPage::OnInitDialog()
 {
 	CheckDlgButton((np2cfg.uPD72020) ? IDC_GDC72020 : IDC_GDC7220, BST_CHECKED);
 	CheckDlgButton(s_gdcchip[np2cfg.grcg & 3], BST_CHECKED);
 	CheckDlgButton(IDC_PC980124, (np2cfg.color16) ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(IDC_PEGC, (np2cfg.usepegcplane) ? BST_CHECKED : BST_UNCHECKED);
 
 #if defined(SUPPORT_PC9821)
 	static const UINT s_disabled[] =
@@ -223,13 +219,16 @@ BOOL ScrOptChipPage::OnInitDialog()
 	CheckDlgButton(s_gdcchip[1], BST_UNCHECKED);
 	CheckDlgButton(s_gdcchip[2], BST_UNCHECKED);
 	CheckDlgButton(s_gdcchip[3], BST_CHECKED);
+#else
+	GetDlgItem(IDC_PEGC).EnableWindow(FALSE);
+	CheckDlgButton(IDC_PEGC, BST_UNCHECKED);
 #endif	// defined(SUPPORT_PC9821)
 
 	return TRUE;
 }
 
 /**
- * ÉÜÅ[ÉUÅ[Ç™ OK ÇÃÉ{É^Éì (IDOK ID Ç™ÇÃÉ{É^Éì) ÇÉNÉäÉbÉNÇ∑ÇÈÇ∆åƒÇ—èoÇ≥ÇÍÇ‹Ç∑
+ * „É¶„Éº„Ç∂„Éº„Åå OK „ÅÆ„Éú„Çø„É≥ (IDOK ID „Åå„ÅÆ„Éú„Çø„É≥) „Çí„ÇØ„É™„ÉÉ„ÇØ„Åô„Çã„Å®Âëº„Å≥Âá∫„Åï„Çå„Åæ„Åô
  */
 void ScrOptChipPage::OnOK()
 {
@@ -265,6 +264,13 @@ void ScrOptChipPage::OnOK()
 		np2cfg.color16 = cColor16;
 		bUpdated = true;
 	}
+	
+	const UINT8 cPEGC = (IsDlgButtonChecked(IDC_PEGC) != BST_UNCHECKED) ? 1 : 0;
+	if (np2cfg.usepegcplane != cPEGC)
+	{
+		np2cfg.usepegcplane = cPEGC;
+		bUpdated = true;
+	}
 
 	if (bUpdated)
 	{
@@ -277,7 +283,7 @@ void ScrOptChipPage::OnOK()
 // ----
 
 /**
- * @brief Timing ÉyÅ[ÉW
+ * @brief Timing „Éö„Éº„Ç∏
  */
 class ScrOptTimingPage : public CPropPageProc
 {
@@ -294,11 +300,11 @@ private:
 	CSliderValue m_tram;	//!< TRAM
 	CSliderValue m_vram;	//!< VRAM
 	CSliderValue m_grcg;	//!< GRCG
-	CSliderValue m_raster;	//!< ÉâÉXÉ^
+	CSliderValue m_raster;	//!< „É©„Çπ„Çø
 };
 
 /**
- * ÉRÉìÉXÉgÉâÉNÉ^
+ * „Ç≥„É≥„Çπ„Éà„É©„ÇØ„Çø
  */
 ScrOptTimingPage::ScrOptTimingPage()
 	: CPropPageProc(IDD_SCROPT3)
@@ -306,16 +312,16 @@ ScrOptTimingPage::ScrOptTimingPage()
 }
 
 /**
- * ÉfÉXÉgÉâÉNÉ^
+ * „Éá„Çπ„Éà„É©„ÇØ„Çø
  */
 ScrOptTimingPage::~ScrOptTimingPage()
 {
 }
 
 /**
- * Ç±ÇÃÉÅÉ\ÉbÉhÇÕ WM_INITDIALOG ÇÃÉÅÉbÉZÅ[ÉWÇ…âûìöÇµÇƒåƒÇ—èoÇ≥ÇÍÇ‹Ç∑
- * @retval TRUE ç≈èâÇÃÉRÉìÉgÉçÅ[ÉãÇ…ì¸óÕÉtÉHÅ[ÉJÉXÇê›íË
- * @retval FALSE ä˘Ç…ê›íËçœ
+ * „Åì„ÅÆ„É°„ÇΩ„ÉÉ„Éâ„ÅØ WM_INITDIALOG „ÅÆ„É°„ÉÉ„Çª„Éº„Ç∏„Å´ÂøúÁ≠î„Åó„Å¶Âëº„Å≥Âá∫„Åï„Çå„Åæ„Åô
+ * @retval TRUE ÊúÄÂàù„ÅÆ„Ç≥„É≥„Éà„É≠„Éº„É´„Å´ÂÖ•Âäõ„Éï„Ç©„Éº„Ç´„Çπ„ÇíË®≠ÂÆö
+ * @retval FALSE Êó¢„Å´Ë®≠ÂÆöÊ∏à
  */
 BOOL ScrOptTimingPage::OnInitDialog()
 {
@@ -343,7 +349,7 @@ BOOL ScrOptTimingPage::OnInitDialog()
 }
 
 /**
- * ÉÜÅ[ÉUÅ[Ç™ OK ÇÃÉ{É^Éì (IDOK ID Ç™ÇÃÉ{É^Éì) ÇÉNÉäÉbÉNÇ∑ÇÈÇ∆åƒÇ—èoÇ≥ÇÍÇ‹Ç∑
+ * „É¶„Éº„Ç∂„Éº„Åå OK „ÅÆ„Éú„Çø„É≥ (IDOK ID „Åå„ÅÆ„Éú„Çø„É≥) „Çí„ÇØ„É™„ÉÉ„ÇØ„Åô„Çã„Å®Âëº„Å≥Âá∫„Åï„Çå„Åæ„Åô
  */
 void ScrOptTimingPage::OnOK()
 {
@@ -382,11 +388,11 @@ void ScrOptTimingPage::OnOK()
 }
 
 /**
- * CWndProc ÉIÉuÉWÉFÉNÉgÇÃ Windows ÉvÉçÉVÅ[ÉWÉÉ (WindowProc) Ç™ópà”Ç≥ÇÍÇƒÇ¢Ç‹Ç∑
- * @param[in] nMsg èàóùÇ≥ÇÍÇÈ Windows ÉÅÉbÉZÅ[ÉWÇéwíËÇµÇ‹Ç∑
- * @param[in] wParam ÉÅÉbÉZÅ[ÉWÇÃèàóùÇ≈égÇ§ïtâ¡èÓïÒÇíÒãüÇµÇ‹Ç∑ÅBÇ±ÇÃÉpÉâÉÅÅ[É^ÇÃílÇÕÉÅÉbÉZÅ[ÉWÇ…àÀë∂ÇµÇ‹Ç∑
- * @param[in] lParam ÉÅÉbÉZÅ[ÉWÇÃèàóùÇ≈égÇ§ïtâ¡èÓïÒÇíÒãüÇµÇ‹Ç∑ÅBÇ±ÇÃÉpÉâÉÅÅ[É^ÇÃílÇÕÉÅÉbÉZÅ[ÉWÇ…àÀë∂ÇµÇ‹Ç∑
- * @return ÉÅÉbÉZÅ[ÉWÇ…àÀë∂Ç∑ÇÈílÇï‘ÇµÇ‹Ç∑
+ * CWndProc „Ç™„Éñ„Ç∏„Çß„ÇØ„Éà„ÅÆ Windows „Éó„É≠„Ç∑„Éº„Ç∏„É£ (WindowProc) „ÅåÁî®ÊÑè„Åï„Çå„Å¶„ÅÑ„Åæ„Åô
+ * @param[in] nMsg Âá¶ÁêÜ„Åï„Çå„Çã Windows „É°„ÉÉ„Çª„Éº„Ç∏„ÇíÊåáÂÆö„Åó„Åæ„Åô
+ * @param[in] wParam „É°„ÉÉ„Çª„Éº„Ç∏„ÅÆÂá¶ÁêÜ„Åß‰Ωø„ÅÜ‰ªòÂä†ÊÉÖÂ†±„ÇíÊèê‰æõ„Åó„Åæ„Åô„ÄÇ„Åì„ÅÆ„Éë„É©„É°„Éº„Çø„ÅÆÂÄ§„ÅØ„É°„ÉÉ„Çª„Éº„Ç∏„Å´‰æùÂ≠ò„Åó„Åæ„Åô
+ * @param[in] lParam „É°„ÉÉ„Çª„Éº„Ç∏„ÅÆÂá¶ÁêÜ„Åß‰Ωø„ÅÜ‰ªòÂä†ÊÉÖÂ†±„ÇíÊèê‰æõ„Åó„Åæ„Åô„ÄÇ„Åì„ÅÆ„Éë„É©„É°„Éº„Çø„ÅÆÂÄ§„ÅØ„É°„ÉÉ„Çª„Éº„Ç∏„Å´‰æùÂ≠ò„Åó„Åæ„Åô
+ * @return „É°„ÉÉ„Çª„Éº„Ç∏„Å´‰æùÂ≠ò„Åô„ÇãÂÄ§„ÇíËøî„Åó„Åæ„Åô
  */
 LRESULT ScrOptTimingPage::WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -422,7 +428,7 @@ LRESULT ScrOptTimingPage::WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam)
 // ----
 
 /**
- * @brief Fullscreen ÉyÅ[ÉW
+ * @brief Fullscreen „Éö„Éº„Ç∏
  */
 class ScrOptFullscreenPage : public CPropPageProc
 {
@@ -436,10 +442,10 @@ protected:
 	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
 
 private:
-	CComboData m_zoom;				//!< ÉYÅ[ÉÄ
+	CComboData m_zoom;				//!< „Ç∫„Éº„É†
 };
 
-//! ÉYÅ[ÉÄ ÉäÉXÉg
+//! „Ç∫„Éº„É† „É™„Çπ„Éà
 static const CComboData::Entry s_zoom[] =
 {
 	{MAKEINTRESOURCE(IDS_ZOOM_NONE),			FSCRNMOD_NORESIZE},
@@ -450,7 +456,7 @@ static const CComboData::Entry s_zoom[] =
 };
 
 /**
- * ÉRÉìÉXÉgÉâÉNÉ^
+ * „Ç≥„É≥„Çπ„Éà„É©„ÇØ„Çø
  */
 ScrOptFullscreenPage::ScrOptFullscreenPage()
 	: CPropPageProc(IDD_SCROPT_FULLSCREEN)
@@ -458,20 +464,20 @@ ScrOptFullscreenPage::ScrOptFullscreenPage()
 }
 
 /**
- * ÉfÉXÉgÉâÉNÉ^
+ * „Éá„Çπ„Éà„É©„ÇØ„Çø
  */
 ScrOptFullscreenPage::~ScrOptFullscreenPage()
 {
 }
 
 /**
- * Ç±ÇÃÉÅÉ\ÉbÉhÇÕ WM_INITDIALOG ÇÃÉÅÉbÉZÅ[ÉWÇ…âûìöÇµÇƒåƒÇ—èoÇ≥ÇÍÇ‹Ç∑
- * @retval TRUE ç≈èâÇÃÉRÉìÉgÉçÅ[ÉãÇ…ì¸óÕÉtÉHÅ[ÉJÉXÇê›íË
- * @retval FALSE ä˘Ç…ê›íËçœ
+ * „Åì„ÅÆ„É°„ÇΩ„ÉÉ„Éâ„ÅØ WM_INITDIALOG „ÅÆ„É°„ÉÉ„Çª„Éº„Ç∏„Å´ÂøúÁ≠î„Åó„Å¶Âëº„Å≥Âá∫„Åï„Çå„Åæ„Åô
+ * @retval TRUE ÊúÄÂàù„ÅÆ„Ç≥„É≥„Éà„É≠„Éº„É´„Å´ÂÖ•Âäõ„Éï„Ç©„Éº„Ç´„Çπ„ÇíË®≠ÂÆö
+ * @retval FALSE Êó¢„Å´Ë®≠ÂÆöÊ∏à
  */
 BOOL ScrOptFullscreenPage::OnInitDialog()
 {
-	const UINT8 c = np2oscfg.fscrnmod;
+	const UINT8 c = FSCRNCFG_fscrnmod;
 	CheckDlgButton(IDC_FULLSCREEN_SAMEBPP, (c & FSCRNMOD_SAMEBPP) ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(IDC_FULLSCREEN_SAMERES, (c & FSCRNMOD_SAMERES) ? BST_CHECKED : BST_UNCHECKED);
 
@@ -484,11 +490,12 @@ BOOL ScrOptFullscreenPage::OnInitDialog()
 }
 
 /**
- * ÉÜÅ[ÉUÅ[Ç™ OK ÇÃÉ{É^Éì (IDOK ID Ç™ÇÃÉ{É^Éì) ÇÉNÉäÉbÉNÇ∑ÇÈÇ∆åƒÇ—èoÇ≥ÇÍÇ‹Ç∑
+ * „É¶„Éº„Ç∂„Éº„Åå OK „ÅÆ„Éú„Çø„É≥ (IDOK ID „Åå„ÅÆ„Éú„Çø„É≥) „Çí„ÇØ„É™„ÉÉ„ÇØ„Åô„Çã„Å®Âëº„Å≥Âá∫„Åï„Çå„Åæ„Åô
  */
 void ScrOptFullscreenPage::OnOK()
 {
 	UINT8 c = 0;
+	UINT8 c2 = 0;
 	if (IsDlgButtonChecked(IDC_FULLSCREEN_SAMEBPP) != BST_UNCHECKED)
 	{
 		c |= FSCRNMOD_SAMEBPP;
@@ -497,19 +504,29 @@ void ScrOptFullscreenPage::OnOK()
 	{
 		c |= FSCRNMOD_SAMERES;
 	}
-	c |= m_zoom.GetCurItemData(np2oscfg.fscrnmod & FSCRNMOD_ASPECTMASK);
-	if (np2oscfg.fscrnmod != c)
+	c2 = c;
+	c |= m_zoom.GetCurItemData(FSCRNCFG_fscrnmod & FSCRNMOD_ASPECTMASK);
+	c2 |= m_zoom.GetCurItemData(np2oscfg.fscrnmod & FSCRNMOD_ASPECTMASK);
+	if ((np2oscfg.fsrescfg && (!scrnrescfg.hasfscfg || scrnrescfg.fscrnmod != c)) || np2oscfg.fscrnmod != c2)
 	{
+		if((np2oscfg.fsrescfg && (!scrnrescfg.hasfscfg || scrnrescfg.fscrnmod != c)) || (!np2oscfg.fsrescfg && np2oscfg.fscrnmod != c2)){
+			resetScreen = 1;
+		}
+		if(np2oscfg.fsrescfg){
+			scrnrescfg.fscrnmod = c;
+			scrnrescfg.hasfscfg = 1;
+			scrnres_writeini();
+		}
 		np2oscfg.fscrnmod = c;
 		::sysmng_update(SYS_UPDATEOSCFG);
 	}
 }
 
 /**
- * ÉÜÅ[ÉUÅ[Ç™ÉÅÉjÉÖÅ[ÇÃçÄñ⁄ÇëIëÇµÇΩÇ∆Ç´Ç…ÅAÉtÉåÅ[ÉÄÉèÅ[ÉNÇ…ÇÊÇ¡ÇƒåƒÇ—èoÇ≥ÇÍÇ‹Ç∑
- * @param[in] wParam ÉpÉâÉÅÉ^
- * @param[in] lParam ÉpÉâÉÅÉ^
- * @retval TRUE ÉAÉvÉäÉPÅ[ÉVÉáÉìÇ™Ç±ÇÃÉÅÉbÉZÅ[ÉWÇèàóùÇµÇΩ
+ * „É¶„Éº„Ç∂„Éº„Åå„É°„Éã„É•„Éº„ÅÆÈ†ÖÁõÆ„ÇíÈÅ∏Êäû„Åó„Åü„Å®„Åç„Å´„ÄÅ„Éï„É¨„Éº„É†„ÉØ„Éº„ÇØ„Å´„Çà„Å£„Å¶Âëº„Å≥Âá∫„Åï„Çå„Åæ„Åô
+ * @param[in] wParam „Éë„É©„É°„Çø
+ * @param[in] lParam „Éë„É©„É°„Çø
+ * @retval TRUE „Ç¢„Éó„É™„Ç±„Éº„Ç∑„Éß„É≥„Åå„Åì„ÅÆ„É°„ÉÉ„Çª„Éº„Ç∏„ÇíÂá¶ÁêÜ„Åó„Åü
  */
 BOOL ScrOptFullscreenPage::OnCommand(WPARAM wParam, LPARAM lParam)
 {
@@ -523,11 +540,176 @@ BOOL ScrOptFullscreenPage::OnCommand(WPARAM wParam, LPARAM lParam)
 
 
 
+#ifdef SUPPORT_SCRN_DIRECT3D
 // ----
 
 /**
- * ÉXÉNÉäÅ[Éìê›íË
- * @param[in] hwndParent êeÉEÉBÉìÉhÉE
+ * @brief Renderer „Éö„Éº„Ç∏
+ */
+class ScrOptRendererPage : public CPropPageProc
+{
+public:
+	ScrOptRendererPage();
+	virtual ~ScrOptRendererPage();
+
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void OnOK();
+	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
+
+private:
+	CComboData m_type;				//!< Á®ÆÈ°û
+	CComboData m_mode;				//!< Ë£úÈñì„É¢„Éº„Éâ
+	CWndProc m_chksoftrender;		//!< USE DIRECTDRAW SOFTWARE RENDERING
+	CWndProc m_chkexclusive;		//!< USE DIRECT3D FULLSCREEN EXCLUSIVE MODE
+};
+
+//! Á®ÆÈ°û „É™„Çπ„Éà
+static const CComboData::Entry s_renderer_type[] =
+{
+	{MAKEINTRESOURCE(IDS_RENDERER_DIRECTDRAW),	DRAWTYPE_DIRECTDRAW_HW},
+	{MAKEINTRESOURCE(IDS_RENDERER_DIRECT3D),	DRAWTYPE_DIRECT3D},
+};
+//! Ë£úÈñì„É¢„Éº„Éâ „É™„Çπ„Éà
+static const CComboData::Entry s_renderer_mode[] =
+{
+	{MAKEINTRESOURCE(IDS_RENDERER_IMODE_NN),	D3D_IMODE_NEAREST_NEIGHBOR},
+	{MAKEINTRESOURCE(IDS_RENDERER_IMODE_LINEAR),D3D_IMODE_BILINEAR},
+	{MAKEINTRESOURCE(IDS_RENDERER_IMODE_PIXEL),	D3D_IMODE_PIXEL},
+	{MAKEINTRESOURCE(IDS_RENDERER_IMODE_PIXEL2),D3D_IMODE_PIXEL2},
+	{MAKEINTRESOURCE(IDS_RENDERER_IMODE_PIXEL3),D3D_IMODE_PIXEL3},
+};
+
+/**
+ * „Ç≥„É≥„Çπ„Éà„É©„ÇØ„Çø
+ */
+ScrOptRendererPage::ScrOptRendererPage()
+	: CPropPageProc(IDD_SCROPT_RENDERER)
+{
+}
+
+/**
+ * „Éá„Çπ„Éà„É©„ÇØ„Çø
+ */
+ScrOptRendererPage::~ScrOptRendererPage()
+{
+}
+
+/**
+ * „Åì„ÅÆ„É°„ÇΩ„ÉÉ„Éâ„ÅØ WM_INITDIALOG „ÅÆ„É°„ÉÉ„Çª„Éº„Ç∏„Å´ÂøúÁ≠î„Åó„Å¶Âëº„Å≥Âá∫„Åï„Çå„Åæ„Åô
+ * @retval TRUE ÊúÄÂàù„ÅÆ„Ç≥„É≥„Éà„É≠„Éº„É´„Å´ÂÖ•Âäõ„Éï„Ç©„Éº„Ç´„Çπ„ÇíË®≠ÂÆö
+ * @retval FALSE Êó¢„Å´Ë®≠ÂÆöÊ∏à
+ */
+BOOL ScrOptRendererPage::OnInitDialog()
+{
+	m_type.SubclassDlgItem(IDC_RENDERER_TYPE, this);
+	m_type.Add(s_renderer_type, _countof(s_renderer_type));
+	m_type.SetCurItemData(np2oscfg.drawtype);
+	
+	m_mode.SubclassDlgItem(IDC_RENDERER_IMODE, this);
+	m_mode.Add(s_renderer_mode, _countof(s_renderer_mode));
+	m_mode.SetCurItemData(FSCRNCFG_d3d_imode);
+	m_mode.EnableWindow(np2oscfg.drawtype==DRAWTYPE_DIRECT3D ? TRUE : FALSE);
+	
+	CheckDlgButton(IDC_SOFTWARERENDERING, (np2oscfg.emuddraw) ? BST_CHECKED : BST_UNCHECKED);
+	
+	m_chksoftrender.SubclassDlgItem(IDC_SOFTWARERENDERING, this);
+	m_chksoftrender.SendMessage(BM_SETCHECK , (np2oscfg.emuddraw) ? BST_CHECKED : BST_UNCHECKED , 0);
+	
+	m_chkexclusive.SubclassDlgItem(IDC_RENDERER_EXCLUSIVE, this);
+	m_chkexclusive.SendMessage(BM_SETCHECK , (np2oscfg.d3d_exclusive) ? BST_CHECKED : BST_UNCHECKED , 0);
+	
+	return TRUE;
+}
+
+/**
+ * „É¶„Éº„Ç∂„Éº„Åå OK „ÅÆ„Éú„Çø„É≥ (IDOK ID „Åå„ÅÆ„Éú„Çø„É≥) „Çí„ÇØ„É™„ÉÉ„ÇØ„Åô„Çã„Å®Âëº„Å≥Âá∫„Åï„Çå„Åæ„Åô
+ */
+void ScrOptRendererPage::OnOK()
+{
+	bool bUpdated = false;
+	UINT8 cMode = 0;
+	UINT32 tmp, tmp2;
+	tmp = m_type.GetCurItemData(np2oscfg.drawtype);
+	if (tmp != np2oscfg.drawtype)
+	{
+		if(tmp==DRAWTYPE_DIRECT3D){
+			if(scrnmngD3D_check() != SUCCESS){
+				MessageBox(g_hWndMain, _T("Failed to initialize Direct3D."), _T("Direct3D Error"), MB_OK|MB_ICONEXCLAMATION);
+				tmp = DRAWTYPE_DIRECTDRAW_HW;
+			}
+		}
+		np2oscfg.drawtype = tmp;
+		resetScreen = 1;
+		bUpdated = true;
+	}
+	tmp = m_mode.GetCurItemData(scrnrescfg.d3d_imode);
+	tmp2 = m_mode.GetCurItemData(np2oscfg.d3d_imode);
+	if ((np2oscfg.fsrescfg && (!scrnrescfg.hasfscfg || scrnrescfg.d3d_imode != tmp)) || np2oscfg.d3d_imode != tmp2)
+	{
+		if((np2oscfg.fsrescfg && (!scrnrescfg.hasfscfg || scrnrescfg.d3d_imode != tmp)) || (!np2oscfg.fsrescfg && np2oscfg.d3d_imode != tmp2)){
+			resetScreen = 1;
+		}
+		if(np2oscfg.fsrescfg){
+			scrnrescfg.d3d_imode = tmp;
+			scrnrescfg.hasfscfg = 1;
+			scrnres_writeini();
+		}
+		np2oscfg.d3d_imode = tmp;
+		bUpdated = true;
+	}
+	cMode = (IsDlgButtonChecked(IDC_RENDERER_EXCLUSIVE) != BST_UNCHECKED);
+	if (!!cMode == !np2oscfg.d3d_exclusive)
+	{
+		np2oscfg.d3d_exclusive = cMode;
+		scrnmng_destroy();
+		scrnmng_create(g_scrnmode);
+		resetScreen = 1;
+		bUpdated = true;
+	}
+	cMode = (IsDlgButtonChecked(IDC_SOFTWARERENDERING) != BST_UNCHECKED);
+	if (!!cMode == !np2oscfg.emuddraw)
+	{
+		np2oscfg.emuddraw = cMode;
+		scrnmng_destroy();
+		scrnmng_create(g_scrnmode);
+		resetScreen = 1;
+		bUpdated = true;
+	}
+	if (bUpdated)
+	{
+		::scrndraw_redraw();
+		::sysmng_update(SYS_UPDATEOSCFG);
+	}
+}
+
+/**
+ * „É¶„Éº„Ç∂„Éº„Åå„É°„Éã„É•„Éº„ÅÆÈ†ÖÁõÆ„ÇíÈÅ∏Êäû„Åó„Åü„Å®„Åç„Å´„ÄÅ„Éï„É¨„Éº„É†„ÉØ„Éº„ÇØ„Å´„Çà„Å£„Å¶Âëº„Å≥Âá∫„Åï„Çå„Åæ„Åô
+ * @param[in] wParam „Éë„É©„É°„Çø
+ * @param[in] lParam „Éë„É©„É°„Çø
+ * @retval TRUE „Ç¢„Éó„É™„Ç±„Éº„Ç∑„Éß„É≥„Åå„Åì„ÅÆ„É°„ÉÉ„Çª„Éº„Ç∏„ÇíÂá¶ÁêÜ„Åó„Åü
+ */
+BOOL ScrOptRendererPage::OnCommand(WPARAM wParam, LPARAM lParam)
+{
+	if (LOWORD(wParam) == IDC_RENDERER_TYPE)
+	{
+		UINT8 drawtype =  (UINT8)m_type.GetCurItemData(np2oscfg.drawtype);
+		m_mode.EnableWindow(drawtype==DRAWTYPE_DIRECT3D ? TRUE : FALSE);
+		m_chkexclusive.EnableWindow(drawtype==DRAWTYPE_DIRECT3D ? TRUE : FALSE);
+		m_chksoftrender.EnableWindow((drawtype==DRAWTYPE_DIRECTDRAW_HW || drawtype==DRAWTYPE_DIRECTDRAW_SW) ? TRUE : FALSE);
+		return TRUE;
+	}
+	return FALSE;
+}
+#endif
+
+
+
+// ----
+
+/**
+ * „Çπ„ÇØ„É™„Éº„É≥Ë®≠ÂÆö
+ * @param[in] hwndParent Ë¶™„Ç¶„Ç£„É≥„Éâ„Ç¶
  */
 void dialog_scropt(HWND hwndParent)
 {
@@ -544,6 +726,11 @@ void dialog_scropt(HWND hwndParent)
 
 	ScrOptFullscreenPage fullscreen;
 	prop.AddPage(&fullscreen);
+	
+#ifdef SUPPORT_SCRN_DIRECT3D
+	ScrOptRendererPage renderer;
+	prop.AddPage(&renderer);
+#endif
 
 	prop.m_psh.dwFlags |= PSH_NOAPPLYNOW | PSH_USEHICON | PSH_USECALLBACK;
 	prop.m_psh.hIcon = LoadIcon(CWndProc::GetResourceHandle(), MAKEINTRESOURCE(IDI_ICON2));
@@ -551,4 +738,10 @@ void dialog_scropt(HWND hwndParent)
 	prop.DoModal();
 
 	::InvalidateRect(hwndParent, NULL, TRUE);
+	
+	// „Éá„Éê„Ç§„ÇπÂÜç‰ΩúÊàê
+	if(resetScreen){
+		scrnmng.forcereset = 1;
+		resetScreen = 0;
+	}
 }

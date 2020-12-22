@@ -10,6 +10,9 @@
 #include	"menubase.h"
 #include	"menustr.h"
 
+#ifdef SUPPORT_NVL_IMAGES
+BOOL nvl_check();
+#endif
 
 enum {
 	DID_FOLDER	= DID_USER,
@@ -20,33 +23,33 @@ enum {
 };
 
 #if defined(OSLANG_SJIS) && !defined(RESOURCE_US)
-static const OEMCHAR str_dirname[] =			// ƒtƒ@ƒCƒ‹‚ÌêŠ
+static const OEMCHAR str_dirname[] =			// ãƒ•ã‚¡ã‚¤ãƒ«ã®å ´æ‰€
 			"\203\164\203\100\203\103\203\213\202\314\217\352\217\212";
-static const OEMCHAR str_filename[] =			// ƒtƒ@ƒCƒ‹–¼
+static const OEMCHAR str_filename[] =			// ãƒ•ã‚¡ã‚¤ãƒ«å
 			"\203\164\203\100\203\103\203\213\226\274";
-static const OEMCHAR str_filetype[] =			// ƒtƒ@ƒCƒ‹‚ÌŽí—Þ
+static const OEMCHAR str_filetype[] =			// ãƒ•ã‚¡ã‚¤ãƒ«ã®ç¨®é¡ž
 			"\203\164\203\100\203\103\203\213\202\314\216\355\227\336";
-static const OEMCHAR str_open[] =				// ŠJ‚­
+static const OEMCHAR str_open[] =				// é–‹ã
 			"\212\112\202\255";
 #elif defined(OSLANG_EUC) && !defined(RESOURCE_US)
-static const OEMCHAR str_dirname[] =			// ƒtƒ@ƒCƒ‹‚ÌêŠ
+static const OEMCHAR str_dirname[] =			// ãƒ•ã‚¡ã‚¤ãƒ«ã®å ´æ‰€
 			"\245\325\245\241\245\244\245\353\244\316\276\354\275\352";
-static const OEMCHAR str_filename[] =			// ƒtƒ@ƒCƒ‹–¼
+static const OEMCHAR str_filename[] =			// ãƒ•ã‚¡ã‚¤ãƒ«å
 			"\245\325\245\241\245\244\245\353\314\276";
-static const OEMCHAR str_filetype[] =			// ƒtƒ@ƒCƒ‹‚ÌŽí—Þ
+static const OEMCHAR str_filetype[] =			// ãƒ•ã‚¡ã‚¤ãƒ«ã®ç¨®é¡ž
 			"\245\325\245\241\245\244\245\353\244\316\274\357\316\340";
-static const OEMCHAR str_open[] =				// ŠJ‚­
+static const OEMCHAR str_open[] =				// é–‹ã
 			"\263\253\244\257";
 #elif defined(OSLANG_UTF8) && !defined(RESOURCE_US)
-static const OEMCHAR str_dirname[] =			// ƒtƒ@ƒCƒ‹‚ÌêŠ
+static const OEMCHAR str_dirname[] =			// ãƒ•ã‚¡ã‚¤ãƒ«ã®å ´æ‰€
 			"\343\203\225\343\202\241\343\202\244\343\203\253\343\201\256" \
 			"\345\240\264\346\211\200";
-static const OEMCHAR str_filename[] =			// ƒtƒ@ƒCƒ‹–¼
+static const OEMCHAR str_filename[] =			// ãƒ•ã‚¡ã‚¤ãƒ«å
 			"\343\203\225\343\202\241\343\202\244\343\203\253\345\220\215";
-static const OEMCHAR str_filetype[] =			// ƒtƒ@ƒCƒ‹‚ÌŽí—Þ
+static const OEMCHAR str_filetype[] =			// ãƒ•ã‚¡ã‚¤ãƒ«ã®ç¨®é¡ž
 			"\343\203\225\343\202\241\343\202\244\343\203\253\343\201\256" \
 			"\347\250\256\351\241\236";
-static const OEMCHAR str_open[] =				// ŠJ‚­
+static const OEMCHAR str_open[] =				// é–‹ã
 			"\351\226\213\343\201\217";
 #else
 static const OEMCHAR str_dirname[] = OEMTEXT("Look in");
@@ -125,7 +128,7 @@ const OEMCHAR	*filter;
 const OEMCHAR	*ext;
 #if defined(__LIBRETRO__)
 int drv;
-#endif	/* __LIBRETRO__ */
+#endif
 } FSELPRM;
 
 typedef struct {
@@ -137,7 +140,7 @@ const OEMCHAR	*ext;
 	OEMCHAR		path[MAX_PATH];
 #if defined(__LIBRETRO__)
 int drv;
-#endif	/* __LIBRETRO__ */
+#endif
 } FILESEL;
 
 static	FILESEL		filesel;
@@ -256,7 +259,7 @@ static void dlgsetlist(void) {
 	}
 }
 
-#if defined(_WIN32)
+#if defined(_WINDOWS)
 static void dlgsetdrvlist(void) {
 
 	LISTARRAY	flist;
@@ -357,7 +360,7 @@ static int dlgcmd(int msg, MENUID id, long param) {
 #if defined(__LIBRETRO__)
 						if(filesel.drv>=0xff)diskdrv_setsxsi(filesel.drv-0xff,filesel.path);
 						else diskdrv_setfdd(filesel.drv, filesel.path, 0);
-#endif	/* __LIBRETRO__ */
+#endif
 						menubase_close();
 					}
 					break;
@@ -369,14 +372,14 @@ static int dlgcmd(int msg, MENUID id, long param) {
 				case DID_PARENT:
 					file_cutname(filesel.path);
 					file_cutseparator(filesel.path);
-#if defined(_WIN32)
+#if defined(_WINDOWS)
 					if(filesel.path[0] == '\0')
 						dlgsetdrvlist();
 					else
 						dlgsetlist();
-#else	/* _WIN32 */
+#else
 					dlgsetlist();
-#endif	/* _WIN32 */
+#endif
 					menudlg_settext(DID_FILE, NULL);
 					break;
 
@@ -407,10 +410,10 @@ static int dlgcmd(int msg, MENUID id, long param) {
 #if defined(__LIBRETRO__)
 static BOOL selectfile(const FSELPRM *prm, OEMCHAR *path, int size, 
 														const OEMCHAR *def,int drv) {
-#else	/* __LIBRETRO__ */
+#else
 static BOOL selectfile(const FSELPRM *prm, OEMCHAR *path, int size, 
 														const OEMCHAR *def) {
-#endif	/* __LIBRETRO__ */
+#endif
 
 const OEMCHAR	*title;
 
@@ -431,12 +434,12 @@ const OEMCHAR	*title;
 		filesel.ext = prm->ext;
 #if defined(__LIBRETRO__)
 		filesel.drv = drv;
-#endif	/* __LIBRETRO__ */
+#endif
 	}
 	menudlg_create(DLGFS_WIDTH, DLGFS_HEIGHT, title, dlgcmd);
 #if !defined(__LIBRETRO__)
 	menubase_modalproc();
-#endif	/* __LIBRETRO__ */
+#endif
 	soundmng_play();
 	if (filesel.result) {
 		file_cpyname(path, filesel.path, size);
@@ -454,7 +457,7 @@ static const OEMCHAR diskfilter[] = OEMTEXT("All supported files");
 static const OEMCHAR fddtitle[] = OEMTEXT("Select floppy image");
 static const OEMCHAR fddext[] = OEMTEXT("d88\0") OEMTEXT("88d\0") OEMTEXT("d98\0") OEMTEXT("98d\0") OEMTEXT("fdi\0") OEMTEXT("xdf\0") OEMTEXT("hdm\0") OEMTEXT("dup\0") OEMTEXT("2hd\0") OEMTEXT("tfd\0") OEMTEXT("nfd\0") OEMTEXT("hd4\0") OEMTEXT("hd5\0") OEMTEXT("hd9\0") OEMTEXT("fdd\0") OEMTEXT("h01\0") OEMTEXT("hdb\0") OEMTEXT("ddb\0") OEMTEXT("dd6\0") OEMTEXT("dcp\0") OEMTEXT("dcu\0") OEMTEXT("flp\0") OEMTEXT("bin\0") OEMTEXT("fim\0") OEMTEXT("img\0") OEMTEXT("ima\0");
 static const OEMCHAR hddtitle[] = OEMTEXT("Select HDD image");
-static const OEMCHAR sasiext[] = OEMTEXT("thd\0") OEMTEXT("nhd\0") OEMTEXT("hdi\0") OEMTEXT("vhd\0") OEMTEXT("sln\0") OEMTEXT("hdn\0");
+static OEMCHAR sasiext[1000] = OEMTEXT("thd\0") OEMTEXT("nhd\0") OEMTEXT("hdi\0") OEMTEXT("vhd\0") OEMTEXT("slh\0") OEMTEXT("hdn\0");
 #if defined(SUPPORT_IDEIO)
 static const OEMCHAR cdtitle[] = OEMTEXT("Select CD-ROM image");
 static const OEMCHAR cdext[] = OEMTEXT("iso\0") OEMTEXT("cue\0") OEMTEXT("ccd\0") OEMTEXT("cdm\0") OEMTEXT("mds\0") OEMTEXT("nrg\0");
@@ -479,9 +482,9 @@ void filesel_fdd(REG8 drv) {
 	if (drv < 4) {
 #if defined(__LIBRETRO__)
 		if (selectfile(&fddprm, path, NELEMENTS(path), fdd_diskname(drv),drv)) {
-#else	/* __LIBRETRO__ */
+#else
 		if (selectfile(&fddprm, path, NELEMENTS(path), fdd_diskname(drv))) {
-#endif	/* __LIBRETRO__ */
+#endif
 			diskdrv_setfdd(drv, path, 0);
 		}
 	}
@@ -500,6 +503,12 @@ const FSELPRM	*prm;
 	if (!(drv & 0x20)) {		// SASI/IDE
 		if (num < 2) {
 			p = np2cfg.sasihdd[num];
+#ifdef SUPPORT_NVL_IMAGES
+		if(nvl_check()) {
+			strcat(sasiext, OEMTEXT("vmdk\0") OEMTEXT("dsk\0") OEMTEXT("vmdx\0") OEMTEXT("vdi\0") OEMTEXT("qcow\0") OEMTEXT("qcow2\0") OEMTEXT("hdd\0"));
+		}
+#endif	/* SUPPORT_NVL_IMAGES */
+
 			prm = &sasiprm;
 		}
 #if defined(SUPPORT_IDEIO)
@@ -519,9 +528,9 @@ const FSELPRM	*prm;
 #endif
 #if defined(__LIBRETRO__)
 	if ((prm) && (selectfile(prm, path, NELEMENTS(path), p,drv+0xff))) {
-#else	/* __LIBRETRO__ */
+#else
 	if ((prm) && (selectfile(prm, path, NELEMENTS(path), p))) {
-#endif	/* __LIBRETRO__ */
+#endif
 		diskdrv_setsxsi(drv, path);
 	}
 }

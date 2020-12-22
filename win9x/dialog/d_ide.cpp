@@ -1,6 +1,6 @@
 /**
  * @file	d_ide.cpp
- * @brief	IDE ê›íËÉ_ÉCÉAÉçÉO
+ * @brief	IDE Ë®≠ÂÆö„ÉÄ„Ç§„Ç¢„É≠„Ç∞
  */
 
 #include "compiler.h"
@@ -14,6 +14,8 @@
 #include "pccore.h"
 #include "common/strres.h"
 
+#ifdef SUPPORT_IDEIO
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -25,8 +27,8 @@ extern "C"
 
 
 /**
- * @brief IDE ê›íËÉ_ÉCÉAÉçÉO
- * @param[in] hwndParent êeÉEÉBÉìÉhÉE
+ * @brief IDE Ë®≠ÂÆö„ÉÄ„Ç§„Ç¢„É≠„Ç∞
+ * @param[in] hwndParent Ë¶™„Ç¶„Ç£„É≥„Éâ„Ç¶
  */
 class CIdeDlg : public CDlgProc
 {
@@ -40,18 +42,21 @@ protected:
 	virtual LRESULT WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam);
 
 private:
-	CComboData m_cmbpm;			//!< ÉvÉâÉCÉ}Éä É}ÉXÉ^
-	CComboData m_cmbps;			//!< ÉvÉâÉCÉ}Éä ÉXÉåÅ[Éu
-	CComboData m_cmbsm;			//!< ÉZÉJÉìÉ_Éä É}ÉXÉ^
-	CComboData m_cmbss;			//!< ÉZÉJÉìÉ_Éä ÉXÉåÅ[Éu
+	CComboData m_cmbpm;			//!< „Éó„É©„Ç§„Éû„É™ „Éû„Çπ„Çø
+	CComboData m_cmbps;			//!< „Éó„É©„Ç§„Éû„É™ „Çπ„É¨„Éº„Éñ
+	CComboData m_cmbsm;			//!< „Çª„Ç´„É≥„ÉÄ„É™ „Éû„Çπ„Çø
+	CComboData m_cmbss;			//!< „Çª„Ç´„É≥„ÉÄ„É™ „Çπ„É¨„Éº„Éñ
+	CWndProc m_chkasynccd;		//!< Use Async CD-ROM Access
+	CWndProc m_chkuseecc;		//!< Use CD-ROM EDC/ECC Emulation
+	CWndProc m_chkallowtraycmd;	//!< Allow CD Tray Open/Close Command
 	CWndProc m_chkidebios;		//!< Use IDE BIOS
 	CWndProc m_chkautoidebios;	//!< Auto IDE BIOS
-	CWndProc m_nudrwait;		//!< äÑÇËçûÇ›ÅièëÇ´çûÇ›ÅjÉfÉBÉåÉC
-	CWndProc m_nudwwait;		//!< äÑÇËçûÇ›ÅièëÇ´çûÇ›ÅjÉfÉBÉåÉC
+	CWndProc m_nudrwait;		//!< Ââ≤„ÇäËæº„ÅøÔºàÊõ∏„ÅçËæº„ÅøÔºâ„Éá„Ç£„É¨„Ç§
+	CWndProc m_nudwwait;		//!< Ââ≤„ÇäËæº„ÅøÔºàÊõ∏„ÅçËæº„ÅøÔºâ„Éá„Ç£„É¨„Ç§
 };
 
 /**
- * äÑÇËçûÇ›ÉäÉXÉg
+ * Ââ≤„ÇäËæº„Åø„É™„Çπ„Éà
  */
 static const CComboData::Entry s_type[] =
 {
@@ -61,8 +66,8 @@ static const CComboData::Entry s_type[] =
 };
 
 /**
- * ÉRÉìÉXÉgÉâÉNÉ^
- * @param[in] hwndParent êeÉEÉBÉìÉhÉE
+ * „Ç≥„É≥„Çπ„Éà„É©„ÇØ„Çø
+ * @param[in] hwndParent Ë¶™„Ç¶„Ç£„É≥„Éâ„Ç¶
  */
 CIdeDlg::CIdeDlg(HWND hwndParent)
 	: CDlgProc(IDD_IDE, hwndParent)
@@ -70,9 +75,9 @@ CIdeDlg::CIdeDlg(HWND hwndParent)
 }
 
 /**
- * Ç±ÇÃÉÅÉ\ÉbÉhÇÕ WM_INITDIALOG ÇÃÉÅÉbÉZÅ[ÉWÇ…âûìöÇµÇƒåƒÇ—èoÇ≥ÇÍÇ‹Ç∑
- * @retval TRUE ç≈èâÇÃÉRÉìÉgÉçÅ[ÉãÇ…ì¸óÕÉtÉHÅ[ÉJÉXÇê›íË
- * @retval FALSE ä˘Ç…ê›íËçœ
+ * „Åì„ÅÆ„É°„ÇΩ„ÉÉ„Éâ„ÅØ WM_INITDIALOG „ÅÆ„É°„ÉÉ„Çª„Éº„Ç∏„Å´ÂøúÁ≠î„Åó„Å¶Âëº„Å≥Âá∫„Åï„Çå„Åæ„Åô
+ * @retval TRUE ÊúÄÂàù„ÅÆ„Ç≥„É≥„Éà„É≠„Éº„É´„Å´ÂÖ•Âäõ„Éï„Ç©„Éº„Ç´„Çπ„ÇíË®≠ÂÆö
+ * @retval FALSE Êó¢„Å´Ë®≠ÂÆöÊ∏à
  */
 BOOL CIdeDlg::OnInitDialog()
 {
@@ -92,14 +97,36 @@ BOOL CIdeDlg::OnInitDialog()
 	m_cmbss.SubclassDlgItem(IDC_IDE4TYPE, this);
 	m_cmbss.Add(s_type, _countof(s_type));
 	m_cmbss.SetCurItemData(np2cfg.idetype[3]);
+
+	
+	m_chkasynccd.SubclassDlgItem(IDC_USEASYNCCD, this);
+	if(np2cfg.useasynccd){
+		m_chkasynccd.SendMessage(BM_SETCHECK , BST_CHECKED , 0);
+	}else{
+		m_chkasynccd.SendMessage(BM_SETCHECK , BST_UNCHECKED , 0);
+	}
+	
+	m_chkuseecc.SubclassDlgItem(IDC_USECDECC, this);
+	if(np2cfg.usecdecc){
+		m_chkuseecc.SendMessage(BM_SETCHECK , BST_CHECKED , 0);
+	}else{
+		m_chkuseecc.SendMessage(BM_SETCHECK , BST_UNCHECKED , 0);
+	}
+	
+	m_chkallowtraycmd.SubclassDlgItem(IDC_ALLOWCDTRAYOP, this);
+	if(np2cfg.allowcdtraycmd){
+		m_chkallowtraycmd.SendMessage(BM_SETCHECK , BST_CHECKED , 0);
+	}else{
+		m_chkallowtraycmd.SendMessage(BM_SETCHECK , BST_UNCHECKED , 0);
+	}
 	
 	m_nudrwait.SubclassDlgItem(IDC_IDERWAIT, this);
 	_stprintf(numbuf, _T("%d"), np2cfg.iderwait);
-	m_nudrwait.SetWindowTextW(numbuf);
+	m_nudrwait.SetWindowText(numbuf);
 
 	m_nudwwait.SubclassDlgItem(IDC_IDEWWAIT, this);
 	_stprintf(numbuf, _T("%d"), np2cfg.idewwait);
-	m_nudwwait.SetWindowTextW(numbuf);
+	m_nudwwait.SetWindowText(numbuf);
 	
 	m_chkautoidebios.SubclassDlgItem(IDC_AUTOIDEBIOS, this);
 	if(np2cfg.autoidebios){
@@ -123,7 +150,7 @@ BOOL CIdeDlg::OnInitDialog()
 }
 
 /**
- * ÉÜÅ[ÉUÅ[Ç™ OK ÇÃÉ{É^Éì (IDOK ID Ç™ÇÃÉ{É^Éì) ÇÉNÉäÉbÉNÇ∑ÇÈÇ∆åƒÇ—èoÇ≥ÇÍÇ‹Ç∑
+ * „É¶„Éº„Ç∂„Éº„Åå OK „ÅÆ„Éú„Çø„É≥ (IDOK ID „Åå„ÅÆ„Éú„Çø„É≥) „Çí„ÇØ„É™„ÉÉ„ÇØ„Åô„Çã„Å®Âëº„Å≥Âá∫„Åï„Çå„Åæ„Åô
  */
 void CIdeDlg::OnOK()
 {
@@ -151,7 +178,22 @@ void CIdeDlg::OnOK()
 		np2cfg.idetype[3] = m_cmbss.GetCurItemData(np2cfg.idetype[3]);
 		update |= SYS_UPDATECFG | SYS_UPDATEHDD;
 	}
-	m_nudrwait.GetWindowTextW(numbuf, 30);
+	if (np2cfg.useasynccd != (m_chkasynccd.SendMessage(BM_GETCHECK , 0 , 0) ? 1 : 0))
+	{
+		np2cfg.useasynccd = (m_chkasynccd.SendMessage(BM_GETCHECK , 0 , 0) ? 1 : 0);
+		update |= SYS_UPDATECFG;
+	}
+	if (np2cfg.usecdecc != (m_chkuseecc.SendMessage(BM_GETCHECK , 0 , 0) ? 1 : 0))
+	{
+		np2cfg.usecdecc = (m_chkuseecc.SendMessage(BM_GETCHECK , 0 , 0) ? 1 : 0);
+		update |= SYS_UPDATECFG;
+	}
+	if (np2cfg.allowcdtraycmd != (m_chkallowtraycmd.SendMessage(BM_GETCHECK , 0 , 0) ? 1 : 0))
+	{
+		np2cfg.allowcdtraycmd = (m_chkallowtraycmd.SendMessage(BM_GETCHECK , 0 , 0) ? 1 : 0);
+		update |= SYS_UPDATECFG;
+	}
+	m_nudrwait.GetWindowText(numbuf, 30);
 	valtmp = _ttol(numbuf);
 	if (valtmp < 0) valtmp = 0;
 	if (valtmp > 100000000) valtmp = 100000000;
@@ -160,7 +202,7 @@ void CIdeDlg::OnOK()
 		np2cfg.iderwait = valtmp;
 		update |= SYS_UPDATECFG;
 	}
-	m_nudwwait.GetWindowTextW(numbuf, 30);
+	m_nudwwait.GetWindowText(numbuf, 30);
 	valtmp = _ttol(numbuf);
 	if (valtmp < 0) valtmp = 0;
 	if (valtmp > 100000000) valtmp = 100000000;
@@ -179,17 +221,17 @@ void CIdeDlg::OnOK()
 		np2cfg.autoidebios = (m_chkautoidebios.SendMessage(BM_GETCHECK , 0 , 0) ? 1 : 0);
 		update |= SYS_UPDATECFG;
 	}
-
+	
 	sysmng_update(update);
 
 	CDlgProc::OnOK();
 }
 
 /**
- * ÉÜÅ[ÉUÅ[Ç™ÉÅÉjÉÖÅ[ÇÃçÄñ⁄ÇëIëÇµÇΩÇ∆Ç´Ç…ÅAÉtÉåÅ[ÉÄÉèÅ[ÉNÇ…ÇÊÇ¡ÇƒåƒÇ—èoÇ≥ÇÍÇ‹Ç∑
- * @param[in] wParam ÉpÉâÉÅÉ^
- * @param[in] lParam ÉpÉâÉÅÉ^
- * @retval TRUE ÉAÉvÉäÉPÅ[ÉVÉáÉìÇ™Ç±ÇÃÉÅÉbÉZÅ[ÉWÇèàóùÇµÇΩ
+ * „É¶„Éº„Ç∂„Éº„Åå„É°„Éã„É•„Éº„ÅÆÈ†ÖÁõÆ„ÇíÈÅ∏Êäû„Åó„Åü„Å®„Åç„Å´„ÄÅ„Éï„É¨„Éº„É†„ÉØ„Éº„ÇØ„Å´„Çà„Å£„Å¶Âëº„Å≥Âá∫„Åï„Çå„Åæ„Åô
+ * @param[in] wParam „Éë„É©„É°„Çø
+ * @param[in] lParam „Éë„É©„É°„Çø
+ * @retval TRUE „Ç¢„Éó„É™„Ç±„Éº„Ç∑„Éß„É≥„Åå„Åì„ÅÆ„É°„ÉÉ„Çª„Éº„Ç∏„ÇíÂá¶ÁêÜ„Åó„Åü
  */
 BOOL CIdeDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 {
@@ -208,11 +250,11 @@ BOOL CIdeDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 }
 
 /**
- * CWndProc ÉIÉuÉWÉFÉNÉgÇÃ Windows ÉvÉçÉVÅ[ÉWÉÉ (WindowProc) Ç™ópà”Ç≥ÇÍÇƒÇ¢Ç‹Ç∑
- * @param[in] nMsg èàóùÇ≥ÇÍÇÈ Windows ÉÅÉbÉZÅ[ÉWÇéwíËÇµÇ‹Ç∑
- * @param[in] wParam ÉÅÉbÉZÅ[ÉWÇÃèàóùÇ≈égÇ§ïtâ¡èÓïÒÇíÒãüÇµÇ‹Ç∑ÅBÇ±ÇÃÉpÉâÉÅÅ[É^ÇÃílÇÕÉÅÉbÉZÅ[ÉWÇ…àÀë∂ÇµÇ‹Ç∑
- * @param[in] lParam ÉÅÉbÉZÅ[ÉWÇÃèàóùÇ≈égÇ§ïtâ¡èÓïÒÇíÒãüÇµÇ‹Ç∑ÅBÇ±ÇÃÉpÉâÉÅÅ[É^ÇÃílÇÕÉÅÉbÉZÅ[ÉWÇ…àÀë∂ÇµÇ‹Ç∑
- * @return ÉÅÉbÉZÅ[ÉWÇ…àÀë∂Ç∑ÇÈílÇï‘ÇµÇ‹Ç∑
+ * CWndProc „Ç™„Éñ„Ç∏„Çß„ÇØ„Éà„ÅÆ Windows „Éó„É≠„Ç∑„Éº„Ç∏„É£ (WindowProc) „ÅåÁî®ÊÑè„Åï„Çå„Å¶„ÅÑ„Åæ„Åô
+ * @param[in] nMsg Âá¶ÁêÜ„Åï„Çå„Çã Windows „É°„ÉÉ„Çª„Éº„Ç∏„ÇíÊåáÂÆö„Åó„Åæ„Åô
+ * @param[in] wParam „É°„ÉÉ„Çª„Éº„Ç∏„ÅÆÂá¶ÁêÜ„Åß‰Ωø„ÅÜ‰ªòÂä†ÊÉÖÂ†±„ÇíÊèê‰æõ„Åó„Åæ„Åô„ÄÇ„Åì„ÅÆ„Éë„É©„É°„Éº„Çø„ÅÆÂÄ§„ÅØ„É°„ÉÉ„Çª„Éº„Ç∏„Å´‰æùÂ≠ò„Åó„Åæ„Åô
+ * @param[in] lParam „É°„ÉÉ„Çª„Éº„Ç∏„ÅÆÂá¶ÁêÜ„Åß‰Ωø„ÅÜ‰ªòÂä†ÊÉÖÂ†±„ÇíÊèê‰æõ„Åó„Åæ„Åô„ÄÇ„Åì„ÅÆ„Éë„É©„É°„Éº„Çø„ÅÆÂÄ§„ÅØ„É°„ÉÉ„Çª„Éº„Ç∏„Å´‰æùÂ≠ò„Åó„Åæ„Åô
+ * @return „É°„ÉÉ„Çª„Éº„Ç∏„Å´‰æùÂ≠ò„Åô„ÇãÂÄ§„ÇíËøî„Åó„Åæ„Åô
  */
 LRESULT CIdeDlg::WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -225,7 +267,7 @@ LRESULT CIdeDlg::WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam)
 			lpnud = (LPNMUPDOWN)lParam;
 			if(lpnud->hdr.code == UDN_DELTAPOS)
 			{
-				m_nudrwait.GetWindowTextW(numbuf, 30);
+				m_nudrwait.GetWindowText(numbuf, 30);
 				nudnum = _ttol(numbuf);
 				if(lpnud->iDelta > 0)
 				{
@@ -238,14 +280,14 @@ LRESULT CIdeDlg::WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam)
 					else nudnum++;
 				}
 				_stprintf(numbuf, _T("%d"), nudnum);
-				m_nudrwait.SetWindowTextW(numbuf);
+				m_nudrwait.SetWindowText(numbuf);
 			}
 			break;
 		case IDC_SPINIDEWWAIT:
 			lpnud = (LPNMUPDOWN)lParam;
 			if(lpnud->hdr.code == UDN_DELTAPOS)
 			{
-				m_nudwwait.GetWindowTextW(numbuf, 30);
+				m_nudwwait.GetWindowText(numbuf, 30);
 				nudnum = _ttol(numbuf);
 				if(lpnud->iDelta > 0)
 				{
@@ -258,7 +300,7 @@ LRESULT CIdeDlg::WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam)
 					else nudnum++;
 				}
 				_stprintf(numbuf, _T("%d"), nudnum);
-				m_nudwwait.SetWindowTextW(numbuf);
+				m_nudwwait.SetWindowText(numbuf);
 			}
 			break;
 	}
@@ -267,11 +309,13 @@ LRESULT CIdeDlg::WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam)
 }
 
 /**
- * ÉRÉìÉtÉBÉO É_ÉCÉAÉçÉO
- * @param[in] hwndParent êeÉEÉBÉìÉhÉE
+ * „Ç≥„É≥„Éï„Ç£„Ç∞ „ÉÄ„Ç§„Ç¢„É≠„Ç∞
+ * @param[in] hwndParent Ë¶™„Ç¶„Ç£„É≥„Éâ„Ç¶
  */
 void dialog_ideopt(HWND hwndParent)
 {
 	CIdeDlg dlg(hwndParent);
 	dlg.DoModal();
 }
+
+#endif

@@ -1,6 +1,6 @@
 /**
  * @file	tstring.cpp
- * @brief	•¶š—ñƒNƒ‰ƒX‚Ì“®ì‚Ì’è‹`‚ğs‚¢‚Ü‚·
+ * @brief	æ–‡å­—åˆ—ã‚¯ãƒ©ã‚¹ã®å‹•ä½œã®å®šç¾©ã‚’è¡Œã„ã¾ã™
  */
 
 #include "compiler.h"
@@ -8,9 +8,9 @@
 #include "WndProc.h"
 
 /**
- * ƒŠƒ\[ƒX‚©‚ç•¶š—ñ‚ğƒ[ƒh
- * @param[in] uID ƒŠƒ\[ƒX¯•Êq
- * @return •¶š—ñ
+ * ãƒªã‚½ãƒ¼ã‚¹ã‹ã‚‰æ–‡å­—åˆ—ã‚’ãƒ­ãƒ¼ãƒ‰
+ * @param[in] uID ãƒªã‚½ãƒ¼ã‚¹è­˜åˆ¥å­
+ * @return æ–‡å­—åˆ—
  */
 std::tstring LoadTString(UINT uID)
 {
@@ -46,7 +46,7 @@ std::tstring LoadTString(UINT uID)
 		}
 
 		UINT nLength = pRes[dwPos++];
-		nLength = np2min(nLength, (dwResSize - dwPos));
+		nLength = MIN(nLength, (dwResSize - dwPos));
 
 #if defined(_UNICODE)
 
@@ -70,9 +70,9 @@ std::tstring LoadTString(UINT uID)
 }
 
 /**
- * ƒŠƒ\[ƒX‚©‚ç•¶š—ñ‚ğƒ[ƒh
- * @param[in] lpString •¶š—ñID
- * @return •¶š—ñ
+ * ãƒªã‚½ãƒ¼ã‚¹ã‹ã‚‰æ–‡å­—åˆ—ã‚’ãƒ­ãƒ¼ãƒ‰
+ * @param[in] lpString æ–‡å­—åˆ—ID
+ * @return æ–‡å­—åˆ—
  */
 std::tstring LoadTString(LPCTSTR lpString)
 {

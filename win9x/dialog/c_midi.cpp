@@ -1,6 +1,6 @@
 /**
  * @file	c_midi.cpp
- * @brief	MIDI ƒRƒ“ƒgƒ[ƒ‹ ƒNƒ‰ƒXŒQ‚Ì“®ì‚Ì’è‹`‚ğs‚¢‚Ü‚·
+ * @brief	MIDI ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ« ã‚¯ãƒ©ã‚¹ç¾¤ã®å‹•ä½œã®å®šç¾©ã‚’è¡Œã„ã¾ã™
  */
 
 #include "compiler.h"
@@ -13,9 +13,10 @@
 #if defined(MT32SOUND_DLL)
 #include "..\ext\mt32snd.h"
 #endif	// defined(MT32SOUND_DLL)
+#include "dialog/winfiledlg.h"
 
 /**
- * MIDI ƒfƒoƒCƒX‚Ì‰Šú‰»
+ * MIDI ãƒ‡ãƒã‚¤ã‚¹ã®åˆæœŸåŒ–
  */
 void CComboMidiDevice::PreSubclassWindow()
 {
@@ -25,7 +26,7 @@ void CComboMidiDevice::PreSubclassWindow()
 }
 
 /**
- * MIDI IN ƒfƒoƒCƒX‚Ì—ñ‹“
+ * MIDI IN ãƒ‡ãƒã‚¤ã‚¹ã®åˆ—æŒ™
  */
 void CComboMidiDevice::EnumerateMidiIn()
 {
@@ -41,7 +42,7 @@ void CComboMidiDevice::EnumerateMidiIn()
 }
 
 /**
- * MIDI OUT ƒfƒoƒCƒX‚Ì—ñ‹“
+ * MIDI OUT ãƒ‡ãƒã‚¤ã‚¹ã®åˆ—æŒ™
  */
 void CComboMidiDevice::EnumerateMidiOut()
 {
@@ -80,8 +81,8 @@ void CComboMidiDevice::EnumerateMidiOut()
 }
 
 /**
- * ƒJ[ƒ\ƒ‹İ’è
- * @param[in] lpDevice ƒfƒoƒCƒX–¼
+ * ã‚«ãƒ¼ã‚½ãƒ«è¨­å®š
+ * @param[in] lpDevice ãƒ‡ãƒã‚¤ã‚¹å
  */
 void CComboMidiDevice::SetCurString(LPCTSTR lpDevice)
 {
@@ -94,7 +95,7 @@ void CComboMidiDevice::SetCurString(LPCTSTR lpDevice)
 }
 
 /**
- * MIDI ƒ‚ƒWƒ…[ƒ‹—ñ‹“
+ * MIDI ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«åˆ—æŒ™
  */
 void CComboMidiModule::PreSubclassWindow()
 {
@@ -105,23 +106,22 @@ void CComboMidiModule::PreSubclassWindow()
 }
 
 /**
- * ƒtƒ@ƒCƒ‹‘I‘ğ
+ * ãƒ•ã‚¡ã‚¤ãƒ«é¸æŠ
  */
 void CEditMimpiFile::Browse()
 {
 	TCHAR szPath[MAX_PATH];
+	TCHAR szName[MAX_PATH];
 	GetWindowText(szPath, _countof(szPath));
 
 	std::tstring rExt(LoadTString(IDS_MIMPIEXT));
 	std::tstring rFilter(LoadTString(IDS_MIMPIFILTER));
 	std::tstring rTitle(LoadTString(IDS_MIMPITITLE));
 
-	CFileDlg dlg(TRUE, rExt.c_str(), szPath, OFN_FILEMUSTEXIST | OFN_HIDEREADONLY, rFilter.c_str(), m_hWnd);
-	dlg.m_ofn.lpstrTitle = rTitle.c_str();
-	dlg.m_ofn.nFilterIndex = 1;
-	if (dlg.DoModal())
+	OPENFILENAMEW ofnw;
+	if (WinFileDialogW(NULL, &ofnw, WINFILEDIALOGW_MODE_GET1, szPath, szName, rExt.c_str(), rTitle.c_str(), rFilter.c_str(), 1))
 	{
-		SetWindowText(dlg.GetPathName());
+		SetWindowText(szPath);
 	}
 	else
 	{

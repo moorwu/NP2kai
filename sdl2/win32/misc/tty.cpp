@@ -1,6 +1,6 @@
 /**
  * @file	ttyl.cpp
- * @brief	ƒVƒŠƒAƒ‹’ÊMƒNƒ‰ƒX‚Ì“®ì‚Ì’è‹`‚ğs‚¢‚Ü‚·
+ * @brief	ã‚·ãƒªã‚¢ãƒ«é€šä¿¡ã‚¯ãƒ©ã‚¹ã®å‹•ä½œã®å®šç¾©ã‚’è¡Œã„ã¾ã™
  */
 
 #include "compiler.h"
@@ -8,11 +8,12 @@
 //#include <algorithm>
 #include <setupapi.h>
 #include <tchar.h>
+#include "codecnv/codecnv.h"
 
 #pragma comment(lib, "setupapi.lib")
 
 /**
- * ƒRƒ“ƒXƒgƒ‰ƒNƒ^
+ * ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
  */
 CTty::CTty()
 	: m_hFile(INVALID_HANDLE_VALUE)
@@ -20,7 +21,7 @@ CTty::CTty()
 }
 
 /**
- * ƒfƒXƒgƒ‰ƒNƒ^
+ * ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
  */
 CTty::~CTty()
 {
@@ -28,15 +29,17 @@ CTty::~CTty()
 }
 
 /**
- * ƒI[ƒvƒ“‚·‚é
- * @param[in] lpDevName ƒfƒoƒCƒX–¼
- * @param[in] nSpeed ƒ{[ƒŒ[ƒg
- * @param[in] lpcszParam ƒpƒ‰ƒƒ^
- * @retval true ¬Œ÷
- * @retval false ¸”s
+ * ã‚ªãƒ¼ãƒ—ãƒ³ã™ã‚‹
+ * @param[in] lpDevName ãƒ‡ãƒã‚¤ã‚¹å
+ * @param[in] nSpeed ãƒœãƒ¼ãƒ¬ãƒ¼ãƒˆ
+ * @param[in] lpcszParam ãƒ‘ãƒ©ãƒ¡ã‚¿
+ * @retval true æˆåŠŸ
+ * @retval false å¤±æ•—
  */
-bool CTty::Open(LPCTSTR lpDevName, UINT nSpeed, LPCTSTR lpcszParam)
+bool CTty::Open(LPCSTR lpDevName, UINT nSpeed, LPCSTR lpcszParam)
 {
+	wchar_t wDevName[MAX_PATH];
+
 	Close();
 
 	if (!SetParam(lpcszParam, NULL))
@@ -44,7 +47,8 @@ bool CTty::Open(LPCTSTR lpDevName, UINT nSpeed, LPCTSTR lpcszParam)
 		return false;
 	}
 
-	HANDLE hFile = ::CreateFile(lpDevName, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, NULL);
+	codecnv_utf8toucs2(wDevName, MAX_PATH, lpDevName, -1);
+	HANDLE hFile = ::CreateFileW(wDevName, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
 		return false;
@@ -72,7 +76,7 @@ bool CTty::Open(LPCTSTR lpDevName, UINT nSpeed, LPCTSTR lpcszParam)
 }
 
 /**
- * ƒNƒ[ƒY‚·‚é
+ * ã‚¯ãƒ­ãƒ¼ã‚ºã™ã‚‹
  */
 void CTty::Close()
 {
@@ -84,10 +88,10 @@ void CTty::Close()
 }
 
 /**
- * ƒf[ƒ^óM
- * @param[in] lpcvData ‘—Mƒf[ƒ^‚Ìƒ|ƒCƒ“ƒ^
- * @param[in] nDataSize ‘—Mƒf[ƒ^‚ÌƒTƒCƒY
- * @return ‘—MƒoƒCƒg”
+ * ãƒ‡ãƒ¼ã‚¿å—ä¿¡
+ * @param[in] lpcvData é€ä¿¡ãƒ‡ãƒ¼ã‚¿ã®ãƒã‚¤ãƒ³ã‚¿
+ * @param[in] nDataSize é€ä¿¡ãƒ‡ãƒ¼ã‚¿ã®ã‚µã‚¤ã‚º
+ * @return é€ä¿¡ãƒã‚¤ãƒˆæ•°
  */
 ssize_t CTty::Read(LPVOID lpcvData, ssize_t nDataSize)
 {
@@ -107,7 +111,7 @@ ssize_t CTty::Read(LPVOID lpcvData, ssize_t nDataSize)
 		return -1;
 	}
 
-	DWORD dwReadLength = np2min(stat.cbInQue, static_cast<DWORD>(nDataSize));
+	DWORD dwReadLength = MIN(stat.cbInQue, static_cast<DWORD>(nDataSize));
 	if (dwReadLength == 0)
 	{
 		return 0;
@@ -122,10 +126,10 @@ ssize_t CTty::Read(LPVOID lpcvData, ssize_t nDataSize)
 }
 
 /**
- * ƒf[ƒ^‘—M
- * @param[in] lpcvData ‘—Mƒf[ƒ^‚Ìƒ|ƒCƒ“ƒ^
- * @param[in] nDataSize ‘—Mƒf[ƒ^‚ÌƒTƒCƒY
- * @return ‘—MƒoƒCƒg”
+ * ãƒ‡ãƒ¼ã‚¿é€ä¿¡
+ * @param[in] lpcvData é€ä¿¡ãƒ‡ãƒ¼ã‚¿ã®ãƒã‚¤ãƒ³ã‚¿
+ * @param[in] nDataSize é€ä¿¡ãƒ‡ãƒ¼ã‚¿ã®ã‚µã‚¤ã‚º
+ * @return é€ä¿¡ãƒã‚¤ãƒˆæ•°
  */
 ssize_t CTty::Write(LPCVOID lpcvData, ssize_t nDataSize)
 {
@@ -148,13 +152,13 @@ ssize_t CTty::Write(LPCVOID lpcvData, ssize_t nDataSize)
 }
 
 /**
- * ƒpƒ‰ƒ[ƒ^İ’è
- * @param[in] lpcszParam ƒpƒ‰ƒƒ^
- * @param[in, out] dcb DCB \‘¢‘Ì‚Ìƒ|ƒCƒ“ƒ^
- * @retval true ¬Œ÷
- * @retval false ¸”s
+ * ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿è¨­å®š
+ * @param[in] lpcszParam ãƒ‘ãƒ©ãƒ¡ã‚¿
+ * @param[in, out] dcb DCB æ§‹é€ ä½“ã®ãƒã‚¤ãƒ³ã‚¿
+ * @retval true æˆåŠŸ
+ * @retval false å¤±æ•—
  */
-bool CTty::SetParam(LPCTSTR lpcszParam, DCB* dcb)
+bool CTty::SetParam(LPCSTR lpcszParam, DCB* dcb)
 {
 	BYTE cByteSize = 8;
 	BYTE cParity = NOPARITY;
@@ -162,33 +166,33 @@ bool CTty::SetParam(LPCTSTR lpcszParam, DCB* dcb)
 
 	if (lpcszParam != NULL)
 	{
-		TCHAR c = lpcszParam[0];
-		if ((c < TEXT('4')) || (c > TEXT('8')))
+		char c = lpcszParam[0];
+		if ((c < '4') || (c > '8'))
 		{
 			return false;
 		}
-		cByteSize = static_cast<BYTE>(c - TEXT('0'));
+		cByteSize = static_cast<BYTE>(c - '0');
 
 		c = lpcszParam[1];
 		switch (c & (~0x20))
 		{
-			case TEXT('N'):		// for no parity
+			case 'N':		// for no parity
 				cParity = NOPARITY;
 				break;
 
-			case TEXT('E'):		// for even parity
+			case 'E':		// for even parity
 				cParity = EVENPARITY;
 				break;
 
-			case TEXT('O'):		// for odd parity
+			case 'O':		// for odd parity
 				cParity = ODDPARITY;
 				break;
 
-			case TEXT('M'):		// for mark parity
+			case 'M':		// for mark parity
 				cParity = MARKPARITY;
 				break;
 
-			case TEXT('S'):		// for for space parity
+			case 'S':		// for for space parity
 				cParity = SPACEPARITY;
 				break;
 
@@ -196,15 +200,15 @@ bool CTty::SetParam(LPCTSTR lpcszParam, DCB* dcb)
 				return false;
 		}
 
-		if (::lstrcmp(lpcszParam + 2, TEXT("1")) == 0)
+		if (strcmp(lpcszParam + 2, "1") == 0)
 		{
 			cStopBits = ONESTOPBIT;
 		}
-		else if (::lstrcmp(lpcszParam + 2, TEXT("1.5")) == 0)
+		else if (strcmp(lpcszParam + 2, "1.5") == 0)
 		{
 			cStopBits = ONE5STOPBITS;
 		}
-		else if (::lstrcmp(lpcszParam + 2, TEXT("2")) == 0)
+		else if (strcmp(lpcszParam + 2, "2") == 0)
 		{
 			cStopBits = TWOSTOPBITS;
 		}

@@ -9,13 +9,17 @@
 #include	"cs4231io.h"
 #include	"iocore16.tbl"
 #ifdef SUPPORT_LGY98
-#include	"lgy98.h"
+#include	"network/lgy98.h"
 #endif
 #ifdef SUPPORT_WAB
-#include	"wab.h"
+#include	"wab/wab.h"
 #endif
 #ifdef SUPPORT_CL_GD5430
-#include	"cirrus_vga_extern.h"
+#include	"wab/cirrus_vga_extern.h"
+#endif
+#ifdef SUPPORT_SMPU98
+#include	"cbus/mpu98ii.h"
+#include	"cbus/smpu98.h"
 #endif
 
 
@@ -39,11 +43,17 @@
 	_PIC		pic;
 	_PIT		pit;
 	_RS232C		rs232c;
+#if defined(SUPPORT_RS232C_FIFO)
+	_RS232CFIFO	rs232cfifo;
+#endif
 	_SYSPORT	sysport;
 	_UPD4990	uPD4990;
 
 #if defined(SUPPORT_PC9821)
 	_PCIDEV		pcidev;
+#endif
+#if defined(SUPPORT_PEGC)
+	_PEGC		pegc;
 #endif
 
 
@@ -131,12 +141,20 @@ static void attachout(IOFUNC iof, UINT port, IOOUT func) {
 		iof->ioout[port] = func;
 	}
 }
+static void detachout(IOFUNC iof, UINT port) {
+
+	iof->ioout[port] = &defout8;
+}
 
 static void attachinp(IOFUNC iof, UINT port, IOINP func) {
 
 	if (func) {
 		iof->ioinp[port] = func;
 	}
+}
+static void detachinp(IOFUNC iof, UINT port) {
+
+	iof->ioinp[port] = &definp8;
 }
 
 
@@ -318,6 +336,21 @@ BRESULT iocore_attachsndout(UINT port, IOOUT func) {
 	}
 	return(r);
 }
+BRESULT iocore_detachsndout(UINT port) {
+
+	BRESULT	r;
+	UINT	num;
+
+	r = makesndiofunc(port);
+	if (r == SUCCESS) {
+		num = (port >> 8) & 15;
+		do {
+			detachout(iocore.base[num], port & 0xff);
+			num += 0x10;
+		} while(num < 0x100);
+	}
+	return(r);
+}
 
 BRESULT iocore_attachsndinp(UINT port, IOINP func) {
 
@@ -329,6 +362,21 @@ BRESULT iocore_attachsndinp(UINT port, IOINP func) {
 		num = (port >> 8) & 15;
 		do {
 			attachinp(iocore.base[num], port & 0xff, func);
+			num += 0x10;
+		} while(num < 0x100);
+	}
+	return(r);
+}
+BRESULT iocore_detachsndinp(UINT port) {
+
+	BRESULT	r;
+	UINT	num;
+
+	r = makesndiofunc(port);
+	if (r == SUCCESS) {
+		num = (port >> 8) & 15;
+		do {
+			detachinp(iocore.base[num], port & 0xff);
 			num += 0x10;
 		} while(num < 0x100);
 	}
@@ -367,6 +415,19 @@ BRESULT iocore_attachout(UINT port, IOOUT func) {
 		return(FAILURE);
 	}
 }
+BRESULT iocore_detachout(UINT port) {
+
+	IOFUNC	iof;
+
+	iof = getextiofunc(port);
+	if (iof) {
+		detachout(iof, port & 0xff);
+		return(SUCCESS);
+	}
+	else {
+		return(FAILURE);
+	}
+}
 
 BRESULT iocore_attachinp(UINT port, IOINP func) {
 
@@ -375,6 +436,19 @@ BRESULT iocore_attachinp(UINT port, IOINP func) {
 	iof = getextiofunc(port);
 	if (iof) {
 		attachinp(iof, port & 0xff, func);
+		return(SUCCESS);
+	}
+	else {
+		return(FAILURE);
+	}
+}
+BRESULT iocore_detachinp(UINT port) {
+
+	IOFUNC	iof;
+
+	iof = getextiofunc(port);
+	if (iof) {
+		detachinp(iof, port & 0xff);
 		return(SUCCESS);
 	}
 	else {
@@ -534,13 +608,6 @@ void IOOUTCALL iocore_out8(UINT port, REG8 dat) {
 
 	IOFUNC	iof;
 
-//#if defined(SUPPORT_PC9821)
-//	if((port&0xff) == 0xf0 && (port&0xff00) != 0x0000){
-//		// Win2000デバイス検出リセット対策（根拠無し）
-//		CPU_REMCLOCK -= iocore.busclock;
-//		return;
-//	}
-//#endif
 //	TRACEOUT(("iocore_out8(%.2x, %.2x)", port, dat));
 	CPU_REMCLOCK -= iocore.busclock;
 	iof = iocore.base[(port >> 8) & 0xff];
@@ -551,14 +618,7 @@ REG8 IOINPCALL iocore_inp8(UINT port) {
 
 	IOFUNC	iof;
 	REG8	ret;
-//
-//#if defined(SUPPORT_PC9821)
-//	if((port&0xff) == 0xf0 && (port&0xff00) != 0x0000){
-//		// Win2000デバイス検出リセット対策（根拠無し）
-//		CPU_REMCLOCK -= iocore.busclock;
-//		return 0xff;
-//	}
-//#endif
+	
 	CPU_REMCLOCK -= iocore.busclock;
 	iof = iocore.base[(port >> 8) & 0xff];
 	ret = iof->ioinp[port & 0xff](port);
@@ -572,6 +632,12 @@ void IOOUTCALL iocore_out16(UINT port, REG16 dat) {
 
 //	TRACEOUT(("iocore_out16(%.4x, %.4x)", port, dat));
 	CPU_REMCLOCK -= iocore.busclock;
+#if defined(SUPPORT_PC9821)&&defined(SUPPORT_PCI)
+	if (0x0cfc <= port && port <= 0x0cff) {
+		pcidev_w16_0xcfc(port, dat);
+		return;
+	}
+#endif
 #if defined(SUPPORT_IDEIO)
 	if (port == 0x0640) {
 		ideio_w16(port, dat);
@@ -584,9 +650,17 @@ void IOOUTCALL iocore_out16(UINT port, REG16 dat) {
 		return;
 	}
 #endif
+#if defined(SUPPORT_SMPU98)
+	if (smpu98.enable && smpu98.port <= port && port <= smpu98.port + 0xf) {
+		if(smpu98_io16outfunc[port - smpu98.port]){
+			(*smpu98_io16outfunc[port - smpu98.port])(port, dat);
+			return;
+		}
+	}
+#endif
 #if defined(SUPPORT_CL_GD5430)
 	if(np2clvga.enabled && cirrusvga_opaque){
-		if(np2clvga.gd54xxtype == CIRRUS_98ID_WAB || np2clvga.gd54xxtype == CIRRUS_98ID_WSN || np2clvga.gd54xxtype == CIRRUS_98ID_WSN_A2F || np2clvga.gd54xxtype == CIRRUS_98ID_GA98NB){
+		if((np2clvga.gd54xxtype & CIRRUS_98ID_WABMASK) == CIRRUS_98ID_WAB || (np2clvga.gd54xxtype & CIRRUS_98ID_GA98NBMASK) == CIRRUS_98ID_GA98NBIC){
 			if(pc98_cirrus_isWABport(port)){
 				cirrusvga_ioport_write_wrap16(port, (UINT16)dat);
 				return;
@@ -634,6 +708,11 @@ REG16 IOINPCALL iocore_inp16(UINT port) {
 	REG8	ret;
 
 	CPU_REMCLOCK -= iocore.busclock;
+#if defined(SUPPORT_PC9821)&&defined(SUPPORT_PCI)
+	if (0x0cfc <= port && port <= 0x0cff) {
+		return(pcidev_r16_0xcfc(port));
+	}
+#endif
 #if defined(SUPPORT_IDEIO)
 	if (port == 0x0640) {
 		return(ideio_r16(port));
@@ -644,9 +723,16 @@ REG16 IOINPCALL iocore_inp16(UINT port) {
 		return(lgy98_ib200_16(port));
 	}
 #endif
+#if defined(SUPPORT_SMPU98)
+	if (smpu98.enable && smpu98.port <= port && port <= smpu98.port + 0xf) {
+		if(smpu98_io16inpfunc[port - smpu98.port]){
+			return (*smpu98_io16inpfunc[port - smpu98.port])(port);
+		}
+	}
+#endif
 #if defined(SUPPORT_CL_GD5430)
 	if(np2clvga.enabled && cirrusvga_opaque){
-		if(np2clvga.gd54xxtype == CIRRUS_98ID_WAB || np2clvga.gd54xxtype == CIRRUS_98ID_WSN || np2clvga.gd54xxtype == CIRRUS_98ID_WSN_A2F || np2clvga.gd54xxtype == CIRRUS_98ID_GA98NB){
+		if((np2clvga.gd54xxtype & CIRRUS_98ID_WABMASK) == CIRRUS_98ID_WAB || (np2clvga.gd54xxtype & CIRRUS_98ID_GA98NBMASK) == CIRRUS_98ID_GA98NBIC){
 			if(pc98_cirrus_isWABport(port)){
 				return(cirrusvga_ioport_read_wrap16(port));
 			}
@@ -699,7 +785,7 @@ void IOOUTCALL iocore_out32(UINT port, UINT32 dat) {
 #endif
 #if defined(SUPPORT_CL_GD5430)
 	if(np2clvga.enabled && cirrusvga_opaque){
-		if(np2clvga.gd54xxtype == CIRRUS_98ID_WAB || np2clvga.gd54xxtype == CIRRUS_98ID_WSN || np2clvga.gd54xxtype == CIRRUS_98ID_WSN_A2F || np2clvga.gd54xxtype == CIRRUS_98ID_GA98NB){
+		if((np2clvga.gd54xxtype & CIRRUS_98ID_WABMASK) == CIRRUS_98ID_WAB || (np2clvga.gd54xxtype & CIRRUS_98ID_GA98NBMASK) == CIRRUS_98ID_GA98NBIC){
 			if(pc98_cirrus_isWABport(port)){
 				cirrusvga_ioport_write_wrap32(port, (UINT32)dat);
 				return;
@@ -723,7 +809,7 @@ UINT32 IOINPCALL iocore_inp32(UINT port) {
 #endif
 #if defined(SUPPORT_CL_GD5430)
 	if(np2clvga.enabled && cirrusvga_opaque){
-		if(np2clvga.gd54xxtype == CIRRUS_98ID_WAB || np2clvga.gd54xxtype == CIRRUS_98ID_WSN || np2clvga.gd54xxtype == CIRRUS_98ID_WSN_A2F || np2clvga.gd54xxtype == CIRRUS_98ID_GA98NB){
+		if((np2clvga.gd54xxtype & CIRRUS_98ID_WABMASK) == CIRRUS_98ID_WAB || (np2clvga.gd54xxtype & CIRRUS_98ID_GA98NBMASK) == CIRRUS_98ID_GA98NBIC){
 			if(pc98_cirrus_isWABport(port)){
 				return(cirrusvga_ioport_read_wrap32(port));
 			}

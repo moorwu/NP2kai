@@ -1,16 +1,12 @@
 #ifndef	NP2_I386C_CPUMEM_H__
 #define	NP2_I386C_CPUMEM_H__
 
-#ifdef NP2_MEMORY_ASM			// アセンブラ版は 必ずfastcallで
-#undef	MEMCALL
-#define	MEMCALL	FASTCALL
+#ifdef NP2_MEMORY_ASM			// 繧｢繧ｻ繝ｳ繝悶Λ迚医�ｯ 蠢�縺喃astcall縺ｧ
+//#undef	MEMCALL
+//#define	MEMCALL	FASTCALL
 #endif
 
-#if !defined(MEMCALL)
-#define	MEMCALL
-#endif
-
-// 000000-0fffff メインメモリ
+// 000000-0fffff 繝｡繧､繝ｳ繝｡繝｢繝ｪ
 // 100000-10ffef HMA
 // 110000-193fff FONT-ROM/RAM
 // 1a8000-1bffff VRAM1
@@ -47,8 +43,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+	
+#if defined(SUPPORT_IA32_HAXM)
+extern	UINT8	membase[0x200000];
+extern	UINT8	*mem;
+#else
 extern	UINT8	mem[0x200000];
+#endif
 
 void MEMCALL memm_arch(UINT type);
 void MEMCALL memm_vram(UINT operate);
@@ -64,6 +65,12 @@ void MEMCALL memp_writes(UINT32 address, const void *dat, UINT leng);
 REG8 MEMCALL memp_read8_codefetch(UINT32 address);
 REG16 MEMCALL memp_read16_codefetch(UINT32 address);
 UINT32 MEMCALL memp_read32_codefetch(UINT32 address);
+REG8 MEMCALL memp_read8_paging(UINT32 address);
+REG16 MEMCALL memp_read16_paging(UINT32 address);
+UINT32 MEMCALL memp_read32_paging(UINT32 address);
+void MEMCALL memp_write8_paging(UINT32 address, REG8 value);
+void MEMCALL memp_write16_paging(UINT32 address, REG16 value);
+void MEMCALL memp_write32_paging(UINT32 address, UINT32 value);
 
 REG8 MEMCALL meml_read8(UINT32 address);
 REG16 MEMCALL meml_read16(UINT32 address);

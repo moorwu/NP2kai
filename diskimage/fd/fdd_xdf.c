@@ -8,8 +8,8 @@
 
 #ifdef SUPPORT_KAI_IMAGES
 
-//	BKDSK(DD6)ABKDSK(DDB)”»’è—p
-//static const OEMCHAR str_dd6[] = OEMTEXT("dd6");	//	–¢g—p‚È‚Ì‚ÅƒRƒƒ“ƒg(kai9)
+//	BKDSK(DD6)ã€BKDSK(DDB)åˆ¤å®šç”¨
+//static const OEMCHAR str_dd6[] = OEMTEXT("dd6");	//	æœªä½¿ç”¨ãªã®ã§ã‚³ãƒ¡ãƒ³ãƒˆ(kai9)
 static const OEMCHAR str_ddb[] = OEMTEXT("ddb");
 //
 
@@ -25,41 +25,41 @@ static const _XDFINFO supportxdf[] = {
 			{0, 160, 15, 2, DISKTYPE_2HD, 0},	//	BKDSK(HD5)	MS-DOS 1.21M(2HC)
 #endif
 			// 1024
-			{0, 154,  8, 3, DISKTYPE_2HD, 0},	//	XDF‘¼2HDABINAFLP“™
+			{0, 154,  8, 3, DISKTYPE_2HD, 0},	//	XDFä»–2HDã€BINã€FLPç­‰
 												//	BKDSK(HDM)	MS-DOS 1.25M(2HD)
 			// 1.44MB
 			{0, 160, 18, 2, DISKTYPE_2HD, 1},	//	BKDSK(HD4)	MS-DOS 1.44M(2HD)
 
-			//	’Ç‰Á‚Å‚¢‚­‚Â‚©‚ÌBKDSKŒ`®‚É‘Î‰
+			//	è¿½åŠ ã§ã„ãã¤ã‹ã®BKDSKå½¢å¼ã«å¯¾å¿œ
 			{0, 154, 26, 1, DISKTYPE_2HD, 0},	//	BKDSK(H01)	2HD:256byte*26sec (0-154)track
 			{0, 154,  9, 3, DISKTYPE_2HD, 0},	//	BKDSK(HD9)	MS-DOS 2HD(9sec)
 			{0, 160,  8, 2, DISKTYPE_2DD, 0},	//	BKDSK(DD6)	MS-DOS  640K(2DD)
 			{0, 160,  9, 2, DISKTYPE_2DD, 0},	//	BKDSK(DD9)	MS-DOS  720K(2DD)
-			//	track 0‚Æ‚»‚êˆÈŠO‚ÅƒZƒNƒ^ƒTƒCƒY‚ªˆá‚¤‚½‚ß–¢‘Î‰
+			//	track 0ã¨ãã‚Œä»¥å¤–ã§ã‚»ã‚¯ã‚¿ã‚µã‚¤ã‚ºãŒé•ã†ãŸã‚æœªå¯¾å¿œ
 //			{0, 154, 26, 1, DISKTYPE_2HD, 0},	//	BKDSK(HDB)	BASIC 2HD
 			//
 			{0, 160, 16, 1, DISKTYPE_2DD, 0},	//	BKDSK(DDB)	BASIC 2DD
 			//
-			//	ƒwƒbƒ_ƒTƒCƒY‚ğw’è‚µA”»’è‚Él—¶‚·‚é‚æ‚¤‚É‚·‚ê‚Î
-			//	DIP‚âDCP^DCU(‘Sƒgƒ‰ƒbƒNŠi”[ƒCƒ[ƒW)‚Æ‚©‚à‚¢‚¯‚é
-			{256, 154,  8, 3, DISKTYPE_2HD, 0},	//	DIP			2HD-8ƒZƒNƒ^(1.25MB)
-												//	FIM			2HD-8ƒZƒNƒ^(1.25MB)
-			{256, 154, 26, 1, DISKTYPE_2HD, 0},	//	FIM			2HD-26ƒZƒNƒ^
-#if 0	//	fdd_dcp.c‚ÖˆÚ“®(kai9)
-			{162, 154,  8, 3, DISKTYPE_2HD, 0},	//	DCP^DCU	01h	2HD- 8ƒZƒNƒ^(1.25MB)
-			{162, 160, 15, 2, DISKTYPE_2HD, 0},	//	DCP^DCU	02h	2HD-15ƒZƒNƒ^(1.21MB)
-			{162, 160, 18, 2, DISKTYPE_2HD, 1},	//	DCP^DCU	03h	2HQ-18ƒZƒNƒ^(1.44MB)
-			{162, 160,  8, 2, DISKTYPE_2DD, 0},	//	DCP^DCU	04h	2DD- 8ƒZƒNƒ^( 640KB)
-			{162, 160,  9, 2, DISKTYPE_2DD, 0},	//	DCP^DCU	05h	2DD- 9ƒZƒNƒ^( 720KB)
-			{162, 154,  9, 3, DISKTYPE_2HD, 0},	//	DCP^DCU	08h	2HD- 9ƒZƒNƒ^(1.44MB)
-//			{162, 154, 26, 1, DISKTYPE_2HD, 0},	//	DCP^DCU	11h	BASIC-2HD
-			{162, 160, 16, 1, DISKTYPE_2DD, 0},	//	DCP^DCU	19h	BASIC-2DD
-			{162, 154, 26, 1, DISKTYPE_2HD, 0},	//	DCP^DCU	21h	2HD-26ƒZƒNƒ^
+			//	ãƒ˜ãƒƒãƒ€ã‚µã‚¤ã‚ºã‚’æŒ‡å®šã—ã€åˆ¤å®šæ™‚ã«è€ƒæ…®ã™ã‚‹ã‚ˆã†ã«ã™ã‚Œã°
+			//	DIPã‚„DCPï¼DCU(å…¨ãƒˆãƒ©ãƒƒã‚¯æ ¼ç´ã‚¤ãƒ¡ãƒ¼ã‚¸)ã¨ã‹ã‚‚ã„ã‘ã‚‹
+			{256, 154,  8, 3, DISKTYPE_2HD, 0},	//	DIP			2HD-8ã‚»ã‚¯ã‚¿(1.25MB)
+												//	FIM			2HD-8ã‚»ã‚¯ã‚¿(1.25MB)
+			{256, 154, 26, 1, DISKTYPE_2HD, 0},	//	FIM			2HD-26ã‚»ã‚¯ã‚¿
+#if 0	//	fdd_dcp.cã¸ç§»å‹•(kai9)
+			{162, 154,  8, 3, DISKTYPE_2HD, 0},	//	DCPï¼DCU	01h	2HD- 8ã‚»ã‚¯ã‚¿(1.25MB)
+			{162, 160, 15, 2, DISKTYPE_2HD, 0},	//	DCPï¼DCU	02h	2HD-15ã‚»ã‚¯ã‚¿(1.21MB)
+			{162, 160, 18, 2, DISKTYPE_2HD, 1},	//	DCPï¼DCU	03h	2HQ-18ã‚»ã‚¯ã‚¿(1.44MB)
+			{162, 160,  8, 2, DISKTYPE_2DD, 0},	//	DCPï¼DCU	04h	2DD- 8ã‚»ã‚¯ã‚¿( 640KB)
+			{162, 160,  9, 2, DISKTYPE_2DD, 0},	//	DCPï¼DCU	05h	2DD- 9ã‚»ã‚¯ã‚¿( 720KB)
+			{162, 154,  9, 3, DISKTYPE_2HD, 0},	//	DCPï¼DCU	08h	2HD- 9ã‚»ã‚¯ã‚¿(1.44MB)
+//			{162, 154, 26, 1, DISKTYPE_2HD, 0},	//	DCPï¼DCU	11h	BASIC-2HD
+			{162, 160, 16, 1, DISKTYPE_2DD, 0},	//	DCPï¼DCU	19h	BASIC-2DD
+			{162, 154, 26, 1, DISKTYPE_2HD, 0},	//	DCPï¼DCU	21h	2HD-26ã‚»ã‚¯ã‚¿
 #endif
 			//
 };
 
-//	FDIƒwƒbƒ_
+//	FDIãƒ˜ãƒƒãƒ€
 typedef struct {
 	UINT8	dummy[4];
 	UINT8	fddtype[4];
@@ -79,31 +79,40 @@ const _XDFINFO	*xdf;
 	FILEH		fh;
 	UINT32		fdsize;
 	UINT		size;
-const OEMCHAR	*p;			//	BKDSK(DD6) or BKDSK(DDB)”»’è—p
+const OEMCHAR	*p;			//	BKDSK(DD6) or BKDSK(DDB)åˆ¤å®šç”¨
 
 	attr = file_attr(fname);
 	if (attr & 0x18) {
 		return(FAILURE);
 	}
-	fh = file_open(fname);
+	if(!ro) {
+		if(attr & FILEATTR_READONLY) {
+			ro = 1;
+		}
+	}
+	if(ro) {
+		fh = file_open_rb(fname);
+	} else {
+		fh = file_open(fname);
+	}
 	if (fh == FILEH_INVALID) {
 		return(FAILURE);
 	}
-	fdsize = file_getsize(fh);
+	fdsize = (UINT32)file_getsize(fh);
 	file_close(fh);
 
-	p = file_getext(fname);	//	BKDSK(DD6) or BKDSK(DDB)”»’è—p
+	p = file_getext(fname);	//	BKDSK(DD6) or BKDSK(DDB)åˆ¤å®šç”¨
 
 	xdf = supportxdf;
 	while(xdf < (supportxdf + NELEMENTS(supportxdf))) {
 		size = xdf->tracks;
 		size *= xdf->sectors;
 		size <<= (7 + xdf->n);
-		//	ƒwƒbƒ_ƒTƒCƒY‚ğl—¶‚·‚é‚æ‚¤‚É
+		//	ãƒ˜ãƒƒãƒ€ã‚µã‚¤ã‚ºã‚’è€ƒæ…®ã™ã‚‹ã‚ˆã†ã«
 		size += xdf->headersize;
 		//
 		if (size == fdsize) {
-			//	BKDSK(DD6)‚ÆBKDSK(DDB)‚ª“¯ˆêƒTƒCƒY‚Ì‚½‚ßAŠg’£q‚Å”»’è
+			//	BKDSK(DD6)ã¨BKDSK(DDB)ãŒåŒä¸€ã‚µã‚¤ã‚ºã®ãŸã‚ã€æ‹¡å¼µå­ã§åˆ¤å®š
 			if (!milstr_cmp(p, str_ddb) && xdf->sectors == 8) {
 				xdf++;
 				continue;
@@ -112,7 +121,7 @@ const OEMCHAR	*p;			//	BKDSK(DD6) or BKDSK(DDB)”»’è—p
 			fdd->type = DISKTYPE_BETA;
 			fdd->protect = ((attr & 1) || (ro))?TRUE:FALSE;
 			fdd->inf.xdf = *xdf;
-			//	ˆ—ŠÖ”ŒQ‚ğ“o˜^(kai9)
+			//	å‡¦ç†é–¢æ•°ç¾¤ã‚’ç™»éŒ²(kai9)
 			fdd_fn->eject		= fdd_eject_xxx;
 //			fdd_fn->diskaccess	= fdd_diskaccess_xdf;
 //			fdd_fn->seek		= fdd_seek_xdf;
@@ -136,7 +145,7 @@ const OEMCHAR	*p;			//	BKDSK(DD6) or BKDSK(DDB)”»’è—p
 	return(FAILURE);
 }
 
-// ‚±‚Á‚»‚è‘Î‰‚µ‚½‚è‚µ‚Ä
+// ã“ã£ãã‚Šå¯¾å¿œã—ãŸã‚Šã—ã¦
 //BRESULT fddxdf_setfdi(FDDFILE fdd, const OEMCHAR *fname, int ro) {
 BRESULT fdd_set_fdi(FDDFILE fdd, FDDFUNC fdd_fn, const OEMCHAR *fname, int ro) {
 
@@ -161,9 +170,18 @@ BRESULT fdd_set_fdi(FDDFILE fdd, FDDFUNC fdd_fn, const OEMCHAR *fname, int ro) {
 	}
 	fdsize = 0;
 	r = 0;
-	fh = file_open_rb(fname);
+	if(!ro) {
+		if(attr & FILEATTR_READONLY) {
+			ro = 1;
+		}
+	}
+	if(ro) {
+		fh = file_open_rb(fname);
+	} else {
+		fh = file_open(fname);
+	}
 	if (fh != FILEH_INVALID) {
-		fdsize = file_getsize(fh);
+		fdsize = (UINT32)file_getsize(fh);
 		r = file_read(fh, &fdi, sizeof(fdi));
 		file_close(fh);
 	}
@@ -224,7 +242,7 @@ BRESULT fdd_set_fdi(FDDFILE fdd, FDDFUNC fdd_fn, const OEMCHAR *fname, int ro) {
 	fdd->inf.xdf.n = n;
 	fdd->inf.xdf.disktype = disktype;
 	fdd->inf.xdf.rpm = rpm;
-	//	ˆ—ŠÖ”ŒQ‚ğ“o˜^(kai9)
+	//	å‡¦ç†é–¢æ•°ç¾¤ã‚’ç™»éŒ²(kai9)
 	fdd_fn->eject		= fdd_eject_xxx;
 	fdd_fn->diskaccess	= fdd_diskaccess_common;
 	fdd_fn->seek		= fdd_seek_common;
@@ -240,7 +258,7 @@ BRESULT fdd_set_fdi(FDDFILE fdd, FDDFUNC fdd_fn, const OEMCHAR *fname, int ro) {
 	return(SUCCESS);
 }
 
-#if 0	//	‹¤’ÊŠÖ”‰»‚µ‚½‚Ì‚Å”p~(fddfile.c‚Ö)(kai9)
+#if 0	//	å…±é€šé–¢æ•°åŒ–ã—ãŸã®ã§å»ƒæ­¢(fddfile.cã¸)(kai9)
 //BRESULT fddxdf_eject(FDDFILE fdd) {
 BRESULT fdd_eject_xdf(FDDFILE fdd) {
 
@@ -309,12 +327,12 @@ BRESULT fdd_read_xdf(FDDFILE fdd) {
 		fddlasterror = 0xc0;
 		return(FAILURE);
 	}
-	/* 170101 ST modified to work on Windows 9x/2000 form ... */
-	if (fdc.eot > fdd->inf.xdf.sectors) {
-		fddlasterror = 0xc0;
-		return(FAILURE);
-	}
-	/* 170101 ST modified to work on Windows 9x/2000 ... to */
+//	/* 170101 ST modified to work on Windows 9x/2000 form ... */
+//	if (fdc.eot < fdd->inf.xdf.sectors) {
+//		fddlasterror = 0xc0;
+//		return(FAILURE);
+//	}
+//	/* 170101 ST modified to work on Windows 9x/2000 ... to */
 
 	seekp = (fdc.treg[fdc.us] << 1) + fdc.hd;
 	seekp *= fdd->inf.xdf.sectors;
@@ -393,9 +411,9 @@ BRESULT fdd_write_xdf(FDDFILE fdd) {
 }
 
 /* 170107 modified to work on Windows 9x/2000 form ... */
-/* À‘••â‘« æ“ª‚©‚ç‚ÌƒIƒtƒZƒbƒg’l‚Í’Pƒ‚Éƒgƒ‰ƒbƒN”‚˜1ƒgƒ‰ƒbƒN“–‚½‚è‚ÌƒZƒNƒ^”‚˜ƒZƒNƒ^ƒTƒCƒY
-   ‚Ås‚Á‚Ä‚¢‚é‚½‚ßAƒgƒ‰ƒbƒN‚²‚Æ‚ÉˆÙ‚È‚éƒZƒNƒ^\‘¢‚ğ‚ÂƒtƒH[ƒ}ƒbƒg‚É‚Í‘Î‰‚Å‚«‚Ü‚¹‚ñ 
-   Œ³Xƒtƒ@ƒCƒ‹‚Ìƒf[ƒ^\‘¢“I‚ÉƒTƒ|[ƒg‚Å‚«‚Ü‚¹‚ñ */
+/* å®Ÿè£…è£œè¶³ å…ˆé ­ã‹ã‚‰ã®ã‚ªãƒ•ã‚»ãƒƒãƒˆå€¤ã¯å˜ç´”ã«ãƒˆãƒ©ãƒƒã‚¯æ•°ï½˜1ãƒˆãƒ©ãƒƒã‚¯å½“ãŸã‚Šã®ã‚»ã‚¯ã‚¿æ•°ï½˜ã‚»ã‚¯ã‚¿ã‚µã‚¤ã‚º
+   ã§è¡Œã£ã¦ã„ã‚‹ãŸã‚ã€ãƒˆãƒ©ãƒƒã‚¯ã”ã¨ã«ç•°ãªã‚‹ã‚»ã‚¯ã‚¿æ§‹é€ ã‚’æŒã¤ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆã«ã¯å¯¾å¿œã§ãã¾ã›ã‚“ 
+   å…ƒã€…ãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒ‡ãƒ¼ã‚¿æ§‹é€ çš„ã«ã‚µãƒãƒ¼ãƒˆã§ãã¾ã›ã‚“ */
 BRESULT fdd_formatinit_xdf(FDDFILE fdd) {
 	FILEH	hdl;
 	FDIHDR	fdi;
@@ -484,7 +502,7 @@ BRESULT fdd_formatinit_xdf(FDDFILE fdd) {
 }
 /* 170107 modified to work on Windows 9x/2000 ... to */
 
-#if 0	//	‹¤’ÊŠÖ”‰»‚µ‚½‚Ì‚Å”p~(fddfile.c‚Ö)(kai9)
+#if 0	//	å…±é€šé–¢æ•°åŒ–ã—ãŸã®ã§å»ƒæ­¢(fddfile.cã¸)(kai9)
 //BRESULT fddxdf_readid(FDDFILE fdd) {
 BRESULT fdd_readid_xdf(FDDFILE fdd) {
 
@@ -547,7 +565,16 @@ const _XDFINFO	*xdf;
 	if (attr & 0x18) {
 		return(FAILURE);
 	}
-	fh = file_open(fname);
+	if(!ro) {
+		if(attr & FILEATTR_READONLY) {
+			ro = 1;
+		}
+	}
+	if(ro) {
+		fh = file_open_rb(fname);
+	} else {
+		fh = file_open(fname);
+	}
 	if (fh == FILEH_INVALID) {
 		return(FAILURE);
 	}
@@ -570,7 +597,7 @@ const _XDFINFO	*xdf;
 	return(FAILURE);
 }
 
-// ‚±‚Á‚»‚è‘Î‰‚µ‚½‚è‚µ‚Ä
+// ã“ã£ãã‚Šå¯¾å¿œã—ãŸã‚Šã—ã¦
 BRESULT fddxdf_setfdi(FDDFILE fdd, const OEMCHAR *fname, int ro) {
 
 	short	attr;
@@ -594,7 +621,16 @@ BRESULT fddxdf_setfdi(FDDFILE fdd, const OEMCHAR *fname, int ro) {
 	}
 	fdsize = 0;
 	r = 0;
-	fh = file_open_rb(fname);
+	if(!ro) {
+		if(attr & FILEATTR_READONLY) {
+			ro = 1;
+		}
+	}
+	if(ro) {
+		fh = file_open_rb(fname);
+	} else {
+		fh = file_open(fname);
+	}
 	if (fh != FILEH_INVALID) {
 		fdsize = file_getsize(fh);
 		r = file_read(fh, &fdi, sizeof(fdi));

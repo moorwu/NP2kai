@@ -6,18 +6,20 @@
 #include	"keystat.h"
 
 
-// �}�E�X ver0.28
-// �ꕔ�̃Q�[���Ń}�E�X�f�[�^��؂�̂Ă�̂Ő���ȓ����Ȃ��Ȃ鎖������
-// ������~���ׂ� �ϓ��Ɉړ��f�[�^���`���悤�ɂ��Ȃ���΂Ȃ�Ȃ�
+// マウス ver0.28
+// 一部のゲームでマウスデータを切り捨てるので正常な動かなくなる事がある
+// それを救う為に 均等に移動データが伝わるようにしなければならない
+
+static int mouseif_limitcounter = 0;
 
 
 void mouseif_sync(void) {
 
-	// �O��̕���␳
+	// 前回の分を補正
 	mouseif.x += mouseif.rx;
 	mouseif.y += mouseif.ry;
 
-	// ����̈ړ��ʂ��擾
+	// 今回の移動量を取得
 	mouseif.b = mousemng_getstat(&mouseif.sx, &mouseif.sy, 1);
 	if (np2cfg.KEY_MODE == 3) {
 		mouseif.b &= keystat_getmouse(&mouseif.sx, &mouseif.sy);
@@ -120,6 +122,7 @@ static void setportc(REG8 value) {
 		mouseif.x = 0;
 		mouseif.latch_y = mouseif.y;
 		mouseif.y = 0;
+		mouseif_limitcounter = 4; // XXX: カウンタがオーバーフローしてマウスカーソルが暴走するのを回避。ただし、オーバーフロー前提の物があるのでオーバーフローしっぱなしならそのままの値を渡す。
 		if (mouseif.latch_x > 127) {
 			mouseif.latch_x = 127;
 		}
@@ -136,8 +139,8 @@ static void setportc(REG8 value) {
 	if ((value ^ mouseif.upd8255.portc) & 0x10) {
 		if (!(value & 0x10)) {
 			if (!nevent_iswork(NEVENT_MOUSE)) {
-				// ���荞�݂����Ƃ�
-				pic_setirq(0x0d);
+				// 割り込みを入れとく → 割り込みはやめとく ver0.86 rev51
+				//pic_setirq(0x0d);
 				nevent_set(NEVENT_MOUSE, mouseif.intrclock << mouseif.timing,
 												mouseint, NEVENT_ABSOLUTE);
 			}
@@ -222,6 +225,13 @@ static REG8 IOINPCALL mouseif_i7fd9(UINT port) {
 		if (portc & 0x40) {
 			x = y;
 		}
+		if (mouseif_limitcounter > 0) {
+			if(x < -128) 
+				x = -128;
+			if(x > +127) 
+				x = +127;
+			mouseif_limitcounter--;
+		}
 		if (!(portc & 0x20)) {
 			ret |= x & 0x0f;
 		}
@@ -283,11 +293,11 @@ void mouseif_reset(const NP2CFG *pConfig) {
 	mouseif.upd8255.portb = 0x00;
 	mouseif.upd8255.portc = 0xf0;									// ver0.82
 	mouseif.upd8255.mode = 0x93;
-	mouseif.intrclock = pccore.realclock / 120;
-	mouseif.moveclock = pccore.realclock / 56400;
+	mouseif_changeclock();
 	mouseif.latch_x = -1;
 	mouseif.latch_y = -1;
-
+	
+	//mouseif.timing = 2;
 	(void)pConfig;
 }
 
@@ -301,5 +311,11 @@ void mouseif_bind(void) {
 	iocore_attachinp(0x7fdb, mouseif_i7fdb);
 	iocore_attachinp(0x7fdd, mouseif_i7fdd);
 	iocore_attachout(0xbfdb, mouseif_obfdb);
+}
+
+void mouseif_changeclock(void) {
+	
+	mouseif.intrclock = pccore.realclock / 120;
+	mouseif.moveclock = pccore.realclock / 56400;
 }
 

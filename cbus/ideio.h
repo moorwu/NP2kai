@@ -44,9 +44,9 @@ typedef struct {
 	UINT8	sk;		// sense key
 	UINT16	asc;	// additional sense code (LSB) & qualifer (MSB)
 
-	UINT32	sector;		// アクセスセクタ (LBA)
-	UINT32	nsectors;	// 総セクタ数
-	UINT16	secsize;	// セクタサイズ
+	UINT32	sector;		// 繧｢繧ｯ繧ｻ繧ｹ繧ｻ繧ｯ繧ｿ (LBA)
+	UINT32	nsectors;	// 邱上そ繧ｯ繧ｿ謨ｰ
+	UINT16	secsize;	// 繧ｻ繧ｯ繧ｿ繧ｵ繧､繧ｺ
 	UINT16	dmy;
 
 	// buffer management
@@ -112,6 +112,7 @@ enum {
 	IDEERR_UNC			= 0x40,
 	IDEERR_MCNG			= 0x20,
 	IDEERR_IDNF			= 0x10,
+	IDEERR_MCRQ			= 0x08,
 	IDEERR_ABRT			= 0x04,
 	IDEERR_TR0			= 0x02,
 	IDEERR_AMNF			= 0x01
@@ -185,11 +186,17 @@ REG16 IOINPCALL ideio_r16(UINT port);
 void IOOUTCALL ideio_w32(UINT port, UINT32 value);
 UINT32 IOINPCALL ideio_r32(UINT port);
 
+void ideio_initialize(void);
+void ideio_deinitialize(void);
+void ideio_basereset();
 void ideio_reset(const NP2CFG *pConfig);
+void ideio_bindCDDA(void);
 void ideio_bind(void);
 void ideio_notify(REG8 sxsidrv, UINT action);
 void ideioint(NEVENTITEM item);
 void ideio_mediachange(REG8 sxsidrv);
+
+void ideio_setcursec(FILEPOS pos);
 
 #ifdef __cplusplus
 }

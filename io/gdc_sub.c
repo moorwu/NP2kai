@@ -209,6 +209,15 @@ void gdcsub_vect0(UINT32 csrw, const GDCVECT *vect, REG16 pat, REG8 ope) {
 	(void)ope;
 }
 
+void gdcsub_vectp(UINT32 csrw, const GDCVECT *vect, REG16 pat, REG8 ope) {
+
+	_GDCPSET	pset;
+
+	gdcpset_prepare(&pset, csrw, pat, ope);
+	gdcpset(&pset, pset.x, pset.y);
+	calc_gdcslavewait(pset.dots);
+}
+
 void gdcsub_vectl(UINT32 csrw, const GDCVECT *vect, REG16 pat, REG8 ope) {
 
 	_GDCPSET	pset;
@@ -501,7 +510,7 @@ const VECTDIR	*dir;
 	sx = LOADINTELWORD(vect->D);
 	sx = ((sx - 1) & 0x3fff) + 1;
 
-	// ‚Ä‚«‚Æ[‚ÉƒŠƒ~ƒbƒg
+	// ã¦ãã¨ãƒ¼ã«ãƒªãƒŸãƒƒãƒˆ
 	if (sx >= 768) {
 		sx = 768;
 	}
@@ -608,7 +617,7 @@ void gdcsub_write(void) {
 			return;
 	}
 #endif
-#if 0									// ‚±‚ê‚Á‚Ä uPD7220‚Å‚à—LŒøH
+#if 0									// ã“ã‚Œã£ã¦ uPD7220ã§ã‚‚æœ‰åŠ¹ï¼Ÿ
 	if (data != 0xffff) {
 		data = 0;
 	}

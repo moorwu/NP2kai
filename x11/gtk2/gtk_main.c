@@ -42,7 +42,7 @@
 #include "gtk2/gtk_keyboard.h"
 #include "gtk2/gtk_menu.h"
 
-#include "resources/np2.xbm"
+#include "resources/np2.xpm"
 
 
 #define	APPNAME		"NP2"
@@ -210,12 +210,15 @@ main_loop_quit(gpointer p)
 static void
 set_icon_bitmap(GtkWidget *w)
 {
-	GdkPixmap *icon_pixmap;
+	GdkPixbuf *icon_pixbuf;
+	GList *pixbufs = NULL;
 
 	gdk_window_set_icon_name(w->window, APPNAME);
-	icon_pixmap = gdk_bitmap_create_from_data(
-	    w->window, np2_bits, np2_width, np2_height);
-	gdk_window_set_icon(w->window, NULL, icon_pixmap, NULL);
+	icon_pixbuf = gdk_pixbuf_new_from_xpm_data(np2_icon);
+	pixbufs = g_list_append(pixbufs, icon_pixbuf);
+	gdk_window_set_icon_list(w->window, pixbufs);
+	g_object_unref(icon_pixbuf);
+	g_list_free(pixbufs);
 }
 
 
@@ -253,20 +256,29 @@ BRESULT
 gui_gtk_arginit(int *argcp, char ***argvp)
 {
 	char buf[MAX_PATH];
-	char *homeenv;
 
 	gtk_set_locale();
 	gtk_init(argcp, argvp);
 
-	homeenv = getenv("HOME");
-	if (homeenv) {
-		g_snprintf(buf, sizeof(buf), "%s/.config/xnp2kai/gtkrc", homeenv);
-		gtk_rc_add_default_file(buf);
-
-		g_snprintf(buf, sizeof(buf), "%s/.config/xnp2kai/accels", homeenv);
-		if (g_file_test(buf, G_FILE_TEST_IS_REGULAR))
-			gtk_accel_map_load(buf);
+	char *config_home = getenv("XDG_CONFIG_HOME");
+	char *home = getenv("HOME");
+	if (config_home && config_home[0] == '/') {
+		/* base dir */
+		g_snprintf(buf, sizeof(buf), "%s/xnp2kai/", config_home);
+	} else if (home) {
+		/* base dir */
+		g_snprintf(buf, sizeof(buf), "%s/.config/xnp2kai/", home);
+	} else {
+		g_printerr("$HOME isn't defined.\n");
+		exit(1);
 	}
+
+	g_strlcat(buf, "gtkrc", sizeof(buf));
+	gtk_rc_add_default_file(buf);
+
+	g_strlcat(buf, "accels", sizeof(buf));
+	if (g_file_test(buf, G_FILE_TEST_IS_REGULAR))
+		gtk_accel_map_load(buf);
 
 	return SUCCESS;
 }

@@ -3,9 +3,20 @@
 #if 1
 #undef	TRACEOUT
 #define	TRACEOUT(s)	(void)(s)
+//static void trace_fmt_ex(const char *fmt, ...)
+//{
+//	char stmp[2048];
+//	va_list ap;
+//	va_start(ap, fmt);
+//	vsprintf(stmp, fmt, ap);
+//	strcat(stmp, "¬•n");
+//	va_end(ap);
+//	OutputDebugStringA(stmp);
+//}
+//#define	TRACEOUT(s)	trace_fmt_ex s
 #endif	/* 1 */
 
-// winÇ≈identifyÇ‹Ç≈ÇÕéÊìæÇ…çsÇ≠ÇÒÇæÇØÇ«Ç»ÅcÇ¡ÇƒAnex86Ç‡ìØÇ∂Ç©
+// win„Åßidentify„Åæ„Åß„ÅØÂèñÂæó„Å´Ë°å„Åè„Çì„Å†„Åë„Å©„Å™‚Ä¶„Å£„Å¶Anex86„ÇÇÂêå„Åò„Åã
 
 #if defined(SUPPORT_IDEIO)
 
@@ -22,11 +33,7 @@
 #include	"fmboard.h"
 #include	"cs4231io.h"
 
-
 	IDEIO	ideio;
-	//
-	//UINT8   ideio_mediastatusnotification[4] = {0};
-	//UINT8   ideio_mediachangeflag[4] = {0};
 
 static IDEDEV getidedev(void) {
 
@@ -78,7 +85,7 @@ static BRESULT setidentify(IDEDRV drv) {
 	}
 
 	ZeroMemory(tmp, sizeof(tmp));
-	// Ç∆ÇËÇ†Ç¶Ç∏égÇ¡ÇƒÇÈïîï™ÇæÇØ
+	// „Å®„Çä„ÅÇ„Åà„Åö‰Ωø„Å£„Å¶„ÇãÈÉ®ÂàÜ„Å†„Åë
 	if (drv->device == IDETYPE_HDD) {
 		tmp[0] = 0x0040;		// non removable device
 		tmp[1] = sxsi->cylinders;
@@ -88,7 +95,7 @@ static BRESULT setidentify(IDEDRV drv) {
 		for (i=0; i<10; i++) {
 			tmp[10+i] = (serial[i*2] << 8) + serial[i*2+1];
 		}
-		tmp[10+2] = '0'+drv->sxsidrv; // ÉVÉäÉAÉãî‘çÜÇÕÉÜÉjÅ[ÉNÇ…ÇµÇƒÇ®Ç©Ç»Ç¢Ç∆ë ñ⁄Ç¡Ç€Ç¢
+		tmp[10+2] = '0'+drv->sxsidrv; // „Ç∑„É™„Ç¢„É´Áï™Âè∑„ÅØ„É¶„Éã„Éº„ÇØ„Å´„Åó„Å¶„Åä„Åã„Å™„ÅÑ„Å®ÈßÑÁõÆ„Å£„ÅΩ„ÅÑ
 		tmp[22] = 4;
 		for (i=0; i<4; i++) {
 			tmp[23+i] = (firm[i*2] << 8) + firm[i*2+1];
@@ -125,7 +132,7 @@ static BRESULT setidentify(IDEDRV drv) {
 		for (i=0; i<10; i++) {
 			tmp[10+i] = (cdrom_serial[i*2] << 8) + cdrom_serial[i*2+1];
 		}
-		tmp[10+2] = '0'+drv->sxsidrv; // ÉVÉäÉAÉãî‘çÜÇÕÉÜÉjÅ[ÉNÇ…ÇµÇƒÇ®Ç©Ç»Ç¢Ç∆ë ñ⁄Ç¡Ç€Ç¢
+		tmp[10+2] = '0'+drv->sxsidrv; // „Ç∑„É™„Ç¢„É´Áï™Âè∑„ÅØ„É¶„Éã„Éº„ÇØ„Å´„Åó„Å¶„Åä„Åã„Å™„ÅÑ„Å®ÈßÑÁõÆ„Å£„ÅΩ„ÅÑ
 		for (i=0; i<4; i++) {
 			tmp[23+i] = (cdrom_firm[i*2] << 8) + cdrom_firm[i*2+1];
 		}
@@ -136,7 +143,7 @@ static BRESULT setidentify(IDEDRV drv) {
 		tmp[53] = 0x0001;
 		tmp[63] = 0x0000;		// no support multiword DMA
 		tmp[80] = 0x003e;		// support ATA-1 to 5
-		tmp[82] = 0x0210;		// support PACKET/DEVICE RESET
+		tmp[82] = 0x0214;		// support PACKET/DEVICE RESET
 		tmp[126] = 0x0000;		// ATAPI byte count
 	}
 	if (drv->sxsidrv & 0x1){
@@ -170,28 +177,13 @@ static void setintr(IDEDRV drv) {
 	}
 }
 
-// íxâÑïtÇ´äÑÇËçûÇ›
-static void setdintr(IDEDRV drv, UINT8 errno, UINT8 status, UINT32 delay) {
-
-	if (!(drv->ctrl & IDECTRL_NIEN)) {
-		//drv->status |= IDESTAT_BSY;
-		ideio.bank[0] = ideio.bank[1] | 0x80;           // ????
-		TRACEOUT(("ideio: reg setdintr()"));
-
-		//// éwíËÇµÇΩéûä‘íxâÑÅiÉ}ÉCÉNÉçïbÅj
-		//nevent_set(NEVENT_SASIIO, (pccore.realclock / 1000 / 1000) * delay, ideioint, NEVENT_ABSOLUTE);
-
-		// éwíËÇµÇΩéûä‘íxâÑÅiÉNÉçÉbÉNêîÅj
-		nevent_set(NEVENT_SASIIO, delay, ideioint, NEVENT_ABSOLUTE);
-	}
-}
-
+// Ââ≤„ÇäËæº„ÅøÂæå„Å´BSY„ÇíËß£Èô§„Åó„ÄÅDRQ„Çí„Çª„ÉÉ„Éà„Åô„ÇãÔºà„Ç≥„Éû„É≥„ÉâÁ∂ôÁ∂ö‰∏≠„Å™„Å©Ôºâ
 void ideioint(NEVENTITEM item) {
 	
 	IDEDRV	drv;
 	IDEDEV  dev;
 
-	//ÉhÉâÉCÉuÇ™Ç†ÇÈÇ©
+	//„Éâ„É©„Ç§„Éñ„Åå„ÅÇ„Çã„Åã
 	dev = getidedev();
 	if (dev == NULL) {
 		return;
@@ -202,15 +194,17 @@ void ideioint(NEVENTITEM item) {
 		return;
 	}
 
-	//BUSYâèú
+	//BUSYËß£Èô§
 	if(dev->drv[0].status != 0xFF){
+		dev->drv[0].status |= IDESTAT_DRQ;
 		dev->drv[0].status &= ~IDESTAT_BSY;
 	}
 	if(dev->drv[1].status != 0xFF){
+		dev->drv[1].status |= IDESTAT_DRQ;
 		dev->drv[1].status &= ~IDESTAT_BSY;
 	}
 
-	//äÑÇËçûÇ›é¿çs//(äÑÇËçûÇ›ÇÕÉhÉâÉCÉuñàÇ…ÇÕéwíËÇ≈Ç´Ç»Ç¢édól)
+	//Ââ≤„ÇäËæº„ÅøÂÆüË°å//(Ââ≤„ÇäËæº„Åø„ÅØ„Éâ„É©„Ç§„ÉñÊØé„Å´„ÅØÊåáÂÆö„Åß„Åç„Å™„ÅÑ‰ªïÊßò)
 	if(!(dev->drv[0].ctrl & IDECTRL_NIEN) || !(dev->drv[1].ctrl & IDECTRL_NIEN)){
 		TRACEOUT(("ideio: run setdintr()"));
 		pic_setirq(IDE_IRQ);
@@ -218,6 +212,72 @@ void ideioint(NEVENTITEM item) {
 	}
    (void)item;
 }
+// Ââ≤„ÇäËæº„ÅøÂæå„Å´BSY„ÇíËß£Èô§„Åó„ÄÅDRQ„ÇÇËß£Èô§„Åô„ÇãÔºà„Ç≥„Éû„É≥„ÉâÁµÇ‰∫ÜÊôÇ„Å™„Å©Ôºâ
+void ideioint2(NEVENTITEM item) {
+	
+	IDEDRV	drv;
+	IDEDEV  dev;
+
+	//„Éâ„É©„Ç§„Éñ„Åå„ÅÇ„Çã„Åã
+	dev = getidedev();
+	if (dev == NULL) {
+		return;
+	}
+
+	drv = getidedrv();
+	if (drv == NULL) {
+		return;
+	}
+
+	//BUSYËß£Èô§
+	if(dev->drv[0].status != 0xFF){
+		dev->drv[0].status &= ~IDESTAT_DRQ;
+		dev->drv[0].status &= ~IDESTAT_BSY;
+	}
+	if(dev->drv[1].status != 0xFF){
+		dev->drv[1].status &= ~IDESTAT_DRQ;
+		dev->drv[1].status &= ~IDESTAT_BSY;
+	}
+
+	//Ââ≤„ÇäËæº„ÅøÂÆüË°å//(Ââ≤„ÇäËæº„Åø„ÅØ„Éâ„É©„Ç§„ÉñÊØé„Å´„ÅØÊåáÂÆö„Åß„Åç„Å™„ÅÑ‰ªïÊßò)
+	if(!(dev->drv[0].ctrl & IDECTRL_NIEN) || !(dev->drv[1].ctrl & IDECTRL_NIEN)){
+		TRACEOUT(("ideio: run setdintr()"));
+		pic_setirq(IDE_IRQ);
+		//mem[MEMB_DISK_INTH] |= 0x01; 
+	}
+   (void)item;
+}
+
+// ÈÅÖÂª∂‰ªò„ÅçÂâ≤„ÇäËæº„Åø
+static void setdintr(IDEDRV drv, UINT8 errno, UINT8 status, UINT32 delay) {
+
+	if (!(drv->ctrl & IDECTRL_NIEN)) {
+		//drv->status |= IDESTAT_BSY;
+		ideio.bank[0] = ideio.bank[1] | 0x80;           // ????
+		TRACEOUT(("ideio: reg setdintr()"));
+
+		//// ÊåáÂÆö„Åó„ÅüÊôÇÈñìÈÅÖÂª∂Ôºà„Éû„Ç§„ÇØ„É≠ÁßíÔºâ
+		//nevent_set(NEVENT_SASIIO, (pccore.realclock / 1000 / 1000) * delay, ideioint, NEVENT_ABSOLUTE);
+
+		// ÊåáÂÆö„Åó„ÅüÊôÇÈñìÈÅÖÂª∂Ôºà„ÇØ„É≠„ÉÉ„ÇØÊï∞Ôºâ
+		nevent_set(NEVENT_SASIIO, delay, ideioint, NEVENT_ABSOLUTE);
+	}
+}
+static void setdintr2(IDEDRV drv, UINT8 errno, UINT8 status, UINT32 delay) {
+
+	if (!(drv->ctrl & IDECTRL_NIEN)) {
+		//drv->status |= IDESTAT_BSY;
+		ideio.bank[0] = ideio.bank[1] | 0x80;           // ????
+		TRACEOUT(("ideio: reg setdintr()"));
+
+		//// ÊåáÂÆö„Åó„ÅüÊôÇÈñìÈÅÖÂª∂Ôºà„Éû„Ç§„ÇØ„É≠ÁßíÔºâ
+		//nevent_set(NEVENT_SASIIO, (pccore.realclock / 1000 / 1000) * delay, ideioint, NEVENT_ABSOLUTE);
+
+		// ÊåáÂÆö„Åó„ÅüÊôÇÈñìÈÅÖÂª∂Ôºà„ÇØ„É≠„ÉÉ„ÇØÊï∞Ôºâ
+		nevent_set(NEVENT_SASIIO, delay, ideioint2, NEVENT_ABSOLUTE);
+	}
+}
+
 
 static void cmdabort(IDEDRV drv) {
 
@@ -290,6 +350,24 @@ static void incsec(IDEDRV drv) {
 	}
 }
 
+void ideio_setcursec(FILEPOS pos) {
+	IDEDRV drv;
+	drv = getidedrv();
+	if (drv) {
+		if (!(drv->dr & IDEDEV_LBA)) {
+			drv->sn = (pos % drv->sectors) + 1;
+			pos /= drv->sectors;
+			drv->hd = (pos % drv->surfaces);
+			pos /= drv->surfaces;
+			drv->cy = pos & 0xffff;
+		}
+		else {
+			drv->sn = (pos & 0xff);
+			drv->cy = ((pos >> 8) & 0xffff);
+			drv->hd = ((pos >> 24) & 0xff);
+		}
+	}
+}
 static FILEPOS getcursec(const IDEDRV drv) {
 
 	FILEPOS	ret;
@@ -327,14 +405,14 @@ static void readsec(IDEDRV drv) {
 	drv->buftc = IDETC_TRANSFEREND;
 	drv->bufpos = 0;
 	drv->bufsize = 512;
-
+	// READ„ÅØI/O„Éù„Éº„Éà„ÅßË™≠„ÅøÂèñ„Çã„Éá„Éº„Çø„ÅåÊ∫ñÂÇô„Åß„Åç„Åü„ÇâÂâ≤„ÇäËæº„Åø
 	if ((drv->mulcnt & (drv->multhr - 1)) == 0) {
 		drv->status = IDESTAT_DRDY | IDESTAT_DSC | IDESTAT_DRQ;
 		drv->error = 0;
 		if(ideio.rwait > 0){
 			drv->status |= IDESTAT_BSY;
+			drv->status &= ~IDESTAT_DRQ;
 			setdintr(drv, 0, 0, ideio.rwait);
-			//mem[MEMB_DISK_INTH] &= ~0x01; 
 		}else{
 			setintr(drv);
 		}
@@ -366,6 +444,7 @@ static void writeinit(IDEDRV drv) {
 write_err:
 	cmdabort(drv);
 }
+
 static void writesec(IDEDRV drv) {
 
 	if (drv->device == IDETYPE_NONE) {
@@ -376,18 +455,21 @@ static void writesec(IDEDRV drv) {
 	drv->buftc = IDETC_TRANSFEREND;
 	drv->bufpos = 0;
 	drv->bufsize = 512;
-
+	
+	// WRITE„ÅØ„Éá„Éº„ÇøÊõ∏„ÅçËæº„Åø„ÅåÂÆå‰∫Ü„Åó„Åü„ÇâÂâ≤„ÇäËæº„Åø
 	if ((drv->mulcnt & (drv->multhr - 1)) == 0) {
 		drv->status = IDESTAT_DRDY | IDESTAT_DSC | IDESTAT_DRQ;
 		drv->error = 0;
 		setintr(drv);
-		if((ideio.bios == IDETC_BIOS && ideio.mwait > 0) || ideio.wwait > 0){
-			drv->status |= IDESTAT_BSY;
-			setdintr(drv, 0, 0, ideio.wwait);
-			//mem[MEMB_DISK_INTH] &= ~0x01; 
-		}else{
-			setintr(drv);
-		}
+		//if(ideio.bios == IDETC_BIOS && ideio.wwait > 0){
+		//	drv->status &= ~IDESTAT_DRQ;
+		//	drv->status |= IDESTAT_BSY;
+		//	setdintr(drv, 0, 0, ideio.wwait);
+		//}else{
+		//	setintr(drv);
+		//}
+	}else{
+		drv->status &= ~IDESTAT_BSY;
 	}
 	return;
 
@@ -403,7 +485,10 @@ static void IOOUTCALL ideio_o430(UINT port, REG8 dat) {
 	TRACEOUT(("ideio setbank%d %.2x [%.4x:%.8x]",
 									(port >> 1) & 1, dat, CPU_CS, CPU_EIP));
 	if (!(dat & 0x80)) {
-		ideio.bank[(port >> 1) & 1] = dat;
+		//char buf[100] = {0};
+		ideio.bank[(port >> 1) & 1] = dat & 0x71;
+		//sprintf(buf, "0x%x¬•n", dat);
+		//OutputDebugStringA(buf);
 	}
 }
 
@@ -414,11 +499,58 @@ static REG8 IOINPCALL ideio_i430(UINT port) {
 
 	bank = (port >> 1) & 1;
 	ret = ideio.bank[bank];
+	if ((port >> 1) & 1) {
+		// 432h
+	}
+	else {
+		// 430h
+		IDEDEV	dev;
+		dev = getidedev();
+		//
+		// Win2000„ÅØbit6„Åå1„ÅÆÊôÇ„Çπ„É¨„Éº„Éñ„Éá„Éê„Ç§„Çπ„ÇíË¶ã„Å´Ë°å„Åè
+		//
+		if (dev->drv[1].device != IDETYPE_NONE) {
+			ret |= 0x40;
+		}
+	}
 	ideio.bank[bank] = ret & (~0x80);
 	TRACEOUT(("ideio getbank%d %.2x [%.4x:%.8x]",
 									(port >> 1) & 1, ret, CPU_CS, CPU_EIP));
-	return(ret & 0x01);
+	return(ret & 0x7f);
 }
+
+
+
+// ----
+
+static void IOOUTCALL ideio_o433(UINT port, REG8 dat) {
+
+}
+
+static REG8 IOINPCALL ideio_i433(UINT port) {
+	
+	UINT	bank;
+	REG8	ret;
+	
+	bank = (port >> 1) & 1;
+	ret = (ideio.bank[bank] & 0x1) ? 0x2 : 0x0;
+
+	if(ret == 0x2 && ideio.dev[1].drv[0].device==IDETYPE_NONE && ideio.dev[1].drv[1].device==IDETYPE_NONE){
+		ret = 0;
+	}
+	//OutputDebugStringA("IN 433h¬•n");
+	return(ret);
+}
+
+static void IOOUTCALL ideio_o435(UINT port, REG8 dat) {
+
+}
+
+static REG8 IOINPCALL ideio_i435(UINT port) {
+
+	return(0x00);
+}
+
 
 
 // ----
@@ -730,7 +862,7 @@ static void IOOUTCALL ideio_o64e(UINT port, REG8 dat) {
 
 		case 0xe1:		// idle immediate
 			TRACEOUT(("ideio: idle immediate dr = %.2x", drv->dr));
-			//ïKÇ∏ê¨å˜Ç∑ÇÈÇÕÇ∏
+			//ÂøÖ„ÅöÊàêÂäü„Åô„Çã„ÅØ„Åö
 			if(drv->status & IDESTAT_DRDY){
 				drv->status = IDESTAT_DRDY | IDESTAT_DSC;
 				drv->error = 0;
@@ -1094,15 +1226,11 @@ void IOOUTCALL ideio_w16(UINT port, REG16 value) {
 		drv->bufpos += 2;
 		if (drv->bufpos >= drv->bufsize) {
 			drv->status &= ~IDESTAT_DRQ;
-			if((ideio.bios == IDETC_BIOS && ideio.mwait > 0) || ideio.wwait > 0){
-				//äÑÇËçûÇ›ëOÇ…É|Å[ÉäÉìÉOÇ≥ÇÍÇÈñ‚ëËÇÃëŒçÙ
-				dev->drv[0].status |= IDESTAT_BSY;
-				dev->drv[1].status |= IDESTAT_BSY;
-			}
 			switch(drv->cmd) {
 				case 0x30:
 				case 0x31:
 				case 0xc5:
+					drv->status |= IDESTAT_BSY;
 					sec = getcursec(drv);
 					//TRACEOUT(("writesec->drv %d sec %x cnt %d thr %d",
 					//			drv->sxsidrv, sec, drv->mulcnt, drv->multhr));
@@ -1117,32 +1245,14 @@ void IOOUTCALL ideio_w16(UINT port, REG16 value) {
 					if (drv->sc) {
 						writesec(drv);
 					}else{
-						// 1ÉZÉNÉ^èëÇ´çûÇ›äÆóπ
-						if((ideio.bios == IDETC_BIOS && ideio.mwait > 0) || ideio.wwait > 0){
-							drv->status |= IDESTAT_BSY;
-							setdintr(drv, 0, 0, ideio.rwait);
+						// 1„Çª„ÇØ„ÇøÊõ∏„ÅçËæº„ÅøÂÆå‰∫Ü
+						if(ideio.bios == IDETC_BIOS && ideio.wwait > 0){
+							setdintr2(drv, 0, 0, ideio.wwait);
 						}else{
 							setintr(drv);
+							drv->status &= ~(IDESTAT_BSY);
 						}
 					}
-					//drv->mulcnt++;
-					//drv->sc--;
-					//if (!drv->sc) {
-					//	//ÉJÉEÉìÉgÇ™èIÇÌÇ¡ÇΩÇÁDRQÇè¡Ç∑
-					//	drv->bufpos = 0;
-					//	drv->error = 0;
-					//	if((ideio.bios == IDETC_BIOS && ideio.mwait > 0) || ideio.wwait > 0){
-					//		drv->status |= IDESTAT_BSY;
-					//		setdintr(drv, 0, 0, ideio.wwait);
-					//	}else{
-					//		setintr(drv);
-					//	}
-					//	break;
-					//}
-
-					////éüÉZÉNÉ^èëÇ´çûÇ›èÄîı
-					//incsec(drv);
-					//writesec(drv);
 					break;
 
 				case 0xa0:
@@ -1185,7 +1295,7 @@ REG16 IOINPCALL ideio_r16(UINT port) {
 					if (drv->sc) {
 						readsec(drv);
 					}else{
-						// ì«Ç›éÊÇËèIÇÌÇË
+						// Ë™≠„ÅøÂèñ„ÇäÁµÇ„Çè„Çä
 					}
 					break;
 
@@ -1228,29 +1338,30 @@ const UINT8	*ptr;
 	SINT32	samplen_d;
 static SINT32	sampcount2_n = 0;
 	SINT32	sampcount2_d;
+	UINT	mute = 0;
 
 	samplen_n = soundcfg.rate;
 	samplen_d = 44100;
 	//if(samplen_n > samplen_d){
-	//	// XXX: ÉTÉìÉvÉäÉìÉOÉåÅ[ÉgÇ™ëÂÇ´Ç¢èÍçáÇÃÉIÅ[ÉoÅ[ÉtÉçÅ[ëŒçÙ•••
+	//	// XXX: „Çµ„É≥„Éó„É™„É≥„Ç∞„É¨„Éº„Éà„ÅåÂ§ß„Åç„ÅÑÂ†¥Âêà„ÅÆ„Ç™„Éº„Éê„Éº„Éï„É≠„ÉºÂØæÁ≠ñÔΩ•ÔΩ•ÔΩ•
 	//	samplen_n /= 100;
 	//	samplen_d /= 100;
 	//}
-	//if(g_nSoundID == SOUNDID_PC_9801_118 || g_nSoundID == SOUNDID_MATE_X_PCM || g_nSoundID == SOUNDID_PC_9801_86_WSS){
+	//if(g_nSoundID == SOUNDID_PC_9801_118 || g_nSoundID == SOUNDID_MATE_X_PCM || g_nSoundID == SOUNDID_PC_9801_86_WSS || g_nSoundID == SOUNDID_WAVESTAR || g_nSoundID == SOUNDID_PC_9801_118_SB16 || g_nSoundID == SOUNDID_PC_9801_86_118_SB16){
 	//	if(cdda_softvolumereg_L != cs4231.devvolume[0x32]){
 	//		cdda_softvolumereg_L = cs4231.devvolume[0x32];
-	//		if(cdda_softvolumereg_L & 0x80){ // FM L Mute
+	//		if(cdda_softvolumereg_L & 0x80){ // CD L Mute
 	//			cdda_softvolume_L = 0;
 	//		}else{
-	//			cdda_softvolume_L = ((~cdda_softvolumereg_L) & 0x1f); // FM L Volume
+	//			cdda_softvolume_L = ((‚Äæcdda_softvolumereg_L) & 0x1f); // CD L Volume
 	//		}
 	//	}
 	//	if(cdda_softvolumereg_R != cs4231.devvolume[0x33]){
 	//		cdda_softvolumereg_R = cs4231.devvolume[0x33];
-	//		if(cdda_softvolumereg_R & 0x80){ // FM R Mute
+	//		if(cdda_softvolumereg_R & 0x80){ // CD R Mute
 	//			cdda_softvolume_R = 0;
 	//		}else{
-	//			cdda_softvolume_R = ((~cdda_softvolumereg_R) & 0x1f); // FM R Volume
+	//			cdda_softvolume_R = ((‚Äæcdda_softvolumereg_R) & 0x1f); // CD R Volume
 	//		}
 	//	}
 	//}else{
@@ -1267,7 +1378,7 @@ static SINT32	sampcount2_n = 0;
 		return(FAILURE);
 	}
 	while(count) {
-		r = np2min(count, drv->dabufrem * samplen_n / samplen_d);
+		r = MIN(count, drv->dabufrem * samplen_n / samplen_d);
 		if (r) {
 			count -= r;
 			ptr = drv->dabuf + 2352 - (drv->dabufrem * 4);
@@ -1319,9 +1430,36 @@ static SINT32	sampcount2_n = 0;
 			drv->daflag = 0x13;
 			return(FAILURE);
 		}
-		if (sxsicd_readraw(sxsi, drv->dacurpos, drv->dabuf) != SUCCESS) {
-			drv->daflag = 0x14;
-			return(FAILURE);
+		if(np2cfg.cddtskip){
+			CDTRK	trk;
+			UINT	tracks;
+			trk = sxsicd_gettrk(sxsi, &tracks);
+			r = tracks;
+			while(r) {
+				r--;
+				if (trk[r].pos <= drv->dacurpos) {
+					break;
+				}
+			}
+			if(trk[r].adr_ctl!=TRACKTYPE_AUDIO){
+				if(drv->dacurpos != 0){
+					// „Ç™„Éº„Éá„Ç£„Ç™„Éà„É©„ÉÉ„ÇØ„Åß„Å™„ÅÑÂ†¥Âêà„ÅØÂº∑Âà∂ÁöÑ„Å´Ê¨°„Å´È£õ„Å∞„Åô
+					if(r==tracks-1){
+						drv->dacurpos = trk[0].pos;
+					}else{
+						drv->dacurpos = trk[r+1].pos;
+					}
+				}
+				mute = 1;
+			}
+		}
+		if(mute){
+			memset(drv->dabuf, 0, sizeof(drv->dabuf));
+		}else{
+			if (sxsicd_readraw(sxsi, drv->dacurpos, drv->dabuf) != SUCCESS) {
+				drv->daflag = 0x14;
+				return(FAILURE);
+			}
 		}
 		drv->dalength--;
 		drv->dacurpos++;
@@ -1329,149 +1467,6 @@ static SINT32	sampcount2_n = 0;
 	}
 	return(SUCCESS);
 }
-//static BRESULT SOUNDCALL playdevaudio(IDEDRV drv, SINT32 *pcm, UINT count) {
-//
-//	SXSIDEV	sxsi;
-//	UINT	r;
-//const UINT8	*ptr;
-//	SINT	sampl;
-//	SINT	sampr;
-//	double	samplen;
-//	double	sampcount2;
-//
-//	samplen = (double)soundcfg.rate / 44100;
-//
-//	sxsi = sxsi_getptr(drv->sxsidrv);
-//	if ((sxsi == NULL) || (sxsi->devtype != SXSIDEV_CDROM) ||
-//		(!(sxsi->flag & SXSIFLAG_READY))) {
-//		drv->daflag = 0x14;
-//		return(FAILURE);
-//	}
-//	while(count) {
-//		r = np2min(count, drv->dabufrem * samplen);
-//		if (r) {
-//			count -= r;
-//			ptr = drv->dabuf + 2352 - (drv->dabufrem * 4);
-//			drv->dabufrem -= r / samplen;
-//			if(samplen < 1.0){
-//				sampcount2 = 0;
-//				do {
-//					sampl = ((SINT8)ptr[1] << 8) + ptr[0];
-//					sampr = ((SINT8)ptr[3] << 8) + ptr[2];
-//					ptr += 4;
-//					sampcount2 += samplen;
-//					if((int)(sampcount2) > 0){
-//						pcm[0] += (SINT)((int)(sampl)*np2cfg.davolume/255);
-//						pcm[1] += (SINT)((int)(sampr)*np2cfg.davolume/255);
-//						pcm += 2 * (int)(sampcount2);
-//						--r;
-//						sampcount2 = sampcount2 - (int)sampcount2;
-//					}
-//				} while(r > 0);
-//			}else{
-//				sampcount2 = samplen;
-//				do {
-//					sampl = ((SINT8)ptr[1] << 8) + ptr[0];
-//					sampr = ((SINT8)ptr[3] << 8) + ptr[2];
-//					pcm[0] += (SINT)((int)(sampl)*np2cfg.davolume/255);
-//					pcm[1] += (SINT)((int)(sampr)*np2cfg.davolume/255);
-//					sampcount2 -= 1.0;
-//					if(sampcount2 < 1.0){
-//						sampcount2 += samplen;
-//						ptr += 4;
-//					}
-//					pcm += 2;
-//				} while(--r);
-//			}
-//		}
-//		if (count == 0) {
-//			break;
-//		}
-//		if (drv->dalength == 0) {
-//			drv->daflag = 0x13;
-//			return(FAILURE);
-//		}
-//		if (sxsicd_readraw(sxsi, drv->dacurpos, drv->dabuf) != SUCCESS) {
-//			drv->daflag = 0x14;
-//			return(FAILURE);
-//		}
-//		drv->dalength--;
-//		drv->dacurpos++;
-//		drv->dabufrem = sizeof(drv->dabuf) / 4;
-//	}
-//	return(SUCCESS);
-//}
-//static BRESULT SOUNDCALL playdevaudio(IDEDRV drv, SINT32 *pcm, UINT count) {
-//
-//	SXSIDEV	sxsi;
-//	UINT	r;
-//const UINT8	*ptr;
-//	SINT	sampl;
-//	SINT	sampr;
-//	double	sampbias = soundcfg.rate / 44100.0;
-//	SINT	samploop;
-//	double	samploop2 = 0.0;
-//	SINT	samploopcount;
-//	double	sampcount2 = 0.0;
-//
-//	sxsi = sxsi_getptr(drv->sxsidrv);
-//	if ((sxsi == NULL) || (sxsi->devtype != SXSIDEV_CDROM) ||
-//		(!(sxsi->flag & SXSIFLAG_READY))) {
-//		drv->daflag = 0x14;
-//		return(FAILURE);
-//	}
-//	while(count) {
-//		r = np2min(count, drv->dabufrem * sampbias);
-//		if (r) {
-//			count -= r;
-//			ptr = drv->dabuf + 2352 - drv->dabufrem * 4;
-//			drv->dabufrem -= r / sampbias;
-//			if(sampbias >= 1.0) {
-//				sampcount2 = sampbias;
-//				do {
-//					sampl = ((SINT8)ptr[1] << 8) + ptr[0];
-//					sampr = ((SINT8)ptr[3] << 8) + ptr[2];
-//					pcm[0] += (SINT)((int)(sampl)*np2cfg.davolume/255);
-//					pcm[1] += (SINT)((int)(sampr)*np2cfg.davolume/255);
-//					sampcount2 -= 1.0;
-//					if(sampcount2 < 1.0) {
-//						sampcount2 += sampbias;
-//						ptr += 4;
-//					}
-//					pcm += 2;
-//				} while(--r);
-//			} else {
-//				do {
-//					sampl = ((SINT8)ptr[1] << 8) + ptr[0];
-//					sampr = ((SINT8)ptr[3] << 8) + ptr[2];
-//					samploopcount = (sampbias + samploop2) < 1.0 ? 1 : (SINT)(sampbias + samploop2);
-//					for(samploop = 0; samploop < samploopcount; samploop++) {
-//						pcm[samploop * 2 + 0] += (SINT)((int)(sampl)*np2cfg.davolume/255);
-//						pcm[samploop * 2 + 1] += (SINT)((int)(sampr)*np2cfg.davolume/255);
-//					}
-//					ptr += 4 * (1.0 / sampbias < 1.0 ? 1 : (SINT)(1.0 / sampbias + samploop2));
-//					pcm += 2 * samploopcount;
-//					samploop2 = ((SINT)((sampbias + samploop2) * 1000) % 1000) / 1000.0;
-//				} while(--r);
-//			}
-//		}
-//		if (count == 0) {
-//			break;
-//		}
-//		if (drv->dalength == 0) {
-//			drv->daflag = 0x13;
-//			return(FAILURE);
-//		}
-//		if (sxsicd_readraw(sxsi, drv->dacurpos, drv->dabuf) != SUCCESS) {
-//			drv->daflag = 0x14;
-//			return(FAILURE);
-//		}
-//		drv->dalength--;
-//		drv->dacurpos++;
-//		drv->dabufrem = sizeof(drv->dabuf) / 4;
-//	}
-//	return(SUCCESS);
-//}
 
 static void SOUNDCALL playaudio(void *hdl, SINT32 *pcm, UINT count) {
 
@@ -1532,86 +1527,112 @@ static void devinit(IDEDRV drv, REG8 sxsidrv) {
 	//memset(ideio_mediachangeflag, 0, sizeof(ideio_mediachangeflag));
 }
 
-void ideio_reset(const NP2CFG *pConfig) {
-	
-	OEMCHAR	path[MAX_PATH];
-	FILEH	fh;
+void ideio_initialize(void) {
+	atapi_initialize();
+}
+
+void ideio_deinitialize(void) {
+	atapi_deinitialize();
+}
+
+void ideio_basereset() {
 	REG8	i;
 	IDEDRV	drv;
-	OEMCHAR tmpbiosname[16];
-	UINT8 useidebios;
 
-	ZeroMemory(&ideio, sizeof(ideio));
 	for (i=0; i<4; i++) {
 		drv = ideio.dev[i >> 1].drv + (i & 1);
 		devinit(drv, i);
 	}
+}
+void ideio_reset(const NP2CFG *pConfig) {
+	REG8	i;
+	
+	OEMCHAR	path[MAX_PATH];
+	FILEH	fh;
+	OEMCHAR tmpbiosname[16];
+	UINT8 useidebios;
+	UINT32 biosaddr;
+
+	ZeroMemory(&ideio, sizeof(ideio));
+
+	ideio_basereset();
 	
 	ideio.rwait = np2cfg.iderwait;
 	ideio.wwait = np2cfg.idewwait;
 	ideio.bios = IDETC_NOBIOS;
 
-	useidebios = np2cfg.idebios && np2cfg.usebios;
-	if(useidebios && np2cfg.autoidebios){
-		SXSIDEV	sxsi;
-		for (i=0; i<4; i++) {
-			sxsi = sxsi_getptr(i);
-			if ((sxsi != NULL) && (np2cfg.idetype[i] == SXSIDEV_HDD) && 
-					(sxsi->devtype == SXSIDEV_HDD) && (sxsi->flag & SXSIFLAG_READY)) {
-				if(sxsi->surfaces != 8 || sxsi->sectors != 17){
-					TRACEOUT(("Incompatible CHS parameter detected. IDE BIOS automatically disabled."));
-					useidebios = 0;
+	if(pccore.hddif & PCHDD_IDE){
+		if(pConfig->idebaddr){
+			biosaddr = (UINT32)pConfig->idebaddr << 12;
+			useidebios = np2cfg.idebios && np2cfg.usebios;
+			if(useidebios && np2cfg.autoidebios){
+				SXSIDEV	sxsi;
+				for (i=0; i<4; i++) {
+					sxsi = sxsi_getptr(i);
+					if ((sxsi != NULL) && (np2cfg.idetype[i] == SXSIDEV_HDD) && 
+							(sxsi->devtype == SXSIDEV_HDD) && (sxsi->flag & SXSIFLAG_READY)) {
+						if(sxsi->surfaces != 8 || sxsi->sectors != 17){
+							TRACEOUT(("Incompatible CHS parameter detected. IDE BIOS automatically disabled."));
+							useidebios = 0;
+						}
+					}
 				}
 			}
+			if(useidebios){
+				_tcscpy(tmpbiosname, OEMTEXT("ide.rom"));
+				getbiospath(path, tmpbiosname, NELEMENTS(path));
+				fh = file_open_rb(path);
+				if (fh == FILEH_INVALID) {
+					_tcscpy(tmpbiosname, OEMTEXT("d8000.rom"));
+					getbiospath(path, tmpbiosname, NELEMENTS(path));
+					fh = file_open_rb(path);
+				}
+				if (fh == FILEH_INVALID) {
+					_tcscpy(tmpbiosname, OEMTEXT("bank3.bin"));
+					getbiospath(path, tmpbiosname, NELEMENTS(path));
+					fh = file_open_rb(path);
+				}
+				if (fh == FILEH_INVALID) {
+					_tcscpy(tmpbiosname, OEMTEXT("bios9821.rom"));
+					getbiospath(path, tmpbiosname, NELEMENTS(path));
+					fh = file_open_rb(path);
+				}
+			}else{
+				fh = FILEH_INVALID;
+			}
+			if (fh != FILEH_INVALID) {
+				// IDE BIOS
+				if (file_read(fh, mem + biosaddr, 0x2000) == 0x2000) {
+					ideio.bios = IDETC_BIOS;
+					TRACEOUT(("load ide.rom"));
+					_tcscpy(ideio.biosname, tmpbiosname);
+					CPU_RAM_D000 &= ~(0x3 << 8);
+				}else{
+					//CopyMemory(mem + biosaddr, idebios, sizeof(idebios));
+					TRACEOUT(("use simulate ide.rom"));
+				}
+				file_close(fh);
+			}else{
+				//CopyMemory(mem + biosaddr, idebios, sizeof(idebios));
+				TRACEOUT(("use simulate ide.rom"));
+			}
 		}
-	}
-	if(useidebios){
-		_tcscpy(tmpbiosname, OEMTEXT("ide.rom"));
-		getbiospath(path, tmpbiosname, NELEMENTS(path));
-		fh = file_open_rb(path);
-		if (fh == FILEH_INVALID) {
-			_tcscpy(tmpbiosname, OEMTEXT("d8000.rom"));
-			getbiospath(path, tmpbiosname, NELEMENTS(path));
-			fh = file_open_rb(path);
-		}
-		if (fh == FILEH_INVALID) {
-			_tcscpy(tmpbiosname, OEMTEXT("bank3.bin"));
-			getbiospath(path, tmpbiosname, NELEMENTS(path));
-			fh = file_open_rb(path);
-		}
-		if (fh == FILEH_INVALID) {
-			_tcscpy(tmpbiosname, OEMTEXT("bios9821.rom"));
-			getbiospath(path, tmpbiosname, NELEMENTS(path));
-			fh = file_open_rb(path);
-		}
-	}else{
-		fh = FILEH_INVALID;
-	}
-	if (fh != FILEH_INVALID) {
-		// IDE BIOS
-		if (file_read(fh, mem + 0x0d8000, 0x2000) == 0x2000) {
-			ideio.bios = IDETC_BIOS;
-			TRACEOUT(("load ide.rom"));
-			_tcscpy(ideio.biosname, tmpbiosname);
-		}else{
-			CopyMemory(mem + 0xd8000, idebios, sizeof(idebios));
-			TRACEOUT(("use simulate ide.rom"));
-		}
-		file_close(fh);
-	}else{
-		CopyMemory(mem + 0xd8000, idebios, sizeof(idebios));
-		TRACEOUT(("use simulate ide.rom"));
 	}
 
 	(void)pConfig;
 }
 
+void ideio_bindCDDA(void) {
+	if (pccore.hddif & PCHDD_IDE) {
+		sound_streamregist(NULL, (SOUNDCB)playaudio);
+	}
+}
+
 void ideio_bind(void) {
 
 	if (pccore.hddif & PCHDD_IDE) {
-#if 1
-		sound_streamregist(NULL, (SOUNDCB)playaudio);
-#endif
+		ideio_bindCDDA();
+
 		iocore_attachout(0x0430, ideio_o430);
 		iocore_attachout(0x0432, ideio_o430);
 		iocore_attachinp(0x0430, ideio_i430);
@@ -1637,8 +1658,13 @@ void ideio_bind(void) {
 		iocore_attachinp(0x074c, ideio_i74c);
 		iocore_attachinp(0x074e, ideio_i74e);
 
-		iocore_attachout(0x1e8e, ideio_o1e8e); // àÍïîIDE BIOSÇÕÇ±ÇÍÇ™Ç»Ç¢Ç∆ãNìÆéûÇ…ÉtÉäÅ[ÉYÇµÇΩÇËÉVÉäÉìÉ_êîÇ™0Ç…Ç»ÇÈ
-		iocore_attachinp(0x1e8e, ideio_i1e8e); // àÍïîIDE BIOSÇÕÇ±ÇÍÇ™Ç»Ç¢Ç∆ãNìÆéûÇ…ÉtÉäÅ[ÉYÇµÇΩÇËÉVÉäÉìÉ_êîÇ™0Ç…Ç»ÇÈ
+		iocore_attachout(0x1e8e, ideio_o1e8e); // ‰∏ÄÈÉ®IDE BIOS„ÅØ„Åì„Çå„Åå„Å™„ÅÑ„Å®Ëµ∑ÂãïÊôÇ„Å´„Éï„É™„Éº„Ç∫„Åó„Åü„Çä„Ç∑„É™„É≥„ÉÄÊï∞„Åå0„Å´„Å™„Çã
+		iocore_attachinp(0x1e8e, ideio_i1e8e); // ‰∏ÄÈÉ®IDE BIOS„ÅØ„Åì„Çå„Åå„Å™„ÅÑ„Å®Ëµ∑ÂãïÊôÇ„Å´„Éï„É™„Éº„Ç∫„Åó„Åü„Çä„Ç∑„É™„É≥„ÉÄÊï∞„Åå0„Å´„Å™„Çã
+		
+		iocore_attachout(0x0433, ideio_o433);
+		iocore_attachinp(0x0433, ideio_i433);
+		iocore_attachout(0x0435, ideio_o435);
+		iocore_attachinp(0x0435, ideio_i435);
 	}
 }
 
@@ -1679,10 +1705,31 @@ do_notify:
 	}
 }
 
-// Win2kÉZÉbÉgÉAÉbÉvÇ≈ÉÅÉfÉBÉAåä∑Çí ímÇ∑ÇÈÇÃÇ…ïKóvÅH
 void ideio_mediachange(REG8 sxsidrv) {
+	
+	//SXSIDEV sxsi;
+	//IDEDRV	drv;
+	//REG8 i;
+	//
+	//sxsi = sxsi_getptr(sxsidrv);
+	//if ((sxsi == NULL)
+	// || (!(sxsi->flag & SXSIFLAG_READY))
+	// || (sxsi->devtype != SXSIDEV_CDROM)) {
+	//	return;
+	//}
 
-	//ideio_mediachangeflag[sxsidrv] = 1;
+	//for (i=0; i<4; i++) {
+	//	drv = ideio.dev[i >> 1].drv + (i & 1);
+	//	if ((drv != NULL) && (drv->sxsidrv == sxsidrv)) {
+	//		break;
+	//	}
+	//}
+	//if(i==4) return;
+	//
+	//drv->status |= IDESTAT_ERR;
+	//drv->error |= IDEERR_MCNG;
+	//setintr(drv);
+	////ideio_mediachangeflag[sxsidrv] = 1;
 }
 
 #endif	/* SUPPORT_IDEIO */

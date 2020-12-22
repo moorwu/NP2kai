@@ -158,10 +158,10 @@ static void setmulstr(void) {
 	if (multiple < 1) {
 		multiple = 1;
 	}
-	else if (multiple > 42) {
-		multiple = 42;
+	else if (multiple > 100) {
+		multiple = 100;
 	}
-	OEMSPRINTF(work, str_mulfmt, multiple);
+	OEMSNPRINTF(work, sizeof(work), str_mulfmt, multiple);
 	menudlg_settext(DID_MULSTR, work);
 }
 
@@ -181,11 +181,11 @@ static void setclockstr(void) {
 	if (multiple < 1) {
 		multiple = 1;
 	}
-	else if (multiple > 42) {
-		multiple = 42;
+	else if (multiple > 100) {
+		multiple = 100;
 	}
 	clock *= multiple;
-	OEMSPRINTF(work, str_clockfmt, clock / 10000, clock % 10000);
+	OEMSNPRINTF(work, sizeof(work),  str_clockfmt, clock / 10000, clock % 10000);
 	menudlg_settext(DID_CLOCKSTR, work);
 }
 
@@ -201,7 +201,7 @@ static void setbufstr(void) {
 	else if (val > 1000) {
 		val = 1000;
 	}
-	OEMSPRINTF(work, str_buffmt, val);
+	OEMSNPRINTF(work, sizeof(work), str_buffmt, val);
 	menudlg_settext(DID_BUFSTR, work);
 }
 

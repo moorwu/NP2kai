@@ -8,6 +8,7 @@
 G_BEGIN_DECLS
 
 typedef struct {
+	UINT8	direct;
 	UINT8	port;
 	UINT8	def_en;
 	UINT8	param;
@@ -41,6 +42,10 @@ typedef struct {
 	char	JOYDEV[2][MAX_PATH];
 
 	COMCFG	mpu;
+#if defined(SUPPORT_SMPU98)
+	COMCFG	smpuA;
+	COMCFG	smpuB;
+#endif
 	COMCFG	com[3];
 
 	UINT8	confirm;
@@ -54,9 +59,14 @@ typedef struct {
 	UINT8	hostdrv_write;
 	UINT8	jastsnd;
 	UINT8	I286SAVE;
+	UINT8	xrollkey;
 
 	UINT8	snddrv;
 	char	MIDIDEV[2][MAX_PATH];
+#if defined(SUPPORT_SMPU98)
+	char	MIDIDEVA[2][MAX_PATH];
+	char	MIDIDEVB[2][MAX_PATH];
+#endif
 	UINT32	MIDIWAIT;
 
 	UINT8	mouse_move_ratio;
@@ -65,7 +75,7 @@ typedef struct {
 	UINT8	drawinterp;
 	UINT8	F11KEY;
 
-	UINT8	cfgreadonly;
+	UINT8	readonly; // No save changed settings
 } NP2OSCFG;
 
 

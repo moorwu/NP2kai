@@ -1,10 +1,18 @@
-#include	"compiler.h"
-#include	"strres.h"
-#include	"resource.h"
-#include	"np2.h"
-#include	"sysmng.h"
-#include	"dialog.h"
-#include	"dialogs.h"
+/**
+ * @file	d_bms.cpp
+ * @brief	BMSè¨­å®šãƒ€ã‚¤ã‚¢ãƒ­ã‚°
+ */
+
+#include "compiler.h"
+#include "resource.h"
+#include "dialog.h"
+#include "c_combodata.h"
+#include "np2.h"
+#include "soundmng.h"
+#include "sysmng.h"
+#include "misc/DlgProc.h"
+#include "pccore.h"
+#include "common/strres.h"
 
 #include	"bmsio.h"
 
@@ -16,7 +24,7 @@ static void bmsupdatedialog(HWND hWnd) {
 /*
 	char work[32];
 
-	// ƒƒ‚ƒŠƒTƒCƒY
+	// ãƒ¡ãƒ¢ãƒªã‚µã‚¤ã‚º
 	wsprintf(work, "%5d", 128 * bmsiocfg.numbanks);
 	SetDlgItemText(hWnd, IDC_BMSKB, work);
 */
@@ -26,10 +34,10 @@ static void bmscreate(HWND hWnd) {
 	TCHAR work[32];
 	UINT val;
 
-	// Žg—p‚·‚é‚©
+	// ä½¿ç”¨ã™ã‚‹ã‹
 	SetDlgItemCheck(hWnd, IDC_BMS, bmsiocfg.enabled);
 
-	// IOƒ|[ƒg
+	// IOãƒãƒ¼ãƒˆ
 	SETLISTSTR(hWnd, IDC_BMSIO, iostr);
 	if (bmsiocfg.port == 0x01d0) {
 		val = 1;
@@ -39,7 +47,7 @@ static void bmscreate(HWND hWnd) {
 	}
 	SendDlgItemMessage(hWnd, IDC_BMSIO, CB_SETCURSEL, val, 0);
 
-	// ƒoƒ“ƒN”
+	// ãƒãƒ³ã‚¯æ•°
 	wsprintf(work, _T("%d"), bmsiocfg.numbanks);
 	SetDlgItemText(hWnd, IDC_BMSBANKS, work);
 
@@ -57,14 +65,14 @@ static void bmsupdate(HWND hWnd) {
 
 	update = 0;
 
-	// Žg—p‚·‚é‚©
+	// ä½¿ç”¨ã™ã‚‹ã‹
 	val = GetDlgItemCheck(hWnd, IDC_BMS);
 	if (bmsiocfg.enabled != (BOOL)val) {
 		bmsiocfg.enabled = val;
 		update |= SYS_UPDATECFG;
 	}
 
-	// IOƒ|[ƒg
+	// IOãƒãƒ¼ãƒˆ
 	GetDlgItemText(hWnd, IDC_BMSIO, work, sizeof(work));
 	val = milstr_solveHEX(work);
 	if (bmsiocfg.port != val) {
@@ -72,7 +80,7 @@ static void bmsupdate(HWND hWnd) {
 		update |= SYS_UPDATECFG;
 	}
 
-	// ƒoƒ“ƒN”
+	// ãƒãƒ³ã‚¯æ•°
 	GetDlgItemText(hWnd, IDC_BMSBANKS, work, sizeof(work));
 	val = (UINT)milstr_solveINT(work);
 	if (val > 255) {
@@ -137,5 +145,13 @@ LRESULT CALLBACK BMSDialogProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 	return(TRUE);
 }
 
-
+/**
+ * BMSè¨­å®šãƒ€ã‚¤ã‚¢ãƒ­ã‚°
+ * @param[in] hwndParent è¦ªã‚¦ã‚£ãƒ³ãƒ‰ã‚¦
+ */
+void dialog_bms(HWND hwndParent)
+{
+	CBMSDlg dlg(hwndParent);
+	dlg.DoModal();
+}
 #endif

@@ -10,11 +10,11 @@
 #include "iocore.h"
 #include "fmboard.h"
 
-/* ƒTƒ“ƒvƒŠƒ“ƒOƒŒ[ƒg‚É8Š|‚¯‚½•¨ */
+/* ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ãƒ¬ãƒ¼ãƒˆã«8æ›ã‘ãŸç‰© */
 const UINT pcm86rate8[] = {352800, 264600, 176400, 132300,
 							88200,  66150,  44010,  33075};
 
-/* 32,24,16,12, 8, 6, 4, 3 - Å­Œö”{”: 96 */
+/* 32,24,16,12, 8, 6, 4, 3 - æœ€å°‘å…¬å€æ•°: 96 */
 /*  3, 4, 6, 8,12,16,24,32 */
 
 static const UINT clk25_128[] = {
@@ -118,8 +118,8 @@ void pcm86_setnextintr(void) {
 		{
 			cnt += pcm86->stepmask;
 			cnt >>= pcm86->stepbit;
-//			cnt += 4;								/* ‚¿‚å‚Á‚Æ‰„‘Ø‚³‚¹‚é */
-			/* ‚±‚±‚Å clk = pccore.realclock * cnt / 86pcm_rate */
+//			cnt += 4;								/* ã¡ã‚‡ã£ã¨å»¶æ»ã•ã›ã‚‹ */
+			/* ã“ã“ã§ clk = pccore.realclock * cnt / 86pcm_rate */
 			/* clk = ((pccore.baseclock / 86pcm_rate) * cnt) * pccore.multiple */
 			if (pccore.cpumode & CPUMODE_8MHZ) {
 				clk = clk20_128[pcm86->fifo & 7];
@@ -127,7 +127,7 @@ void pcm86_setnextintr(void) {
 			else {
 				clk = clk25_128[pcm86->fifo & 7];
 			}
-			/* cnt‚ÍÅ‘å 8000h ‚Å 32bit‚Åû‚Ü‚é‚æ‚¤‚Éc */
+			/* cntã¯æœ€å¤§ 8000h ã§ 32bitã§åã¾ã‚‹ã‚ˆã†ã«â€¦ */
 			clk *= cnt;
 			clk >>= 7;
 //			clk++;						/* roundup */
@@ -139,6 +139,7 @@ void pcm86_setnextintr(void) {
 
 void SOUNDCALL pcm86gen_checkbuf(PCM86 pcm86)
 {
+	int smpsize[0x8] = {0, 2, 2, 4, 0, 1, 1, 2};
 	long	bufs;
 	UINT32	past;
 	static SINT32 lastvirbuf = 0;
@@ -154,13 +155,13 @@ void SOUNDCALL pcm86gen_checkbuf(PCM86 pcm86)
 		RECALC_NOWCLKWAIT(past);
 	}
 	
-	// XXX: Windows‚ÅƒtƒŠ[ƒY‚·‚é–â‘è‚Ìb’è‘ÎÇ—Ã–@i‚ ‚é’ö“xŠÔ‚ªŒo‚Á‚½¬‚³‚¢ƒoƒbƒtƒ@‚ğÌ‚Ä‚éj
+	// XXX: Windowsã§ãƒ•ãƒªãƒ¼ã‚ºã™ã‚‹å•é¡Œã®æš«å®šå¯¾ç—‡ç™‚æ³•ï¼ˆã‚ã‚‹ç¨‹åº¦æ™‚é–“ãŒçµŒã£ãŸå°ã•ã„ãƒãƒƒãƒ•ã‚¡ã‚’æ¨ã¦ã‚‹ï¼‰
 	if(0 < pcm86->virbuf && pcm86->virbuf < 128){
 		if(pcm86->virbuf == lastvirbuf){
 			lastvirbufcnt++;
 			if(lastvirbufcnt > 500){
-				// 500‰ñŒÄ‚Î‚ê‚Ä‚à’l‚ª•Ï‰»‚µ‚È‚©‚Á‚½‚çÌ‚Ä‚é
-				pcm86->virbuf = 0;
+				// 500å›å‘¼ã°ã‚Œã¦ã‚‚å€¤ãŒå¤‰åŒ–ã—ãªã‹ã£ãŸã‚‰æ¨ã¦ã‚‹
+				pcm86->virbuf = pcm86->realbuf = 0;
 				lastvirbufcnt = 0;
 			}
 		}else{
@@ -170,9 +171,9 @@ void SOUNDCALL pcm86gen_checkbuf(PCM86 pcm86)
 	}else{
 		lastvirbufcnt = 0;
 	}
-
+	
 	bufs = pcm86->realbuf - pcm86->virbuf;
-	if (bufs < 0)									/* ˆ——‚¿‚Ä‚éc */
+	if (bufs < smpsize[(pcm86->dactrl >> 4) & 0x7])									/* å‡¦ç†è½ã¡ã¦ã‚‹â€¦ */
 	{
 		bufs &= ~3;
 		pcm86->virbuf += bufs;

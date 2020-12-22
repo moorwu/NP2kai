@@ -1,17 +1,10 @@
 #ifndef NP2_IOCORE_H
 #define NP2_IOCORE_H
 
-#ifndef IOOUTCALL
-#define	IOOUTCALL
-#endif
-#ifndef IOINPCALL
-#define	IOINPCALL
-#endif
-
 typedef void (*FNIORESET)(const NP2CFG *pConfig);
 typedef void (*FNIOBIND)(void);
-typedef	void (IOOUTCALL *IOOUT)(UINT port, REG8 val);
-typedef	REG8 (IOINPCALL *IOINP)(UINT port);
+typedef	void (IOOUTCALL *IOOUT)(UINT port, UINT val);
+typedef	UINT (IOINPCALL *IOINP)(UINT port);
 
 #include	"lsidef.h"
 
@@ -42,6 +35,9 @@ typedef	REG8 (IOINPCALL *IOINP)(UINT port);
 #if defined(SUPPORT_PC9821)
 #include	"pcidev.h"
 #endif
+#if defined(SUPPORT_PEGC)
+#include	"pegc.h"
+#endif
 
 
 #ifdef __cplusplus
@@ -68,11 +64,17 @@ extern	_NP2SYSP	np2sysp;
 extern	_PIC		pic;
 extern	_PIT		pit;
 extern	_RS232C		rs232c;
+#if defined(SUPPORT_RS232C_FIFO)
+extern	_RS232CFIFO	rs232cfifo;
+#endif
 extern	_SYSPORT	sysport;
 extern	_UPD4990	uPD4990;
 
 #if defined(SUPPORT_PC9821)
 extern	_PCIDEV		pcidev;
+#endif
+#if defined(SUPPORT_PEGC)
+extern	_PEGC		pegc;
 #endif
 
 
@@ -84,7 +86,7 @@ void iocore_attachcmnoutex(UINT port, UINT mask,
 void iocore_attachcmninpex(UINT port, UINT mask,
 											const IOINP *func, UINT funcs);
 
-// システムI/O - 10bit decode
+// 繧ｷ繧ｹ繝�繝I/O - 10bit decode
 void iocore_attachsysout(UINT port, IOOUT func);
 void iocore_attachsysinp(UINT port, IOINP func);
 void iocore_attachsysoutex(UINT port, UINT mask,
@@ -92,13 +94,17 @@ void iocore_attachsysoutex(UINT port, UINT mask,
 void iocore_attachsysinpex(UINT port, UINT mask,
 											const IOINP *func, UINT funcs);
 
-// サウンドI/O - 12bit decode
+// 繧ｵ繧ｦ繝ｳ繝迂/O - 12bit decode
 BRESULT iocore_attachsndout(UINT port, IOOUT func);
+BRESULT iocore_detachsndout(UINT port);
 BRESULT iocore_attachsndinp(UINT port, IOINP func);
+BRESULT iocore_detachsndinp(UINT port);
 
-// 拡張I/O - 16bit decode
+// 諡｡蠑ｵI/O - 16bit decode
 BRESULT iocore_attachout(UINT port, IOOUT func);
+BRESULT iocore_detachout(UINT port);
 BRESULT iocore_attachinp(UINT port, IOINP func);
+BRESULT iocore_detachinp(UINT port);
 
 void iocore_create(void);
 void iocore_destroy(void);

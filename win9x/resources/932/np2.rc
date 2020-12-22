@@ -158,7 +158,6 @@ BEGIN
     LTEXT           "Ratio",IDC_STATIC,20,55,22,8
     CONTROL         "Slider1",IDC_SKIPLIGHT,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,44,55,96,10
     RTEXT           "",IDC_LIGHTSTR,144,54,20,10,SS_SUNKEN
-    CONTROL         "Use software rendering",IDC_SOFTWARERENDERING,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,8,72,156,10
 END
 
 IDD_SCROPT_FULLSCREEN DIALOG 0, 0, 172, 96
@@ -173,6 +172,19 @@ BEGIN
     COMBOBOX        IDC_FULLSCREEN_ZOOM,40,42,96,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
 END
 
+IDD_SCROPT_RENDERER DIALOG 0, 0, 172, 96
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Renderer"
+FONT 9, "ÇlÇr ÇoÉSÉVÉbÉN"
+BEGIN
+    LTEXT           "Type",IDC_STATIC,8,15,60,8
+    COMBOBOX        IDC_RENDERER_TYPE,70,12,96,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "Interpolation Mode",IDC_STATIC,8,35,60,8
+    COMBOBOX        IDC_RENDERER_IMODE,70,32,96,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    CONTROL         "Use Direct3D fullscreen exclusive mode",IDC_RENDERER_EXCLUSIVE,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,8,52,200,10
+    CONTROL         "Use DirectDraw software rendering",IDC_SOFTWARERENDERING,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,8,68,200,10
+END
+
 IDD_SCROPT2 DIALOG 0, 0, 172, 96
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Chip"
@@ -181,12 +193,13 @@ BEGIN
     GROUPBOX        "Graphic Display Controller",IDC_STATIC,8,8,120,28
     CONTROL         "uPD7220",IDC_GDC7220,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,20,20,50,10
     CONTROL         "uPD72020",IDC_GDC72020,"Button",BS_AUTORADIOBUTTON,72,20,50,10
-    GROUPBOX        "Graphic Charger",IDC_GCBOX,8,42,156,28
+    GROUPBOX        "Graphic Charger",IDC_GCBOX,8,42,156,42
     CONTROL         "None",IDC_GRCGNON,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,20,54,34,10
     CONTROL         "GRCG",IDC_GRCG,"Button",BS_AUTORADIOBUTTON,54,54,34,10
     CONTROL         "GRCG+",IDC_GRCG2,"Button",BS_AUTORADIOBUTTON,88,54,40,10
     CONTROL         "EGC",IDC_EGC,"Button",BS_AUTORADIOBUTTON,128,54,34,10
-    CONTROL         "&Enable 16color-board (PC-9801-24)",IDC_PC980124,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,80,148,10
+    CONTROL         "&Enable PEGC plane mode",IDC_PEGC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,20,68,148,10
+    CONTROL         "&Enable 16color-board (PC-9801-24)",IDC_PC980124,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,90,148,10
 END
 
 IDD_SCROPT3 DIALOG 0, 0, 172, 96
@@ -218,10 +231,11 @@ FONT 9, "ÇlÇr ÇoÉSÉVÉbÉN"
 BEGIN
     LTEXT           "Port",IDC_STATIC,8,10,30,8
     COMBOBOX        IDC_COM1PORT,40,8,48,96,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "Assign",IDC_COM1STR00,8,28,132,84
+    GROUPBOX        "Assign",IDC_COM1STR00,8,28,182,84
     LTEXT           "Speed",IDC_COM1STR01,16,45,40,8
     COMBOBOX        IDC_COM1SPEED,60,42,48,128,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "bps",IDC_COM1STR02,112,45,26,8
+    CONTROL         "Fixed",IDC_COM1FSPEED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,130,44,50,10
     LTEXT           "Data bits",IDC_COM1STR03,16,61,40,8
     COMBOBOX        IDC_COM1CHARSIZE,60,58,48,64,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "bits",IDC_COM1STR04,112,61,26,8
@@ -239,6 +253,12 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,82,170,10
     LTEXT           "",IDC_COM1DEFF,26,94,148,10,SS_SUNKEN
     PUSHBUTTON      "...",IDC_COM1DEFB,176,94,10,10
+    CONTROL         "Fixed aspect mode (1:1)",IDC_COM1PENTABFA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,28,150,10
+    LTEXT           "Pipe Name",IDC_COM1STR30,8,28,50,8
+    EDITTEXT        IDC_COM1PIPENAME,55,25,80,14, ES_AUTOHSCROLL
+    LTEXT           "Server Name",IDC_COM1STR31,8,44,50,8
+    EDITTEXT        IDC_COM1PIPESERV,55,41,80,14, ES_AUTOHSCROLL
+    EDITTEXT        IDC_COM1STR32,8,60,150,14, ES_READONLY
 END
 
 IDD_PC9861A DIALOG 0, 0, 224, 140
@@ -268,15 +288,15 @@ END
 IDD_MPUPC98 DIALOG 0, 0, 192, 178
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "MPU-PC98II"
-CLASS "np2dialog"
 FONT 9, "ÇlÇr ÇoÉSÉVÉbÉN"
 BEGIN
-    LTEXT           "I/O port",IDC_STATIC,8,10,32,8
-    COMBOBOX        IDC_MPUIO,44,8,48,52,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Interrupt",IDC_STATIC,8,26,32,8
-    COMBOBOX        IDC_MPUINT,44,24,48,52,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "DIP-SW",IDC_STATIC,8,46,32,8
-    CONTROL         "",IDC_MPUDIP,"Static",SS_ENHMETAFILE | SS_NOTIFY,44,46,94,26
+    CONTROL         "Enable",IDC_MPUENABLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,6,100,10
+    LTEXT           "I/O port",IDC_STATIC,8,20,32,8
+    COMBOBOX        IDC_MPUIO,44,18,48,52,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Interrupt",IDC_STATIC,8,36,32,8
+    COMBOBOX        IDC_MPUINT,44,34,48,52,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "DIP-SW",IDC_STATIC,8,50,32,8
+    CONTROL         "",IDC_MPUDIP,"Static",SS_ENHMETAFILE | SS_NOTIFY,44,50,94,26
     GROUPBOX        "Assign",IDC_STATIC,8,72,176,98
     LTEXT           "MIDI-OUT",IDC_STATIC,16,87,40,8
     COMBOBOX        IDC_MPU98MMAP,60,84,116,96,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
@@ -288,8 +308,44 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,140,160,10
     LTEXT           "",IDC_MPU98DEFF,26,152,138,10,SS_SUNKEN
     PUSHBUTTON      "...",IDC_MPU98DEFB,166,152,10,10
-    DEFPUSHBUTTON   "&OK",IDOK,140,8,44,14,WS_GROUP
-    PUSHBUTTON      "Cancel",IDCANCEL,140,26,44,14
+    PUSHBUTTON      "Defaults",IDC_MPUDEF,140,58,44,14
+END
+
+IDD_SMPU98 DIALOG 0, 0, 192, 280
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "S-MPU"
+FONT 9, "ÇlÇr ÇoÉSÉVÉbÉN"
+BEGIN
+    CONTROL         "Enable",IDC_MPUENABLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,6,40,10
+    CONTROL         "Mute Port B during MPU-401 mode",IDC_MPUMUTEB,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,50,6,150,10
+    LTEXT           "I/O port",IDC_STATIC,8,20,32,8
+    COMBOBOX        IDC_MPUIO,44,18,48,52,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Interrupt",IDC_STATIC,8,36,32,8
+    COMBOBOX        IDC_MPUINT,44,34,48,52,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "DIP-SW",IDC_STATIC,8,50,32,8
+    CONTROL         "",IDC_MPUDIP,"Static",SS_ENHMETAFILE | SS_NOTIFY,60,50,84,26
+    GROUPBOX        "Assign Port A",IDC_STATIC,8,72,176,98
+    LTEXT           "MIDI-OUT",IDC_STATIC,16,87,40,8
+    COMBOBOX        IDC_MPU98MMAP,60,84,116,96,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "MIDI-IN",IDC_STATIC,16,103,40,8
+    COMBOBOX        IDC_MPU98MDIN,60,100,116,96,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Module",IDC_STATIC,16,119,40,8
+    COMBOBOX        IDC_MPU98MMDL,60,116,116,96,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Use program define file (MIMPI define)",IDC_MPU98DEFE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,140,160,10
+    LTEXT           "",IDC_MPU98DEFF,26,152,138,10,SS_SUNKEN
+    PUSHBUTTON      "...",IDC_MPU98DEFB,166,152,10,10
+    GROUPBOX        "Assign Port B",IDC_STATIC,8,172,176,98
+    LTEXT           "MIDI-OUT",IDC_STATIC,16,187,40,8
+    COMBOBOX        IDC_MPU98MMAP_B,60,184,116,96,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "MIDI-IN",IDC_STATIC,16,203,40,8
+    COMBOBOX        IDC_MPU98MDIN_B,60,200,116,96,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Module",IDC_STATIC,16,219,40,8
+    COMBOBOX        IDC_MPU98MMDL_B,60,216,116,96,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Use program define file (MIMPI define)",IDC_MPU98DEFE_B,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,240,160,10
+    LTEXT           "",IDC_MPU98DEFF_B,26,252,138,10,SS_SUNKEN
+    PUSHBUTTON      "...",IDC_MPU98DEFB_B,166,252,10,10
     PUSHBUTTON      "Defaults",IDC_MPUDEF,140,58,44,14
 END
 
@@ -298,25 +354,29 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Mixer"
 FONT 9, "ÇlÇr ÇoÉSÉVÉbÉN", 0, 0, 0x1
 BEGIN
-    LTEXT           "FM",IDC_STATIC,8,9,30,8
-    CONTROL         "Slider1",IDC_VOLFM,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_GROUP | WS_TABSTOP,40,9,88,10
-    LTEXT           "",IDC_VOLFMSTR,134,8,16,10,SS_SUNKEN,WS_EX_RIGHT
-    LTEXT           "PSG",IDC_STATIC,8,23,30,8
-    CONTROL         "Slider16",IDC_VOLPSG,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,40,23,88,10
-    LTEXT           "",IDC_VOLPSGSTR,134,22,16,10,SS_SUNKEN,WS_EX_RIGHT
-    LTEXT           "ADPCM",IDC_STATIC,8,37,30,8
-    CONTROL         "Slider2",IDC_VOLADPCM,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,40,37,88,10
-    LTEXT           "",IDC_VOLADPCMSTR,134,36,16,10,SS_SUNKEN,WS_EX_RIGHT
-    LTEXT           "PCM",IDC_STATIC,8,51,30,8
-    CONTROL         "Slider4",IDC_VOLPCM,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,40,51,88,10
-    LTEXT           "",IDC_VOLPCMSTR,134,50,16,10,SS_SUNKEN,WS_EX_RIGHT
-    LTEXT           "Rhythm",IDC_STATIC,8,65,30,8
-    CONTROL         "Slider8",IDC_VOLRHYTHM,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,40,65,88,10
-    LTEXT           "",IDC_VOLRHYTHMSTR,134,64,16,10,SS_SUNKEN,WS_EX_RIGHT
-    LTEXT           "CD-DA",IDC_STATIC,8,79,30,8
-    CONTROL         "Slider32",IDC_VOLCDDA,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,40,79,88,10
-    LTEXT           "",IDC_VOLCDDASTR,134,78,16,10,SS_SUNKEN,WS_EX_RIGHT
-    PUSHBUTTON      "Defaults",IDC_SNDMIXDEF,136,102,40,14
+    LTEXT           "Master",IDC_STATIC,8,5,30,8
+    CONTROL         "Slider1",IDC_VOLMASTER,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_GROUP | WS_TABSTOP,40,5,88,10
+    LTEXT           "",IDC_VOLMASTERSTR,134,4,16,10,SS_SUNKEN,WS_EX_RIGHT
+    LTEXT           "FM",IDC_STATIC,8,19,30,8
+    CONTROL         "Slider1",IDC_VOLFM,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_GROUP | WS_TABSTOP,40,19,88,10
+    LTEXT           "",IDC_VOLFMSTR,134,18,16,10,SS_SUNKEN,WS_EX_RIGHT
+    LTEXT           "PSG",IDC_STATIC,8,33,30,8
+    CONTROL         "Slider16",IDC_VOLPSG,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,40,33,88,10
+    LTEXT           "",IDC_VOLPSGSTR,134,32,16,10,SS_SUNKEN,WS_EX_RIGHT
+    LTEXT           "ADPCM",IDC_STATIC,8,47,30,8
+    CONTROL         "Slider2",IDC_VOLADPCM,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,40,47,88,10
+    LTEXT           "",IDC_VOLADPCMSTR,134,46,16,10,SS_SUNKEN,WS_EX_RIGHT
+    LTEXT           "PCM",IDC_STATIC,8,61,30,8
+    CONTROL         "Slider4",IDC_VOLPCM,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,40,61,88,10
+    LTEXT           "",IDC_VOLPCMSTR,134,60,16,10,SS_SUNKEN,WS_EX_RIGHT
+    LTEXT           "Rhythm",IDC_STATIC,8,75,30,8
+    CONTROL         "Slider8",IDC_VOLRHYTHM,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,40,75,88,10
+    LTEXT           "",IDC_VOLRHYTHMSTR,134,74,16,10,SS_SUNKEN,WS_EX_RIGHT
+    LTEXT           "CD-DA",IDC_STATIC,8,89,30,8
+    CONTROL         "Slider32",IDC_VOLCDDA,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,40,89,88,10
+    LTEXT           "",IDC_VOLCDDASTR,134,88,16,10,SS_SUNKEN,WS_EX_RIGHT
+	PUSHBUTTON      "Defaults 1",IDC_SNDMIXDEF,116,102,40,14
+	PUSHBUTTON      "Defaults 2",IDC_SNDMIXDEF2,160,102,40,14
 END
 
 IDD_SND14 DIALOGEX 0, 0, 184, 124
@@ -394,6 +454,9 @@ BEGIN
     COMBOBOX        IDC_SND118INTP,146,26,60,52,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Interrupt(MIDI)",IDC_STATIC,94,46,50,10
     COMBOBOX        IDC_SND118INTM,146,44,60,52,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "ROM",IDC_SND118ROM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,94,64,40,10
+    LTEXT           "Jumper",IDC_STATIC,8,72,30,8
+    CONTROL         "",IDC_SND118JMP,"Static",SS_ENHMETAFILE | SS_NOTIFY,8,84,100,36
     PUSHBUTTON      "Defaults",IDC_SND118DEF,136,102,40,14
 END
 
@@ -508,10 +571,26 @@ CLASS "np2dialog"
 FONT 9, "ÇlÇr ÇoÉSÉVÉbÉN"
 BEGIN
     ICON            IDI_ICON1,IDC_NP2ICON,8,8,20,20
-    LTEXT           "",IDC_NP2VER,36,16,152,8
+    LTEXT           "",IDC_NP2VER,36,12,152,16
     DEFPUSHBUTTON   "&OK",IDOK,168,8,40,14,WS_GROUP
     PUSHBUTTON      "More >>",IDC_MORE,168,26,40,14
     EDITTEXT        IDC_NP2INFO,8,52,200,48,ES_MULTILINE | ES_READONLY | ES_WANTRETURN | WS_VSCROLL
+END
+
+IDD_BMS DIALOG DISCARDABLE  0, 0, 187, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "IO Bank Memory"
+FONT 9, "ÇlÇr ÇoÉSÉVÉbÉN"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,130,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,130,24,50,14
+    LTEXT           "I/O port",IDC_STATIC,30,32,24,8
+    COMBOBOX        IDC_BMSIO,64,30,40,52,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Use IO Bank Memory",IDC_BMS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,8,8,78,10
+    LTEXT           "Bank Size",IDC_STATIC,30,57,30,8
+    EDITTEXT        IDC_BMSBANKS,64,55,30,12,WS_GROUP
 END
 
 IDD_NETWORK DIALOGEX 0, 0, 184, 124
@@ -520,7 +599,7 @@ CAPTION "General"
 FONT 9, "ÇlÇr ÇoÉSÉVÉbÉN", 0, 0, 0x0
 BEGIN
     LTEXT           "TAP device name",IDC_STATIC,8,8,76,8
-    COMBOBOX        IDC_NETTAP,8,18,168,12,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_NETTAP,8,18,168,12,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP | CBS_AUTOHSCROLL
     CONTROL         "Enable Power Management",IDC_NETPMM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,36,140,10
 END
 
@@ -529,7 +608,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "LGY-98"
 FONT 9, "ÇlÇr ÇoÉSÉVÉbÉN", 0, 0, 0x0
 BEGIN
-    CONTROL         "Enabled",IDC_LGY98ENABLED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,8,40,10
+    CONTROL         "Enable",IDC_LGY98ENABLED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,8,40,10
     LTEXT           "I/O port",IDC_STATIC,8,26,30,8
     COMBOBOX        IDC_LGY98IO,40,24,40,52,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Interrupt",IDC_STATIC,104,26,30,8
@@ -552,14 +631,14 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "CL-GD54xx"
 FONT 9, "ÇlÇr ÇoÉSÉVÉbÉN", 0, 0, 0x0
 BEGIN
-    CONTROL         "Enabled",IDC_GD5430ENABLED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,8,40,10
+    CONTROL         "Enable",IDC_GD5430ENABLED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,8,40,10
     LTEXT           "Type",IDC_STATIC,8,26,30,8
     COMBOBOX        IDC_GD5430TYPE,40,24,136,52,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Use Fake Hardware Cursor",IDC_GD5430FAKECURSOR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,44,100,10
     PUSHBUTTON      "Defaults",IDC_GD5430DEF,136,102,40,14
 END
 
-IDD_IDE DIALOGEX 0, 0, 195, 156
+IDD_IDE DIALOGEX 0, 0, 195, 186
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "IDE Configure"
 CLASS "np2dialog"
@@ -568,23 +647,26 @@ BEGIN
     LTEXT           "Primary",IDC_STATIC,40,8,64,8
     LTEXT           "Secondary",IDC_STATIC,118,8,68,8
     LTEXT           "Master",IDC_STATIC,8,26,29,8
-    LTEXT           "Slave",IDC_STATIC,8,56,29,8
+    LTEXT           "Slave",IDC_STATIC,8,46,29,8
     COMBOBOX        IDC_IDE1TYPE,40,24,64,14,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_IDE2TYPE,40,54,64,14,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_IDE2TYPE,40,44,64,14,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_IDE3TYPE,118,24,64,14,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_IDE4TYPE,118,54,64,14,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    EDITTEXT        IDC_IDERWAIT,80,78,34,14,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
-	CONTROL			"", IDC_SPINIDERWAIT, "msctls_updown32", UDS_ALIGNRIGHT | UDS_ARROWKEYS, 114, 78, 10, 14
-    LTEXT           "Interrupt Delay(Read)",IDC_STATIC,8,80,70,8
-    LTEXT           "clock",IDC_STATIC,126,80,32,8
-    EDITTEXT        IDC_IDEWWAIT,80,98,34,14,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
-	CONTROL			"", IDC_SPINIDEWWAIT, "msctls_updown32", UDS_ALIGNRIGHT | UDS_ARROWKEYS, 114, 98, 10, 14
-    LTEXT           "Interrupt Delay(Write)",IDC_STATIC,8,100,70,8
-    LTEXT           "clock",IDC_STATIC,126,100,32,8
-    CONTROL         "Use IDE BIOS",IDC_USEIDEBIOS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,120,200,10
-    CONTROL         "Auto IDE BIOS",IDC_AUTOIDEBIOS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,134,80,10
-    DEFPUSHBUTTON   "&OK",IDOK,92,130,44,14,WS_GROUP
-    PUSHBUTTON      "Cancel",IDCANCEL,140,130,44,14
+    COMBOBOX        IDC_IDE4TYPE,118,44,64,14,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_IDERWAIT,80,68,34,14,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
+	CONTROL			"", IDC_SPINIDERWAIT, "msctls_updown32", UDS_ALIGNRIGHT | UDS_ARROWKEYS, 114, 68, 10, 14
+    LTEXT           "Interrupt Delay(Read)",IDC_STATIC,8,70,70,8
+    LTEXT           "clock",IDC_STATIC,126,70,32,8
+    EDITTEXT        IDC_IDEWWAIT,80,88,34,14,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
+	CONTROL			"", IDC_SPINIDEWWAIT, "msctls_updown32", UDS_ALIGNRIGHT | UDS_ARROWKEYS, 114, 88, 10, 14
+    LTEXT           "Interrupt Delay(Write)",IDC_STATIC,8,90,70,8
+    LTEXT           "clock",IDC_STATIC,126,90,32,8
+    CONTROL         "Use Async CD-ROM Access",IDC_USEASYNCCD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,110,160,10
+    CONTROL         "Use CD-ROM EDC/ECC Emulation",IDC_USECDECC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,124,160,10
+    CONTROL         "Allow CD Tray Open/Close Command",IDC_ALLOWCDTRAYOP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,138,160,10
+    CONTROL         "Use IDE BIOS",IDC_USEIDEBIOS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,152,80,10
+    CONTROL         "Auto IDE BIOS",IDC_AUTOIDEBIOS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,166,80,10
+    DEFPUSHBUTTON   "&OK",IDOK,92,160,44,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,140,160,44,14
 END
 
 IDD_HOSTDRV DIALOGEX 0, 0, 195, 156
@@ -593,9 +675,9 @@ CAPTION "Hostdrv Configure"
 CLASS "np2dialog"
 FONT 9, "ÇlÇr ÇoÉSÉVÉbÉN", 0, 0, 0x0
 BEGIN
-    CONTROL         "Enabled",IDC_HOSTDRVENABLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,8,140,10
+    CONTROL         "Enable",IDC_HOSTDRVENABLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,8,140,10
     LTEXT           "Shared Directory",IDC_STATIC,8,23,76,8
-    COMBOBOX        IDC_HOSTDRVDIR,8,33,130,12, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_HOSTDRVDIR,8,33,130,12, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP | CBS_AUTOHSCROLL
     PUSHBUTTON      "Browse...",IDC_HOSTDRVBROWSE,140,32,44,14
     LTEXT           "Permission",IDC_STATIC,8,51,76,8
     CONTROL         "Read",IDC_HOSTDRVREAD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,65,140,10
@@ -603,6 +685,17 @@ BEGIN
     CONTROL         "Delete",IDC_HOSTDRVDELETE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,95,140,10
     DEFPUSHBUTTON   "&OK",IDOK,92,130,44,14,WS_GROUP
     PUSHBUTTON      "Cancel",IDCANCEL,140,130,44,14
+END
+
+IDD_PCI DIALOGEX 0, 0, 184, 124
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "General"
+FONT 9, "ÇlÇr ÇoÉSÉVÉbÉN", 0, 0, 0x0
+BEGIN
+    CONTROL         "Enable",IDC_PCIENABLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,8,140,10
+    LTEXT           "PCMC Type",IDC_STATIC,8,26,30,8
+    COMBOBOX        IDC_PCIPCMCTYPE,40,24,136,52,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Use BIOS32 (not recommended)",IDC_PCIBIOS32,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,44,140,10
 END
 
 
@@ -773,6 +866,17 @@ BEGIN
         TOPMARGIN, 8
         BOTTOMMARGIN, 100
     END
+
+    IDD_BMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 180
+        VERTGUIDE, 30
+        VERTGUIDE, 64
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
+        HORZGUIDE, 65
+    END
 	
     IDD_NETWORK, DIALOG
     BEGIN
@@ -856,13 +960,14 @@ BEGIN
     MENUITEM "&Window snap",                IDM_SNAPENABLE
     MENUITEM "&Background",                 IDM_BACKGROUND
     MENUITEM "Back&ground sound",           IDM_BGSOUND
+    MENUITEM "&Restore window border",      IDM_RESTOREBORDER
     MENUITEM SEPARATOR
-    MENUITEM " 320x200",                    IDM_SCRNMUL4
-    MENUITEM " 480x300",                    IDM_SCRNMUL6
-    MENUITEM " 640x400",                    IDM_SCRNMUL8
-    MENUITEM " 800x500",                    IDM_SCRNMUL10
-    MENUITEM " 960x600",                    IDM_SCRNMUL12
-    MENUITEM "1280x800",                    IDM_SCRNMUL16
+    MENUITEM " 320x200(x0.5)",              IDM_SCRNMUL4
+    MENUITEM " 480x300(x0.75)",             IDM_SCRNMUL6
+    MENUITEM " 640x400(x1)",                IDM_SCRNMUL8
+    MENUITEM " 800x500(x1.25)",             IDM_SCRNMUL10
+    MENUITEM " 960x600(x1.5)",              IDM_SCRNMUL12
+    MENUITEM "1280x800(x2)",                IDM_SCRNMUL16
     MENUITEM SEPARATOR
 END
 
@@ -895,7 +1000,11 @@ BEGIN
         MENUITEM "&Reset",                      IDM_RESET
         MENUITEM SEPARATOR
         MENUITEM "&Configure...",               IDM_CONFIG
-        MENUITEM "&New disk...",                IDM_NEWDISK
+        POPUP "&New disk"
+        BEGIN
+            MENUITEM "&Floppy disk image...",   IDM_NEWDISKFD
+            MENUITEM "&Hard disk image...",     IDM_NEWDISKHD
+        END
         MENUITEM "&Font...",                    IDM_CHANGEFONT
         MENUITEM SEPARATOR
         MENUITEM "&Load VM config...",          IDM_LOADVMCFG
@@ -907,6 +1016,7 @@ BEGIN
     BEGIN
         MENUITEM "&Window",                     IDM_WINDOW
         MENUITEM "&Fullscreen",                 IDM_FULLSCREEN
+		//MENUITEM "&Restore window border",      IDM_RESTOREBORDER
         MENUITEM SEPARATOR
         MENUITEM "Nor&mal",                     IDM_ROLNORMAL
         MENUITEM "&Left rotated",               IDM_ROLLEFT
@@ -916,7 +1026,8 @@ BEGIN
         MENUITEM "Real &palettes",              IDM_RASTER
         MENUITEM SEPARATOR
         MENUITEM "&No wait",                    IDM_NOWAIT
-        //MENUITEM "&CPU clock stabilizer",       IDM_CPUSTABILIZER
+        MENUITEM "&CPU clock stabilizer",       IDM_CPUSTABILIZER
+        MENUITEM "&Async CPU (experimental)",   IDM_ASYNCCPU
         MENUITEM SEPARATOR
         MENUITEM "&Auto frame",                 IDM_AUTOFPS
         MENUITEM "F&ull frame",                 IDM_60FPS
@@ -949,6 +1060,10 @@ BEGIN
             MENUITEM "F12 = User2",                 IDM_USERKEY2
             MENUITEM "F12 = No wait",               IDM_F12NOWAIT
             MENUITEM "F12 = No wait(toggle)",       IDM_F12NOWAIT2
+            MENUITEM "F12 = WAB relay SW",          IDM_F12WABRELAY
+            MENUITEM SEPARATOR
+            MENUITEM "Use &NumLock key",            IDM_USENUMLOCK
+            MENUITEM "Swap PageUp/PageDown",        IDM_SWAPPAGEUPDOWN
             MENUITEM SEPARATOR
             MENUITEM "&System Key Hook",            IDM_SYSKHOOK
         END
@@ -967,13 +1082,23 @@ BEGIN
             MENUITEM "PC-9801-86 + &Chibi-oto",     IDM_PC9801_86_CB
             MENUITEM "PC-9801-11&8",                IDM_PC9801_118
             MENUITEM "PC-9801-86 + Mate-X PCM(&B460)", IDM_PC9801_86_WSS
+            MENUITEM "PC-9801-86 + 118(&B460)",     IDM_PC9801_86_118
             MENUITEM "Mate-&X PCM",                 IDM_MATE_X_PCM
             MENUITEM "S&peak board",                IDM_SPEAKBOARD
+            MENUITEM "PC-9801-86 + S&peak board",   IDM_86SPEAKBOARD
             MENUITEM "Sp&ark board",                IDM_SPARKBOARD
             MENUITEM "Sound &Orchestra",            IDM_SOUNDORCHESTRA
             MENUITEM "Sound Orchestra-&V",          IDM_SOUNDORCHESTRAV
+            MENUITEM "L&ittle Orchestra L",         IDM_LITTLEORCHESTRAL
+            MENUITEM "&Multimedia Orchestra",       IDM_MMORCHESTRA
             MENUITEM "Sound B&laster 16",           IDM_SB16
+            MENUITEM "PC-9801-86 + Sound Blaster 16",  IDM_PC9801_86_SB16
+            MENUITEM "Mate-X PCM + Sound Blaster 16",  IDM_WSS_SB16
+            MENUITEM "PC-9801-118 + Sound Blaster 16",   IDM_PC9801_118_SB16
+            MENUITEM "PC-9801-86 + Mate-X PCM(B460) + Sound Blaster 16",   IDM_PC9801_86_WSS_SB16
+            MENUITEM "PC-9801-86 + 118(B460) + Sound Blaster 16",   IDM_PC9801_86_118_SB16
             MENUITEM "&AMD-98",                     IDM_AMD98
+            MENUITEM "&WaveStar",                   IDM_WAVESTAR
             MENUITEM "&JastSound",                  IDM_JASTSOUND
             MENUITEM SEPARATOR
             MENUITEM "&Seek sound",                 IDM_SEEKSND
@@ -991,8 +1116,10 @@ BEGIN
             MENUITEM "&64.6MB",                     IDM_MEM646
             MENUITEM "&120.6MB",                    IDM_MEM1206
             MENUITEM "&230.6MB",                    IDM_MEM2306
+            MENUITEM "&512.6MB",                    IDM_MEM5126
+            MENUITEM "&1024.6MB",                   IDM_MEM10246
         END
-        POPUP "F&PU"
+        POPUP "&FPU"
         BEGIN
             MENUITEM "80bit Extended Precision FPU (recommended)",IDM_FPU80
             MENUITEM "64bit Double Precision FPU",  IDM_FPU64
@@ -1012,6 +1139,8 @@ BEGIN
             MENUITEM "x1/3",                        IDM_MOUSED3X
             MENUITEM "x1/4",                        IDM_MOUSED4X
         END
+        MENUITEM "IO &Bank Memory...",              IDM_BMS
+        MENUITEM SEPARATOR
         MENUITEM "Se&rial option...",               IDM_SERIAL1
         MENUITEM SEPARATOR
         MENUITEM "MIDI &option...",                 IDM_MPUPC98
@@ -1023,11 +1152,14 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Window Accelerator option...",   IDM_WABOPT
         MENUITEM SEPARATOR
+        MENUITEM "P&CI option...",                  IDM_PCIOPT
+        MENUITEM SEPARATOR
         MENUITEM "&Hostdrv option...",              IDM_HOSTDRVOPT
     END
     POPUP "&Other"
     BEGIN
         MENUITEM "&BMP save...",                IDM_BMPSAVE
+        MENUITEM "Hook fomtrom",                IDM_HF_ENABLE
         MENUITEM "&TXT save...",                IDM_TXTSAVE
         MENUITEM "&S98 logging...",             IDM_S98LOGGING
         MENUITEM "Ca&lendar...",                IDM_CALENDAR
@@ -1041,9 +1173,11 @@ BEGIN
         MENUITEM "Joy re&verse",                IDM_JOYX
         MENUITEM "Joy &rapid",                  IDM_RAPID
         MENUITEM "&Mouse rapid",                IDM_MSRAPID
+        MENUITEM "&Use SSTP",                   IDM_SSTP
         MENUITEM "&ITF work",                   IDM_ITFWORK
-        MENUITEM "Fix &MMTimer",                IDM_TIMERFIX
-        MENUITEM "&Skip over 16MB memcheck",    IDM_SKIP16MEMCHK
+        // MENUITEM "Fix &MMTimer",                IDM_TIMERFIX
+        // MENUITEM "&Skip over 16MB memcheck",    IDM_SKIP16MEMCHK
+        MENUITEM "Fast m&emcheck",              IDM_FASTMEMCHK
         MENUITEM SEPARATOR
         MENUITEM "&Help...",                    IDM_HELP
         MENUITEM "&About...",                   IDM_ABOUT
@@ -1162,12 +1296,16 @@ BEGIN
         MENUITEM "&Open...",                    IDM_IDE0OPEN
         MENUITEM SEPARATOR
         MENUITEM "&Remove",                     IDM_IDE0EJECT
+        MENUITEM SEPARATOR
+        MENUITEM " ",							IDM_IDE0STATE
     END
     POPUP "SASI #1"
     BEGIN
         MENUITEM "&Open...",                    IDM_IDE1OPEN
         MENUITEM SEPARATOR
         MENUITEM "&Remove",                     IDM_IDE1EJECT
+        MENUITEM SEPARATOR
+        MENUITEM " ",							IDM_IDE1STATE
     END
 END
 
@@ -1335,7 +1473,11 @@ NP21TOOL                BITMAP                  "..\\np21tool.bmp"
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
+#ifdef SUPPORT_IA32_HAXM
+IDI_ICON1               ICON                    "..\\haxmnp2.ico"
+#else
 IDI_ICON1               ICON                    "..\\np2.ico"
+#endif
 IDI_ICON2               ICON                    "..\\np2debug.ico"
 IDI_ICON3               ICON                    "..\\np2vm.ico"
 
@@ -1350,14 +1492,21 @@ RELAY1WAV               EXTROM                  "..\\relay1.wav"
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// RAWBMP
+//
+
+JUMPER118               RAWBMP                  "..\\j118.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // String Table
 //
 
 STRINGTABLE
 BEGIN
-    IDS_APP_NAME2           "Neko Project II/W"
-    IDS_APP_NAME21          "Neko Project 21/W"
-    IDS_FILENAME_HELP       "np21w.chm"
+    IDS_APP_NAME2           "Neko Project IIÅ@kai"
+    IDS_APP_NAME21          "Neko Project 21 kai"
+    IDS_FILENAME_HELP       "np2kai.chm"
     IDS_FONTFACE            "ÇlÇr ÉSÉVÉbÉN"
     IDS_PFONTFACE           "ÇlÇr ÇoÉSÉVÉbÉN"
     IDS_FONTFACE_PRIMARY    "ÇlÇr ÉSÉVÉbÉN"
@@ -1381,6 +1530,8 @@ BEGIN
     IDS_SERIALOPTION        "Serial option"
     IDS_NETWORKOPTION       "Network option"
     IDS_WABOPTION           "Window Accelerator board option"
+    IDS_PCIOPTION           "PCI option"
+    IDS_MIDIOPTION          "MIDI option"
 END
 
 STRINGTABLE
@@ -1452,6 +1603,8 @@ BEGIN
     IDS_COM3                "COM3"
     IDS_COM4                "COM4"
     IDS_MIDI                "MIDI"
+    IDS_TABLET              "PENTAB"
+    IDS_PIPE                "PIPE"
     IDS_2_0MHZ              "1.9968MHz"
     IDS_2_5MHZ              "2.4576MHz"
 END
@@ -1534,14 +1687,30 @@ BEGIN
     IDS_GD5430_XE10         "PC-9821Xe10,Xa7e,Xb10 built-in"
     IDS_GD5430_CB2          "PC-9821Cb2 built-in"
     IDS_GD5430_CX2          "PC-9821Cx2 built-in"
+    IDS_GD5430_PCI          "PC-9821 PCI CL-GD5446 built-in"
     IDS_GD5430_WAB          "MELCO WAB-S"
     IDS_GD5430_WSN_A2F      "MELCO WSN-A2F"
     IDS_GD5430_WSN          "MELCO WSN-A4F"
-    IDS_GD5430_GA98NB       "I-O DATA GA-98NBI/C,II,IV"
+    IDS_GD5430_GA98NBIC     "I-O DATA GA-98NBI/C"
+    IDS_GD5430_GA98NBII     "I-O DATA GA-98NBII"
+    IDS_GD5430_GA98NBIV     "I-O DATA GA-98NBIV"
     IDS_GD5430_96           "PC-9801-96(PC-9801B3-E02)"
+    IDS_GD5430_AUTO_XE_G1_PCI    "Auto Select(Xe10, GA-98NBI/C, PCI)"
+    IDS_GD5430_AUTO_XE_G2_PCI    "Auto Select(Xe10, GA-98NBII, PCI)"
+    IDS_GD5430_AUTO_XE_G4_PCI    "Auto Select(Xe10, GA-98NBIV, PCI)"
+    IDS_GD5430_AUTO_XE_WA_PCI    "Auto Select(Xe10, WAB-S, PCI)"
+    IDS_GD5430_AUTO_XE_WS_PCI    "Auto Select(Xe10, WSN-A2F, PCI)"
+    IDS_GD5430_AUTO_XE_W4_PCI    "Auto Select(Xe10, WSN-A4F, PCI)"
     IDS_GD5430_AUTO_XE10_WABS    "Auto Select(Xe10, WAB-S)"
     IDS_GD5430_AUTO_XE10_WSN2    "Auto Select(Xe10, WSN-A2F)"
     IDS_GD5430_AUTO_XE10_WSN4    "Auto Select(Xe10, WSN-A4F)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PCI_PCMC_82434LX    "Intel 82434LX"
+    IDS_PCI_PCMC_82441FX    "Intel 82441FX"
+    IDS_PCI_PCMC_WILDCAT    "VLSI Wildcat"
 END
 
 STRINGTABLE
@@ -1581,15 +1750,36 @@ STRINGTABLE
 BEGIN
     IDS_CPU_CUSTOM          "(custom)"
     IDS_CPU_80286           "Intel 80286"
+    IDS_CPU_80386           "Intel 80386"
     IDS_CPU_I486SX          "Intel i486SX"
     IDS_CPU_I486DX          "Intel i486DX"
     IDS_CPU_PENTIUM         "Intel Pentium"
     IDS_CPU_MMXPENTIUM      "Intel MMX Pentium"
     IDS_CPU_PENTIUMPRO      "Intel Pentium Pro"
     IDS_CPU_PENTIUMII       "Intel Pentium II"
+    IDS_CPU_PENTIUMIII      "Intel Pentium III"
+    IDS_CPU_PENTIUMM        "Intel Pentium M"
+    IDS_CPU_PENTIUM4        "Intel Pentium 4"
     IDS_CPU_AMD_K6_2        "AMD K6-2"
     IDS_CPU_AMD_K6_III      "AMD K6-III"
+    IDS_CPU_AMD_K7_ATHLON   "AMD K7 Athlon"
+    IDS_CPU_AMD_K7_ATHLONXP "AMD K7 Athlon XP"
     IDS_CPU_NEKOPRO         "Neko Processor II"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_RENDERER_DIRECTDRAW "DirectDraw"
+    IDS_RENDERER_DIRECT3D   "Direct3D"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_RENDERER_IMODE_NN       "Nearest Neighbor"
+    IDS_RENDERER_IMODE_LINEAR   "Bilinear"
+    IDS_RENDERER_IMODE_PIXEL    "Pixel-retained (Light)"
+    IDS_RENDERER_IMODE_PIXEL2   "Pixel-retained (Soft)"
+    IDS_RENDERER_IMODE_PIXEL3   "Pixel-retained (Hard)"
 END
 
 
@@ -1625,7 +1815,7 @@ STRINGTABLE
 BEGIN
     IDS_FDDTITLE            "Select floppy image"
     IDS_FDDEXT              "d88"
-    IDS_FDDFILTER           "Anex86 floppy disk images (*.fdi)|*.fdi|T98-Next floppy disk images (*.nfd)|*.nfd|Virtual floppy disk images (*.fdd)|*.fdd|BKDSK images (*.hdm;*.hd4;*.hd5;*.hd9;*.h01;*.hdb;*.ddb;*.dd6;*.dd9)|*.hdm;*.hd4;*.hd5;*.hd9;*.h01;*.hdb;*.ddb;*.dd6;*.dd9|D88 image files (*.d88;*.d98)|*.d88;*.88d;*.d98;*.98d|DCP/DCU image files (*.dcp;*.dcu)|*.dcp;*.dcu|Floppy disk images (*.xdf;*.hdm;*.dup;*.2hd;*.flp;*.bin;*.tfd)|*.fdi;*.hdm;*.hd4;*.hd5;*.hd9;*.h01;*.hdb;*.ddb;*.dd6;*.dd9;*.dcp;*.dcu;*.xdf;*.dup;*.2hd;*.flp;*.bin;*.tfd;*.fim;*.img;*.ima|All supported files|*.fdi;*.nfd;*.fdd;*.hdm;*.hd4;*.hd5;*.hd9;*.h01;*hdb;*.ddb;*.dd6;*.dd9;*.d88;*.88d;*.d98;*.98d;*.dcp;*.dcu;*.xdf;*.dup;*.2hd;*.flp;*.bin;*.tfd;*.fim;*.img;*.ima|All files (*.*)|*.*|"
+    IDS_FDDFILTER           "Anex86 floppy disk images (*.fdi)|*.fdi|T98-Next floppy disk images (*.nfd)|*.nfd|Virtual floppy disk images (*.fdd)|*.fdd|BKDSK images (*.hdm;*.hd4;*.hd5;*.hd9;*.h01;*.hdb;*.ddb;*.dd6;*.dd9)|*.hdm;*.hd4;*.hd5;*.hd9;*.h01;*.hdb;*.ddb;*.dd6;*.dd9|D88 image files (*.d88;*.d98)|*.d88;*.88d;*.d98;*.98d|DCP/DCU image files (*.dcp;*.dcu)|*.dcp;*.dcu|Floppy disk images (*.xdf;*.hdm;*.dup;*.2hd;*.flp;*.bin;*.tfd)|*.fdi;*.hdm;*.hd4;*.hd5;*.hd9;*.h01;*.hdb;*.ddb;*.dd6;*.dd9;*.dcp;*.dcu;*.xdf;*.dup;*.2hd;*.flp;*.bin;*.tfd;*.fim|All supported files|*.fdi;*.nfd;*.fdd;*.hdm;*.hd4;*.hd5;*.hd9;*.h01;*hdb;*.ddb;*.dd6;*.dd9;*.d88;*.88d;*.d98;*.98d;*.dcp;*.dcu;*.xdf;*.dup;*.2hd;*.flp;*.bin;*.tfd;*.fim|All files (*.*)|*.*|"
 //    IDS_FDDFILTER           "D88 image files (*.d88;*.d98)|*.d88;*.88d;*.d98;*.98d|Floppy disk images (*.xdf;*.hdm;*.dup;*.2hd)|*.xdf;*.hdm;*.hd4;*.dup;*.2hd;*.tfd|All supported files|*.d88;*.88d;*.d98;*.98d;*.fdi;*.xdf;*.hdm;*.hd4;*.dup;*.2hd;*.tfd|All files (*.*)|*.*|"
 END
 
@@ -1634,6 +1824,7 @@ BEGIN
     IDS_HDDTITLE            "Select HD image"
     IDS_HDDEXT              "thd"
     IDS_HDDFILTER           "Anex86 harddisk image files (*.hdi)|*.hdi|T98 harddisk image files (*.thd)|*.thd|T98-Next harddisk image files (*.nhd)|*.nhd|VirtualPC harddisk image files (*.vhd)|*.vhd|SL9821 harddisk image files (*.slh)|*.slh|All supported files|*.thd;*.nhd;*.hdi;*.vhd;*.slh|All files (*.*)|*.*|"
+    IDS_HDDFILTER_NVL       "Anex86 harddisk image files (*.hdi)|*.hdi|T98 harddisk image files (*.thd)|*.thd|T98-Next harddisk image files (*.nhd)|*.nhd|VirtualPC harddisk image files (*.vhd)|*.vhd|SL9821 harddisk image files (*.slh)|*.slh|Virtual Machine harddisk image files (*.vmdk;*.dsk)|*.vmdk;*.dsk|Hyper-V harddisk image files (*.vhdx)|*.vhdx|VirtualBox harddisk image files (*.vdi)|*.vdi|QEMU harddisk image files (*.qcow;*.qcow2)|*.qcow;*.qcow2|Parallels harddisk image files (*.hdd)|*.hdd|All supported files|*.thd;*.nhd;*.hdi;*.vhd;*.slh;*.vmdk;*.dsk;*.vhdx;*.vdi;*.qcow;*.qcow2;*.hdd|All files (*.*)|*.*|"
     IDS_SASITITLE           "Select SASI/IDE HDD image"
     IDS_IDETITLE            "Select IDE HDD image"
     IDS_ISOTITLE            "Select ISO-9660 image"
@@ -1655,8 +1846,11 @@ BEGIN
     IDS_NEWDISKEXT          "d88"
 //    IDS_NEWDISKFILTER       "D88 image files (*.d88;*.d98)|*.d88;*.88d;*.d98;*.98d|Anex86 harddisk image files (*.hdi)|*.hdi|T98 harddisk image files (*.thd)|*.thd|T98-Next harddisk image files (*.nhd)|*.nhd|Virtual98 harddisk image files (*.hdd)|*.hdd|"
 //    IDS_NEWDISKFILTER2      "D88 image files (*.d88;*.d98)|*.d88;*.88d;*.d98;*.98d|Anex86 harddisk image files (*.hdi)|*.hdi|T98 harddisk image files (*.thd)|*.thd|T98-Next harddisk image files (*.nhd)|*.nhd|"
-    IDS_NEWDISKFILTER       "D88 image files (*.d88;*.d98)|*.d88;*.88d;*.d98;*.98d|Anex86 harddisk image files (*.hdi)|*.hdi|T98 harddisk image files (*.thd)|*.thd|T98-Next harddisk image files (*.nhd)|*.nhd|Virtual98 harddisk image files (*.hdd)|*.hdd|RaSCSI harddisk image files (*.hdn)|*.hdn|VirtualPC harddisk image files (*.vhd)|*.vhd|"
-    IDS_NEWDISKFILTER2      "D88 image files (*.d88;*.d98)|*.d88;*.88d;*.d98;*.98d|Anex86 harddisk image files (*.hdi)|*.hdi|T98 harddisk image files (*.thd)|*.thd|T98-Next harddisk image files (*.nhd)|*.nhd|VirtualPC harddisk image files (*.vhd)|*.vhd|"
+    IDS_NEWDISKFILTER       "D88 image files (*.d88;*.d98)|*.d88;*.88d;*.d98;*.98d|1.25MB raw image file (*.hdm)|*.hdm|1.44MB raw image file (*.hd4)|*.hd4|Anex86 harddisk image files (*.hdi)|*.hdi|T98 harddisk image files (*.thd)|*.thd|T98-Next harddisk image files (*.nhd)|*.nhd|Virtual98 harddisk image files (*.hdd)|*.hdd|RaSCSI harddisk image files (*.hdn)|*.hdn|VirtualPC harddisk image files (*.vhd)|*.vhd|"
+    IDS_NEWDISKFILTER2      "D88 image files (*.d88;*.d98)|*.d88;*.88d;*.d98;*.98d|1.25MB raw image file (*.hdm)|*.hdm|1.44MB raw image file (*.hd4)|*.hd4|Anex86 harddisk image files (*.hdi)|*.hdi|T98 harddisk image files (*.thd)|*.thd|T98-Next harddisk image files (*.nhd)|*.nhd|VirtualPC harddisk image files (*.vhd)|*.vhd|"
+    IDS_NEWDISKHDFILTER     "T98-Next harddisk image files (*.nhd)|*.nhd|VirtualPC harddisk image files (*.vhd)|*.vhd|Anex86 harddisk image files (*.hdi)|*.hdi|T98 harddisk image files (*.thd)|*.thd|Virtual98 harddisk image files (*.hdd)|*.hdd|RaSCSI harddisk image files (*.hdn)|*.hdn|"
+    IDS_NEWDISKHDFILTER2    "T98-Next harddisk image files (*.nhd)|*.nhd|VirtualPC harddisk image files (*.vhd)|*.vhd|Anex86 harddisk image files (*.hdi)|*.hdi|T98 harddisk image files (*.thd)|*.thd|"
+    IDS_NEWDISKFDFILTER     "D88 image files (*.d88;*.d98)|*.d88;*.88d;*.d98;*.98d|1.25MB raw image file (*.hdm)|*.hdm|1.44MB raw image file (*.hd4)|*.hd4|"
     IDS_S98TITLE            "Save as S98 log"
     IDS_S98EXT              "s98"
     IDS_S98FILTER           "S98 log (*.s98)|*.s98|"

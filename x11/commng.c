@@ -11,6 +11,9 @@ static UINT
 ncread(COMMNG self, UINT8 *data)
 {
 
+	(void)self;
+	(void)data;
+
 	return 0;
 }
 
@@ -18,12 +21,35 @@ static UINT
 ncwrite(COMMNG self, UINT8 data)
 {
 
+	(void)self;
+	(void)data;
+
 	return 0;
+}
+
+static UINT
+ncwriteretry(COMMNG self)
+{
+
+	(void)self;
+
+	return 1;
+}
+
+static UINT
+nclastwritesuccess(COMMNG self)
+{
+
+	(void)self;
+
+	return 1;
 }
 
 static UINT8
 ncgetstat(COMMNG self)
 {
+
+	(void)self;
 
 	return 0xf0;
 }
@@ -31,6 +57,11 @@ ncgetstat(COMMNG self)
 static INTPTR
 ncmsg(COMMNG self, UINT msg, INTPTR param)
 {
+
+	(void)self;
+	(void)msg;
+	(void)param;
+
 
 	return 0;
 }
@@ -40,10 +71,12 @@ ncrelease(COMMNG self)
 {
 
 	/* Nothing to do */
+
+	(void)self;
 }
 
 static _COMMNG com_nc = {
-	COMCONNECT_OFF, ncread, ncwrite, ncgetstat, ncmsg, ncrelease
+	COMCONNECT_OFF, ncread, ncwrite, ncwriteretry, nclastwritesuccess, ncgetstat, ncmsg, ncrelease
 };
 
 
@@ -81,6 +114,16 @@ commng_create(UINT device)
 		cfg = &np2oscfg.mpu;
 		break;
 
+#if defined(SUPPORT_SMPU98)
+	case COMCREATE_SMPU98_A:
+		cfg = &np2oscfg.smpuA;
+		break;
+
+	case COMCREATE_SMPU98_B:
+		cfg = &np2oscfg.smpuB;
+		break;
+#endif
+
 	case COMCREATE_PRINTER:
 		cfg = NULL;
 		if (np2oscfg.jastsnd) {
@@ -97,7 +140,7 @@ commng_create(UINT device)
 		 && (cfg->port <= COMPORT_COM4)) {
 			ret = cmserial_create(cfg->port - COMPORT_COM1 + 1, cfg->param, cfg->speed);
 		} else if (cfg->port == COMPORT_MIDI) {
-			ret = cmmidi_create(cfg->mout, cfg->min, cfg->mdl);
+			ret = cmmidi_create(device, cfg->mout, cfg->min, cfg->mdl);
 			if (ret) {
 				(*ret->msg)(ret, COMMSG_MIMPIDEFFILE, (INTPTR)cfg->def);
 				(*ret->msg)(ret, COMMSG_MIMPIDEFEN, (INTPTR)cfg->def_en);
@@ -114,6 +157,8 @@ commng_destroy(COMMNG hdl)
 {
 
 	if (hdl) {
-		hdl->release(hdl);
+		if(hdl->release) {
+			hdl->release(hdl);
+		}
 	}
 }

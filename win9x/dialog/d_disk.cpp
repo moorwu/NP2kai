@@ -19,39 +19,50 @@
 #include "fdd/newdisk.h"
 #include "fdd/sxsi.h"
 #include "np2class.h"
+#include "winfiledlg.h"
+#if defined(_WINDOWS)
+#include	<process.h>
+#endif
+#ifdef SUPPORT_NVL_IMAGES
+extern "C" BOOL nvl_check();
+#endif
+#include "dialog/winfiledlg.h"
 
-// i’»•\¦—piÀ‘•“‚·‚¬¥¥¥j
-static int _mt_progressvalue = 0;
-static int _mt_progressmax = 100;
+
+// é€²æ—è¡¨ç¤ºç”¨ï¼ˆå®Ÿè£…é…·ã™ãï½¥ï½¥ï½¥ï¼‰
+static int mt_progressvalue = 0;
+static int mt_progressmax = 100;
 
 /**
- * FDD ‘I‘ğƒ_ƒCƒAƒƒO
- * @param[in] hWnd eƒEƒBƒ“ƒhƒE
- * @param[in] drv ƒhƒ‰ƒCƒu
+ * FDD é¸æŠãƒ€ã‚¤ã‚¢ãƒ­ã‚°
+ * @param[in] hWnd è¦ªã‚¦ã‚£ãƒ³ãƒ‰ã‚¦
+ * @param[in] drv ãƒ‰ãƒ©ã‚¤ãƒ–
  */
 void dialog_changefdd(HWND hWnd, REG8 drv)
 {
 	if (drv < 4)
 	{
-		LPCTSTR lpPath = fdd_diskname(drv);
-		if ((lpPath == NULL) || (lpPath[0] == '\0'))
+		char szPath[MAX_PATH];
+		char szImage[MAX_PATH];
+		char szName[MAX_PATH];
+
+		strcpy(szPath, fdd_diskname(drv));
+		if ((szPath == NULL) || (szPath[0] == '\0'))
 		{
-			lpPath = fddfolder;
+			strcpy(szPath, fddfolder);
 		}
 
 		std::tstring rExt(LoadTString(IDS_FDDEXT));
 		std::tstring rFilter(LoadTString(IDS_FDDFILTER));
 		std::tstring rTitle(LoadTString(IDS_FDDTITLE));
 
-		CFileDlg dlg(TRUE, rExt.c_str(), lpPath, OFN_FILEMUSTEXIST | OFN_HIDEREADONLY, rFilter.c_str(), hWnd);
-		dlg.m_ofn.lpstrTitle = rTitle.c_str();
-		dlg.m_ofn.nFilterIndex = 8; // 3;
-		if (dlg.DoModal())
+		OPENFILENAMEW ofnw;
+		if (WinFileDialogW(hWnd, &ofnw, WINFILEDIALOGW_MODE_GET1, szPath, szName, "", rTitle.c_str(), rFilter.c_str(), 8))
 		{
-			LPCTSTR lpImage = dlg.GetPathName();
-			BOOL bReadOnly = dlg.GetReadOnlyPref();
+			LPCTSTR lpImage = szPath;
+			BOOL bReadOnly = (ofnw.Flags & OFN_READONLY) ? TRUE : FALSE;
 
-			file_cpyname(fddfolder, lpImage, _countof(fddfolder));
+			file_cpyname(fddfolder, szImage, _countof(fddfolder));
 			sysmng_update(SYS_UPDATEOSCFG);
 			diskdrv_setfdd(drv, lpImage, bReadOnly);
 			toolwin_setfdd(drv, lpImage);
@@ -60,9 +71,9 @@ void dialog_changefdd(HWND hWnd, REG8 drv)
 }
 
 /**
- * HDD ‘I‘ğƒ_ƒCƒAƒƒO
- * @param[in] hWnd eƒEƒBƒ“ƒhƒE
- * @param[in] drv ƒhƒ‰ƒCƒu
+ * HDD é¸æŠãƒ€ã‚¤ã‚¢ãƒ­ã‚°
+ * @param[in] hWnd è¦ªã‚¦ã‚£ãƒ³ãƒ‰ã‚¦
+ * @param[in] drv ãƒ‰ãƒ©ã‚¤ãƒ–
  */
 void dialog_changehdd(HWND hWnd, REG8 drv)
 {
@@ -83,14 +94,16 @@ void dialog_changehdd(HWND hWnd, REG8 drv)
 				nTitle = IDS_SASITITLE;
 				nExt = IDS_HDDEXT;
 				nFilter = IDS_HDDFILTER;
-				nIndex = 6;
+				//nIndex = 6;
+				nIndex = 0;
 			}
 			else
 			{
 				nTitle = IDS_ISOTITLE;
 				nExt = IDS_ISOEXT;
 				nFilter = IDS_ISOFILTER;
-				nIndex = 7; // 3
+				//nIndex = 7; // 3
+				nIndex = 0;
 			}
 		}
 #else
@@ -103,7 +116,8 @@ void dialog_changehdd(HWND hWnd, REG8 drv)
 #endif
 			nExt = IDS_HDDEXT;
 			nFilter = IDS_HDDFILTER;
-			nIndex = 6;//4;
+			//nIndex = 6;//4;
+			nIndex = 0;
 		}
 #endif
 	}
@@ -115,7 +129,8 @@ void dialog_changehdd(HWND hWnd, REG8 drv)
 			nTitle = IDS_SCSITITLE;
 			nExt = IDS_SCSIEXT;
 			nFilter = IDS_SCSIFILTER;
-			nIndex = 3;
+			//nIndex = 3;	
+			nIndex = 0;
 		}
 	}
 #endif	// defined(SUPPORT_SCSI)
@@ -124,76 +139,103 @@ void dialog_changehdd(HWND hWnd, REG8 drv)
 		return;
 	}
 
-	LPCTSTR lpPath;
+	char szPath[MAX_PATH];
+	char szImage[MAX_PATH];
+	char szName[MAX_PATH];
 #ifdef SUPPORT_IDEIO
 	if(np2cfg.idetype[drv]!=SXSIDEV_CDROM)
 	{
 #endif
-		lpPath = diskdrv_getsxsi(drv);
+		strcpy(szPath, diskdrv_getsxsi(drv));
 #ifdef SUPPORT_IDEIO
 	}
 	else
 	{
-		lpPath = np2cfg.idecd[drv];
+		strcpy(szPath, np2cfg.idecd[drv]);
 	}
 #endif
-	if ((lpPath == NULL) || (lpPath[0] == '\0') || _tcsnicmp(lpPath, OEMTEXT("\\\\.\\"), 4)==0)
+	if ((szPath == NULL) || (szPath[0] == '\0') || _tcsnicmp(szPath, OEMTEXT("\\\\.\\"), 4)==0)
 	{
-		lpPath = sxsi_getfilename(drv);
-		if ((lpPath == NULL) || (lpPath[0] == '\0') || _tcsnicmp(lpPath, OEMTEXT("\\\\.\\"), 4)==0)
+		if(sxsi_getfilename(drv)) {
+			strcpy(szPath, sxsi_getfilename(drv));
+		}
+		if ((szPath == NULL) || (szPath[0] == '\0') || _tcsnicmp(szPath, OEMTEXT("\\\\.\\"), 4)==0)
 		{
 			if(sxsi_getdevtype(drv)!=SXSIDEV_CDROM)
 			{
-				lpPath = hddfolder;
+				strcpy(szPath, hddfolder);
 			}
 			else
 			{
-				lpPath = cdfolder;
+				strcpy(szPath, cdfolder);
 			}
 		}
 	}
+	
+#ifdef SUPPORT_NVL_IMAGES
+	if(nFilter == IDS_HDDFILTER && nvl_check()){
+		nFilter = IDS_HDDFILTER_NVL;
+		nIndex = 0;
+	}
+#endif
 
 	std::tstring rExt(LoadTString(nExt));
 	std::tstring rFilter(LoadTString(nFilter));
 	std::tstring rTitle(LoadTString(nTitle));
+	
+	if(nIndex==0){ // All supported filesï¼ˆå¾Œã‚ã‹ã‚‰2ç•ªç›®ï¼‰ã‚’è‡ªå‹•é¸æŠ
+		int seppos = 0;
+		int seppostmp;
+		int sepcount = 0;
+		// åŒºåˆ‡ã‚Šæ–‡å­—ã®æ•°ã‚’æ•°ãˆã‚‹
+		while((seppostmp = (int)rFilter.find('|', seppos)) != std::string::npos){
+			if(seppostmp == std::string::npos) break;
+			seppos = seppostmp + 1;
+			sepcount++;
+		}
+		if(rFilter.back()!='|'){
+			sepcount++; // æœ«å°¾ãŒ|ã§ãªã‘ã‚Œã°ã‚ã‚‹ã‚‚ã®ã¨ã™ã‚‹
+		}
+		if((sepcount / 2) - 1 > 0){
+			nIndex = (sepcount / 2) - 1; // æœ€å¾ŒãŒAll filesãªã®ã§ä¸€ã¤å‰ã‚’é¸æŠ
+		}
+	}
 
-	CFileDlg dlg(TRUE, rExt.c_str(), lpPath, OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_SHAREAWARE, rFilter.c_str(), hWnd);
-	dlg.m_ofn.lpstrTitle = rTitle.c_str();
-	dlg.m_ofn.nFilterIndex = nIndex;
-	if (dlg.DoModal())
+	OPENFILENAMEW ofnw;
+	if (WinFileDialogW(hWnd, &ofnw, WINFILEDIALOGW_MODE_GET2, szPath, szName, "", rTitle.c_str(), rFilter.c_str(), nIndex))
 	{
-		LPCTSTR lpImage = dlg.GetPathName();
+		strcpy(szImage, szPath);
 #ifdef SUPPORT_IDEIO
 		if(np2cfg.idetype[drv]!=SXSIDEV_CDROM)
 		{
-			file_cpyname(hddfolder, lpImage, _countof(hddfolder));
+			file_cpyname(hddfolder, szImage, _countof(hddfolder));
 		}
 		else
 		{
 #endif
-			file_cpyname(cdfolder, lpImage, _countof(cdfolder));
+			file_cpyname(cdfolder, szImage, _countof(cdfolder));
 #ifdef SUPPORT_IDEIO
 		}
 #endif
 		sysmng_update(SYS_UPDATEOSCFG);
-		diskdrv_setsxsi(drv, lpImage);
+		diskdrv_setsxsi(drv, szImage);
 	}
 }
 
 
 // ---- newdisk
 
-/** ƒfƒtƒHƒ‹ƒg–¼ */
+/** ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆå */
 static const TCHAR str_newdisk[] = TEXT("newdisk");
 
-/** HDD ƒTƒCƒY */
+/** HDD ã‚µã‚¤ã‚º */
 #ifdef SUPPORT_LARGE_HDD
 static const UINT32 s_hddsizetbl[] = {20, 41, 65, 80, 127, 255, 511, 1023, 2047, 4095, 8191};
 #else
 static const UINT32 s_hddsizetbl[] = {20, 41, 65, 80, 127, 255, 511, 1023, 2047};
 #endif
 
-/** HDD ƒTƒCƒY */
+/** HDD ã‚µã‚¤ã‚º */
 static const UINT32 s_hddCtbl[] = {16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536};
 static const UINT32 s_hddHtbl[] = { 8, 15, 16};
 static const UINT32 s_hddStbl[] = {17, 63, 255};
@@ -208,16 +250,16 @@ static const UINT16 s_sasires[6] =
 };
 
 /**
- * @brief V‚µ‚¢HDD
+ * @brief æ–°ã—ã„HDD
  */
 class CNewHddDlg : public CDlgProc
 {
 public:
 	/**
-	 * ƒRƒ“ƒXƒgƒ‰ƒNƒ^
-	 * @param[in] hwndParent eƒEƒBƒ“ƒhƒE
-	 * @param[in] nHddMinSize Å¬ƒTƒCƒY
-	 * @param[in] nHddMaxSize Å‘åƒTƒCƒY
+	 * ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
+	 * @param[in] hwndParent è¦ªã‚¦ã‚£ãƒ³ãƒ‰ã‚¦
+	 * @param[in] nHddMinSize æœ€å°ã‚µã‚¤ã‚º
+	 * @param[in] nHddMaxSize æœ€å¤§ã‚µã‚¤ã‚º
 	 */
 	CNewHddDlg(HWND hwndParent, UINT32 nHddMinSize, UINT32 nHddMaxSize)
 		: CDlgProc(IDD_NEWHDDDISK, hwndParent)
@@ -236,15 +278,15 @@ public:
 	}
 
 	/**
-	 * ƒfƒXƒgƒ‰ƒNƒ^
+	 * ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
 	 */
 	virtual ~CNewHddDlg()
 	{
 	}
 
 	/**
-	 * ƒTƒCƒY‚ğ•Ô‚·
-	 * @return ƒTƒCƒY
+	 * ã‚µã‚¤ã‚ºã‚’è¿”ã™
+	 * @return ã‚µã‚¤ã‚º
 	 */
 	UINT32 GetSize() const
 	{
@@ -252,8 +294,8 @@ public:
 	}
 	
 	/**
-	 * ƒVƒŠƒ“ƒ_”‚ğ•Ô‚·
-	 * @return ƒTƒCƒY
+	 * ã‚·ãƒªãƒ³ãƒ€æ•°ã‚’è¿”ã™
+	 * @return ã‚µã‚¤ã‚º
 	 */
 	UINT GetC() const
 	{
@@ -261,8 +303,8 @@ public:
 	}
 	
 	/**
-	 * ƒwƒbƒh”‚ğ•Ô‚·
-	 * @return ƒTƒCƒY
+	 * ãƒ˜ãƒƒãƒ‰æ•°ã‚’è¿”ã™
+	 * @return ã‚µã‚¤ã‚º
 	 */
 	UINT GetH() const
 	{
@@ -270,8 +312,8 @@ public:
 	}
 	
 	/**
-	 * ƒZƒNƒ^”‚ğ•Ô‚·
-	 * @return ƒTƒCƒY
+	 * ã‚»ã‚¯ã‚¿æ•°ã‚’è¿”ã™
+	 * @return ã‚µã‚¤ã‚º
 	 */
 	UINT GetS() const
 	{
@@ -279,8 +321,8 @@ public:
 	}
 	
 	/**
-	 * ƒZƒNƒ^ƒTƒCƒY‚ğ•Ô‚·
-	 * @return ƒTƒCƒY
+	 * ã‚»ã‚¯ã‚¿ã‚µã‚¤ã‚ºã‚’è¿”ã™
+	 * @return ã‚µã‚¤ã‚º
 	 */
 	UINT GetSS() const
 	{
@@ -288,8 +330,8 @@ public:
 	}
 	
 	/**
-	 * Ú×İ’èƒ‚[ƒh‚È‚çtrue
-	 * @return Ú×İ’èƒ‚[ƒh
+	 * è©³ç´°è¨­å®šãƒ¢ãƒ¼ãƒ‰ãªã‚‰true
+	 * @return è©³ç´°è¨­å®šãƒ¢ãƒ¼ãƒ‰
 	 */
 	bool IsAdvancedMode() const
 	{
@@ -297,8 +339,8 @@ public:
 	}
 	
 	/**
-	 * —e—Ê‰Â•Ïƒ‚[ƒh‚È‚çtrue
-	 * @return Ú×İ’èƒ‚[ƒh
+	 * å®¹é‡å¯å¤‰ãƒ¢ãƒ¼ãƒ‰ãªã‚‰true
+	 * @return è©³ç´°è¨­å®šãƒ¢ãƒ¼ãƒ‰
 	 */
 	bool IsDynamicDisk() const
 	{
@@ -306,8 +348,8 @@ public:
 	}
 	
 	/**
-	 * ‹óƒfƒBƒXƒNì¬‚È‚çtrue
-	 * @return Ú×İ’èƒ‚[ƒh
+	 * ç©ºãƒ‡ã‚£ã‚¹ã‚¯ä½œæˆãªã‚‰true
+	 * @return è©³ç´°è¨­å®šãƒ¢ãƒ¼ãƒ‰
 	 */
 	bool IsBlankDisk() const
 	{
@@ -315,7 +357,7 @@ public:
 	}
 	
 	/**
-	 * Šg’£İ’è‚ğ‹–‰Â
+	 * æ‹¡å¼µè¨­å®šã‚’è¨±å¯
 	 * @return 
 	 */
 	void EnableAdvancedOptions()
@@ -325,7 +367,7 @@ public:
 	}
 	
 	/**
-	 * “®“IƒŠƒTƒCƒYƒfƒBƒXƒN‚ğ‹–‰Â(VHD—p)
+	 * å‹•çš„ãƒªã‚µã‚¤ã‚ºãƒ‡ã‚£ã‚¹ã‚¯ã‚’è¨±å¯(VHDç”¨)
 	 * @return 
 	 */
 	void EnableDynamicSize()
@@ -336,7 +378,7 @@ public:
 	}
 	
 	/**
-	 * ƒfƒBƒXƒNƒTƒCƒY‚©‚çCHS‚ğ©“®Œˆ’è‚µ‚Ä•\¦‚·‚é
+	 * ãƒ‡ã‚£ã‚¹ã‚¯ã‚µã‚¤ã‚ºã‹ã‚‰CHSã‚’è‡ªå‹•æ±ºå®šã—ã¦è¡¨ç¤ºã™ã‚‹
 	 * @return 
 	 */
 	void SetCHSfromSize()
@@ -368,7 +410,7 @@ public:
 	}
 	
 	/**
-	 * CHS‚©‚çƒfƒBƒXƒNƒTƒCƒY‚É•ÏŠ·‚µ‚Ä•\¦‚·‚é
+	 * CHSã‹ã‚‰ãƒ‡ã‚£ã‚¹ã‚¯ã‚µã‚¤ã‚ºã«å¤‰æ›ã—ã¦è¡¨ç¤ºã™ã‚‹
 	 * @return 
 	 */
 	void SetSizefromCHS()
@@ -387,9 +429,9 @@ public:
 	}
 	
 	/**
-	 * ƒAƒCƒeƒ€‚Ì—Ìˆæ‚ğ“¾‚é
+	 * ã‚¢ã‚¤ãƒ†ãƒ ã®é ˜åŸŸã‚’å¾—ã‚‹
 	 * @param[in] nID ID
-	 * @param[out] rect —Ìˆæ
+	 * @param[out] rect é ˜åŸŸ
 	 */
 	void GetDlgItemRect(UINT nID, RECT& rect)
 	{
@@ -400,14 +442,20 @@ public:
 
 protected:
 	/**
-	 * ‚±‚Ìƒƒ\ƒbƒh‚Í WM_INITDIALOG ‚ÌƒƒbƒZ[ƒW‚É‰“š‚µ‚ÄŒÄ‚Ño‚³‚ê‚Ü‚·
-	 * @retval TRUE Å‰‚ÌƒRƒ“ƒgƒ[ƒ‹‚É“ü—ÍƒtƒH[ƒJƒX‚ğİ’è
-	 * @retval FALSE Šù‚Éİ’èÏ
+	 * ã“ã®ãƒ¡ã‚½ãƒƒãƒ‰ã¯ WM_INITDIALOG ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã«å¿œç­”ã—ã¦å‘¼ã³å‡ºã•ã‚Œã¾ã™
+	 * @retval TRUE æœ€åˆã®ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã«å…¥åŠ›ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ã‚’è¨­å®š
+	 * @retval FALSE æ—¢ã«è¨­å®šæ¸ˆ
 	 */
 	virtual BOOL OnInitDialog()
 	{
+		int hddsizetblcount = 0;
+		
+		while(hddsizetblcount<_countof(s_hddsizetbl) && s_hddsizetbl[hddsizetblcount] <= m_nHddMaxSize){
+			hddsizetblcount++;
+		}
+
 		m_hddsize.SubclassDlgItem(IDC_HDDSIZE, this);
-		m_hddsize.Add(s_hddsizetbl, _countof(s_hddsizetbl));
+		m_hddsize.Add(s_hddsizetbl, hddsizetblcount);
 		
 		m_cmbhddC.SubclassDlgItem(IDC_HDDADVANCED_C, this);
 		m_cmbhddC.Add(s_hddCtbl, _countof(s_hddCtbl));
@@ -461,22 +509,22 @@ protected:
 	}
 
 	/**
-	 * ƒ†[ƒU[‚ª OK ‚Ìƒ{ƒ^ƒ“ (IDOK ID ‚ª‚Ìƒ{ƒ^ƒ“) ‚ğƒNƒŠƒbƒN‚·‚é‚ÆŒÄ‚Ño‚³‚ê‚Ü‚·
+	 * ãƒ¦ãƒ¼ã‚¶ãƒ¼ãŒ OK ã®ãƒœã‚¿ãƒ³ (IDOK ID ãŒã®ãƒœã‚¿ãƒ³) ã‚’ã‚¯ãƒªãƒƒã‚¯ã™ã‚‹ã¨å‘¼ã³å‡ºã•ã‚Œã¾ã™
 	 */
 	virtual void OnOK()
 	{
 		UINT nSize = GetDlgItemInt(IDC_HDDSIZE, NULL, FALSE);
-		nSize = np2max(nSize, m_nHddMinSize);
-		nSize = np2min(nSize, m_nHddMaxSize);
+		nSize = max(nSize, m_nHddMinSize);
+		nSize = min(nSize, m_nHddMaxSize);
 		m_nHddSize = nSize;
 		CDlgProc::OnOK();
 	}
 	
 	/**
-	 * ƒ†[ƒU[‚ªƒƒjƒ…[‚Ì€–Ú‚ğ‘I‘ğ‚µ‚½‚Æ‚«‚ÉAƒtƒŒ[ƒ€ƒ[ƒN‚É‚æ‚Á‚ÄŒÄ‚Ño‚³‚ê‚Ü‚·
-	 * @param[in] wParam ƒpƒ‰ƒƒ^
-	 * @param[in] lParam ƒpƒ‰ƒƒ^
-	 * @retval TRUE ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ª‚±‚ÌƒƒbƒZ[ƒW‚ğˆ—‚µ‚½
+	 * ãƒ¦ãƒ¼ã‚¶ãƒ¼ãŒãƒ¡ãƒ‹ãƒ¥ãƒ¼ã®é …ç›®ã‚’é¸æŠã—ãŸã¨ãã«ã€ãƒ•ãƒ¬ãƒ¼ãƒ ãƒ¯ãƒ¼ã‚¯ã«ã‚ˆã£ã¦å‘¼ã³å‡ºã•ã‚Œã¾ã™
+	 * @param[in] wParam ãƒ‘ãƒ©ãƒ¡ã‚¿
+	 * @param[in] lParam ãƒ‘ãƒ©ãƒ¡ã‚¿
+	 * @retval TRUE ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ãŒã“ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’å‡¦ç†ã—ãŸ
 	 */
 	BOOL OnCommand(WPARAM wParam, LPARAM lParam)
 	{
@@ -587,52 +635,52 @@ protected:
 	}
 
 	/**
-	 * CWndProc ƒIƒuƒWƒFƒNƒg‚Ì Windows ƒvƒƒV[ƒWƒƒ (WindowProc) ‚ª—pˆÓ‚³‚ê‚Ä‚¢‚Ü‚·
-	 * @param[in] nMsg ˆ—‚³‚ê‚é Windows ƒƒbƒZ[ƒW‚ğw’è‚µ‚Ü‚·
-	 * @param[in] wParam ƒƒbƒZ[ƒW‚Ìˆ—‚Åg‚¤•t‰Áî•ñ‚ğ’ñ‹Ÿ‚µ‚Ü‚·B‚±‚Ìƒpƒ‰ƒ[ƒ^‚Ì’l‚ÍƒƒbƒZ[ƒW‚ÉˆË‘¶‚µ‚Ü‚·
-	 * @param[in] lParam ƒƒbƒZ[ƒW‚Ìˆ—‚Åg‚¤•t‰Áî•ñ‚ğ’ñ‹Ÿ‚µ‚Ü‚·B‚±‚Ìƒpƒ‰ƒ[ƒ^‚Ì’l‚ÍƒƒbƒZ[ƒW‚ÉˆË‘¶‚µ‚Ü‚·
-	 * @return ƒƒbƒZ[ƒW‚ÉˆË‘¶‚·‚é’l‚ğ•Ô‚µ‚Ü‚·
+	 * CWndProc ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã® Windows ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£ (WindowProc) ãŒç”¨æ„ã•ã‚Œã¦ã„ã¾ã™
+	 * @param[in] nMsg å‡¦ç†ã•ã‚Œã‚‹ Windows ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’æŒ‡å®šã—ã¾ã™
+	 * @param[in] wParam ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã®å‡¦ç†ã§ä½¿ã†ä»˜åŠ æƒ…å ±ã‚’æä¾›ã—ã¾ã™ã€‚ã“ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®å€¤ã¯ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã«ä¾å­˜ã—ã¾ã™
+	 * @param[in] lParam ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã®å‡¦ç†ã§ä½¿ã†ä»˜åŠ æƒ…å ±ã‚’æä¾›ã—ã¾ã™ã€‚ã“ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®å€¤ã¯ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã«ä¾å­˜ã—ã¾ã™
+	 * @return ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã«ä¾å­˜ã™ã‚‹å€¤ã‚’è¿”ã—ã¾ã™
 	 */
 	LRESULT WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam)
 	{
 		return CDlgProc::WindowProc(nMsg, wParam, lParam);
 	}
 private:
-	CComboData m_hddsize;			/*!< HDD ƒTƒCƒY ƒRƒ“ƒgƒ[ƒ‹ */
-	UINT32 m_nHddSize;				/*!< HDD ƒTƒCƒY */
-	UINT32 m_nHddMinSize;			/*!< Å¬ƒTƒCƒY */
-	UINT32 m_nHddMaxSize;			/*!< Å‘åƒTƒCƒY */
+	CComboData m_hddsize;			/*!< HDD ã‚µã‚¤ã‚º ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ« */
+	UINT32 m_nHddSize;				/*!< HDD ã‚µã‚¤ã‚º */
+	UINT32 m_nHddMinSize;			/*!< æœ€å°ã‚µã‚¤ã‚º */
+	UINT32 m_nHddMaxSize;			/*!< æœ€å¤§ã‚µã‚¤ã‚º */
 	
-	SIZE m_szNewDisk;				//!< ƒEƒBƒ“ƒhƒE‚ÌƒTƒCƒY
-	CWndProc m_btnAdvanced;			/*!< Ú×İ’èƒ{ƒ^ƒ“ */
-	UINT8 m_advanced;				/*!< Ú×İ’è‹–‰Âƒtƒ‰ƒO */
+	SIZE m_szNewDisk;				//!< ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ã‚µã‚¤ã‚º
+	CWndProc m_btnAdvanced;			/*!< è©³ç´°è¨­å®šãƒœã‚¿ãƒ³ */
+	UINT8 m_advanced;				/*!< è©³ç´°è¨­å®šè¨±å¯ãƒ•ãƒ©ã‚° */
 	UINT32 m_HddC;					/*!< Cylinder */
 	UINT16 m_HddH;					/*!< Head */
 	UINT16 m_HddS;					/*!< Sector */
 	UINT16 m_HddSS;					/*!< Sector Size(Bytes) */
-	CComboData m_cmbhddC;			/*!< Cylinder’l ƒRƒ“ƒgƒ[ƒ‹ */
-	CComboData m_cmbhddH;			/*!< Head’l ƒRƒ“ƒgƒ[ƒ‹ */
-	CComboData m_cmbhddS;			/*!< Sector’l ƒRƒ“ƒgƒ[ƒ‹ */
-	CComboData m_cmbhddSS;			/*!< Sector Size’l ƒRƒ“ƒgƒ[ƒ‹ */
-	UINT8 m_usedynsize;				/*!< “®“IŠ„‚è“–‚Ä‹–‰Âƒtƒ‰ƒO */
-	UINT8 m_dynsize;				/*!< “®“IŠ„‚è“–‚ÄƒfƒBƒXƒNiVHD‚Ì‚İj */
+	CComboData m_cmbhddC;			/*!< Cylinderå€¤ ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ« */
+	CComboData m_cmbhddH;			/*!< Headå€¤ ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ« */
+	CComboData m_cmbhddS;			/*!< Sectorå€¤ ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ« */
+	CComboData m_cmbhddSS;			/*!< Sector Sizeå€¤ ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ« */
+	UINT8 m_usedynsize;				/*!< å‹•çš„å‰²ã‚Šå½“ã¦è¨±å¯ãƒ•ãƒ©ã‚° */
+	UINT8 m_dynsize;				/*!< å‹•çš„å‰²ã‚Šå½“ã¦ãƒ‡ã‚£ã‚¹ã‚¯ï¼ˆVHDã®ã¿ï¼‰ */
 	CWndProc m_rdbfixsize;			//!< FIXED
 	CWndProc m_rdbdynsize;			//!< DYNAMIC
-	UINT8 m_blank;					/*!< ‹óƒfƒBƒXƒNì¬ƒtƒ‰ƒO */
+	UINT8 m_blank;					/*!< ç©ºãƒ‡ã‚£ã‚¹ã‚¯ä½œæˆãƒ•ãƒ©ã‚° */
 	CWndProc m_chkblank;			//!< BLANK
 };
 
 
 
 /**
- * @brief V‚µ‚¢HDD
+ * @brief æ–°ã—ã„HDD
  */
 class CNewSasiDlg : public CDlgProc
 {
 public:
 	/**
-	 * ƒRƒ“ƒXƒgƒ‰ƒNƒ^
-	 * @param[in] hwndParent eƒEƒBƒ“ƒhƒE
+	 * ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
+	 * @param[in] hwndParent è¦ªã‚¦ã‚£ãƒ³ãƒ‰ã‚¦
 	 */
 	CNewSasiDlg(HWND hwndParent)
 		: CDlgProc(IDD_NEWSASI, hwndParent)
@@ -641,8 +689,8 @@ public:
 	}
 
 	/**
-	 * HDD ƒ^ƒCƒv‚ğ“¾‚é
-	 * @return HDD ƒ^ƒCƒv
+	 * HDD ã‚¿ã‚¤ãƒ—ã‚’å¾—ã‚‹
+	 * @return HDD ã‚¿ã‚¤ãƒ—
 	 */
 	UINT GetType() const
 	{
@@ -651,9 +699,9 @@ public:
 
 protected:
 	/**
-	 * ‚±‚Ìƒƒ\ƒbƒh‚Í WM_INITDIALOG ‚ÌƒƒbƒZ[ƒW‚É‰“š‚µ‚ÄŒÄ‚Ño‚³‚ê‚Ü‚·
-	 * @retval TRUE Å‰‚ÌƒRƒ“ƒgƒ[ƒ‹‚É“ü—ÍƒtƒH[ƒJƒX‚ğİ’è
-	 * @retval FALSE Šù‚Éİ’èÏ
+	 * ã“ã®ãƒ¡ã‚½ãƒƒãƒ‰ã¯ WM_INITDIALOG ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã«å¿œç­”ã—ã¦å‘¼ã³å‡ºã•ã‚Œã¾ã™
+	 * @retval TRUE æœ€åˆã®ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã«å…¥åŠ›ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ã‚’è¨­å®š
+	 * @retval FALSE æ—¢ã«è¨­å®šæ¸ˆ
 	 */
 	virtual BOOL OnInitDialog()
 	{
@@ -662,7 +710,7 @@ protected:
 	}
 
 	/**
-	 * ƒ†[ƒU[‚ª OK ‚Ìƒ{ƒ^ƒ“ (IDOK ID ‚ª‚Ìƒ{ƒ^ƒ“) ‚ğƒNƒŠƒbƒN‚·‚é‚ÆŒÄ‚Ño‚³‚ê‚Ü‚·
+	 * ãƒ¦ãƒ¼ã‚¶ãƒ¼ãŒ OK ã®ãƒœã‚¿ãƒ³ (IDOK ID ãŒã®ãƒœã‚¿ãƒ³) ã‚’ã‚¯ãƒªãƒƒã‚¯ã™ã‚‹ã¨å‘¼ã³å‡ºã•ã‚Œã¾ã™
 	 */
 	virtual void OnOK()
 	{
@@ -678,18 +726,18 @@ protected:
 	}
 
 private:
-	UINT m_nType;			/*!< HDD ƒ^ƒCƒv */
+	UINT m_nType;			/*!< HDD ã‚¿ã‚¤ãƒ— */
 };
 
 /**
- * @brief V‚µ‚¢FDD
+ * @brief æ–°ã—ã„FDD
  */
 class CNewFddDlg : public CDlgProc
 {
 public:
 	/**
-	 * ƒRƒ“ƒXƒgƒ‰ƒNƒ^
-	 * @param[in] hwndParent eƒEƒBƒ“ƒhƒE
+	 * ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
+	 * @param[in] hwndParent è¦ªã‚¦ã‚£ãƒ³ãƒ‰ã‚¦
 	 */
 	CNewFddDlg(HWND hwndParent)
 		: CDlgProc((np2cfg.usefd144) ? IDD_NEWDISK2 : IDD_NEWDISK, hwndParent)
@@ -698,8 +746,8 @@ public:
 	}
 
 	/**
-	 * ƒ^ƒCƒv‚ğ“¾‚é
-	 * @return ƒ^ƒCƒv
+	 * ã‚¿ã‚¤ãƒ—ã‚’å¾—ã‚‹
+	 * @return ã‚¿ã‚¤ãƒ—
 	 */
 	UINT8 GetType() const
 	{
@@ -707,8 +755,8 @@ public:
 	}
 
 	/**
-	 * ƒ‰ƒxƒ‹‚ğ“¾‚é
-	 * @return ƒ‰ƒxƒ‹
+	 * ãƒ©ãƒ™ãƒ«ã‚’å¾—ã‚‹
+	 * @return ãƒ©ãƒ™ãƒ«
 	 */
 	LPCTSTR GetLabel() const
 	{
@@ -717,9 +765,9 @@ public:
 
 protected:
 	/**
-	 * ‚±‚Ìƒƒ\ƒbƒh‚Í WM_INITDIALOG ‚ÌƒƒbƒZ[ƒW‚É‰“š‚µ‚ÄŒÄ‚Ño‚³‚ê‚Ü‚·
-	 * @retval TRUE Å‰‚ÌƒRƒ“ƒgƒ[ƒ‹‚É“ü—ÍƒtƒH[ƒJƒX‚ğİ’è
-	 * @retval FALSE Šù‚Éİ’èÏ
+	 * ã“ã®ãƒ¡ã‚½ãƒƒãƒ‰ã¯ WM_INITDIALOG ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã«å¿œç­”ã—ã¦å‘¼ã³å‡ºã•ã‚Œã¾ã™
+	 * @retval TRUE æœ€åˆã®ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã«å…¥åŠ›ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ã‚’è¨­å®š
+	 * @retval FALSE æ—¢ã«è¨­å®šæ¸ˆ
 	 */
 	virtual BOOL OnInitDialog()
 	{
@@ -744,7 +792,7 @@ protected:
 	}
 
 	/**
-	 * ƒ†[ƒU[‚ª OK ‚Ìƒ{ƒ^ƒ“ (IDOK ID ‚ª‚Ìƒ{ƒ^ƒ“) ‚ğƒNƒŠƒbƒN‚·‚é‚ÆŒÄ‚Ño‚³‚ê‚Ü‚·
+	 * ãƒ¦ãƒ¼ã‚¶ãƒ¼ãŒ OK ã®ãƒœã‚¿ãƒ³ (IDOK ID ãŒã®ãƒœã‚¿ãƒ³) ã‚’ã‚¯ãƒªãƒƒã‚¯ã™ã‚‹ã¨å‘¼ã³å‡ºã•ã‚Œã¾ã™
 	 */
 	virtual void OnOK()
 	{
@@ -769,21 +817,21 @@ protected:
 	}
 
 private:
-	UINT m_nFdType;					/*!< ƒ^ƒCƒv */
-	TCHAR m_szDiskLabel[16 + 1];	/*!< ƒ‰ƒxƒ‹ */
+	UINT m_nFdType;					/*!< ã‚¿ã‚¤ãƒ— */
+	TCHAR m_szDiskLabel[16 + 1];	/*!< ãƒ©ãƒ™ãƒ« */
 };
 
 /**
- * @brief HDDì¬i’»
+ * @brief HDDä½œæˆé€²æ—
  */
 class CNewHddDlgProg : public CDlgProc
 {
 public:
 	/**
-	 * ƒRƒ“ƒXƒgƒ‰ƒNƒ^
-	 * @param[in] hwndParent eƒEƒBƒ“ƒhƒE
-	 * @param[in] nProgMax i’»Å‘å’l
-	 * @param[in] nProgValue i’»Œ»İ’l
+	 * ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
+	 * @param[in] hwndParent è¦ªã‚¦ã‚£ãƒ³ãƒ‰ã‚¦
+	 * @param[in] nProgMax é€²æ—æœ€å¤§å€¤
+	 * @param[in] nProgValue é€²æ—ç¾åœ¨å€¤
 	 */
 	CNewHddDlgProg(HWND hwndParent, UINT32 nProgMax, UINT32 nProgValue)
 		: CDlgProc(IDD_NEWHDDPROC, hwndParent)
@@ -793,15 +841,15 @@ public:
 	}
 
 	/**
-	 * ƒfƒXƒgƒ‰ƒNƒ^
+	 * ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
 	 */
 	virtual ~CNewHddDlgProg()
 	{
 	}
 
 	/**
-	 * ƒvƒƒOƒŒƒXƒo[Å‘å’l‚ğİ’è
-	 * @return ƒTƒCƒY
+	 * ãƒ—ãƒ­ã‚°ãƒ¬ã‚¹ãƒãƒ¼æœ€å¤§å€¤ã‚’è¨­å®š
+	 * @return ã‚µã‚¤ã‚º
 	 */
 	void SetProgressMax(UINT32 value) const
 	{
@@ -809,8 +857,8 @@ public:
 	}
 	
 	/**
-	 * ƒvƒƒOƒŒƒXƒo[Œ»İ’l‚ğİ’è
-	 * @return ƒTƒCƒY
+	 * ãƒ—ãƒ­ã‚°ãƒ¬ã‚¹ãƒãƒ¼ç¾åœ¨å€¤ã‚’è¨­å®š
+	 * @return ã‚µã‚¤ã‚º
 	 */
 	void SetProgressValue(UINT32 value) const
 	{
@@ -819,9 +867,9 @@ public:
 	
 protected:
 	/**
-	 * ‚±‚Ìƒƒ\ƒbƒh‚Í WM_INITDIALOG ‚ÌƒƒbƒZ[ƒW‚É‰“š‚µ‚ÄŒÄ‚Ño‚³‚ê‚Ü‚·
-	 * @retval TRUE Å‰‚ÌƒRƒ“ƒgƒ[ƒ‹‚É“ü—ÍƒtƒH[ƒJƒX‚ğİ’è
-	 * @retval FALSE Šù‚Éİ’èÏ
+	 * ã“ã®ãƒ¡ã‚½ãƒƒãƒ‰ã¯ WM_INITDIALOG ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã«å¿œç­”ã—ã¦å‘¼ã³å‡ºã•ã‚Œã¾ã™
+	 * @retval TRUE æœ€åˆã®ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã«å…¥åŠ›ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ã‚’è¨­å®š
+	 * @retval FALSE æ—¢ã«è¨­å®šæ¸ˆ
 	 */
 	virtual BOOL OnInitDialog()
 	{
@@ -830,10 +878,10 @@ protected:
 	}
 
 	/**
-	 * ƒ†[ƒU[‚ªƒƒjƒ…[‚Ì€–Ú‚ğ‘I‘ğ‚µ‚½‚Æ‚«‚ÉAƒtƒŒ[ƒ€ƒ[ƒN‚É‚æ‚Á‚ÄŒÄ‚Ño‚³‚ê‚Ü‚·
-	 * @param[in] wParam ƒpƒ‰ƒƒ^
-	 * @param[in] lParam ƒpƒ‰ƒƒ^
-	 * @retval TRUE ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ª‚±‚ÌƒƒbƒZ[ƒW‚ğˆ—‚µ‚½
+	 * ãƒ¦ãƒ¼ã‚¶ãƒ¼ãŒãƒ¡ãƒ‹ãƒ¥ãƒ¼ã®é …ç›®ã‚’é¸æŠã—ãŸã¨ãã«ã€ãƒ•ãƒ¬ãƒ¼ãƒ ãƒ¯ãƒ¼ã‚¯ã«ã‚ˆã£ã¦å‘¼ã³å‡ºã•ã‚Œã¾ã™
+	 * @param[in] wParam ãƒ‘ãƒ©ãƒ¡ã‚¿
+	 * @param[in] lParam ãƒ‘ãƒ©ãƒ¡ã‚¿
+	 * @retval TRUE ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ãŒã“ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’å‡¦ç†ã—ãŸ
 	 */
 	BOOL OnCommand(WPARAM wParam, LPARAM lParam)
 	{
@@ -841,11 +889,11 @@ protected:
 	}
 
 	/**
-	 * CWndProc ƒIƒuƒWƒFƒNƒg‚Ì Windows ƒvƒƒV[ƒWƒƒ (WindowProc) ‚ª—pˆÓ‚³‚ê‚Ä‚¢‚Ü‚·
-	 * @param[in] nMsg ˆ—‚³‚ê‚é Windows ƒƒbƒZ[ƒW‚ğw’è‚µ‚Ü‚·
-	 * @param[in] wParam ƒƒbƒZ[ƒW‚Ìˆ—‚Åg‚¤•t‰Áî•ñ‚ğ’ñ‹Ÿ‚µ‚Ü‚·B‚±‚Ìƒpƒ‰ƒ[ƒ^‚Ì’l‚ÍƒƒbƒZ[ƒW‚ÉˆË‘¶‚µ‚Ü‚·
-	 * @param[in] lParam ƒƒbƒZ[ƒW‚Ìˆ—‚Åg‚¤•t‰Áî•ñ‚ğ’ñ‹Ÿ‚µ‚Ü‚·B‚±‚Ìƒpƒ‰ƒ[ƒ^‚Ì’l‚ÍƒƒbƒZ[ƒW‚ÉˆË‘¶‚µ‚Ü‚·
-	 * @return ƒƒbƒZ[ƒW‚ÉˆË‘¶‚·‚é’l‚ğ•Ô‚µ‚Ü‚·
+	 * CWndProc ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã® Windows ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£ (WindowProc) ãŒç”¨æ„ã•ã‚Œã¦ã„ã¾ã™
+	 * @param[in] nMsg å‡¦ç†ã•ã‚Œã‚‹ Windows ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’æŒ‡å®šã—ã¾ã™
+	 * @param[in] wParam ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã®å‡¦ç†ã§ä½¿ã†ä»˜åŠ æƒ…å ±ã‚’æä¾›ã—ã¾ã™ã€‚ã“ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®å€¤ã¯ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã«ä¾å­˜ã—ã¾ã™
+	 * @param[in] lParam ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã®å‡¦ç†ã§ä½¿ã†ä»˜åŠ æƒ…å ±ã‚’æä¾›ã—ã¾ã™ã€‚ã“ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®å€¤ã¯ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã«ä¾å­˜ã—ã¾ã™
+	 * @return ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã«ä¾å­˜ã™ã‚‹å€¤ã‚’è¿”ã—ã¾ã™
 	 */
 	LRESULT WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam)
 	{
@@ -854,10 +902,10 @@ protected:
 			KillTimer(this->m_hWnd, 1);
 			break;
 		case WM_TIMER:
-			SetProgressValue(_mt_progressvalue);
-			SetProgressMax(_mt_progressmax);
-			if(_mt_progressvalue >= _mt_progressmax){
-				// ˆ—I‚í‚è
+			SetProgressValue(mt_progressvalue);
+			SetProgressMax(mt_progressmax);
+			if(mt_progressvalue >= mt_progressmax){
+				// å‡¦ç†çµ‚ã‚ã‚Š
 				CDlgProc::OnOK();
 			}
 			return 0;
@@ -867,7 +915,7 @@ protected:
 private:
 };
 
-static HANDLE	newdisk_hThread = NULL; // ƒfƒBƒXƒNì¬—pƒXƒŒƒbƒh
+static HANDLE	newdisk_hThread = NULL; // ãƒ‡ã‚£ã‚¹ã‚¯ä½œæˆç”¨ã‚¹ãƒ¬ãƒƒãƒ‰
 static int _mt_cancel = 0;
 static int _mt_dyndisk = 0;
 static int _mt_blank = 0;
@@ -878,7 +926,7 @@ static UINT16 _mt_diskH = 0;
 static UINT16 _mt_diskS = 0;
 static UINT16 _mt_diskSS = 0;
 
-static DWORD WINAPI newdisk_ThreadFunc(LPVOID vdParam)
+static unsigned int __stdcall newdisk_ThreadFunc(LPVOID vdParam)
 {
 	LPCTSTR lpPath = _mt_lpPath;
 	LPCTSTR ext = file_getext(lpPath);
@@ -889,11 +937,11 @@ static DWORD WINAPI newdisk_ThreadFunc(LPVOID vdParam)
 	else if (!file_cmpname(ext, str_nhd))
 	{
 		if(_mt_diskSize){
-			// ‘S—e—Êw’èƒ‚[ƒh
-			newdisk_nhd_ex(lpPath, _mt_diskSize, _mt_blank, &_mt_progressvalue, &_mt_cancel);
+			// å…¨å®¹é‡æŒ‡å®šãƒ¢ãƒ¼ãƒ‰
+			newdisk_nhd_ex(lpPath, _mt_diskSize, _mt_blank, &mt_progressvalue, &_mt_cancel);
 		}else{
-			// CHSw’èƒ‚[ƒh
-			newdisk_nhd_ex_CHS(lpPath, _mt_diskC, _mt_diskH, _mt_diskS, _mt_diskSS, _mt_blank, &_mt_progressvalue, &_mt_cancel);
+			// CHSæŒ‡å®šãƒ¢ãƒ¼ãƒ‰
+			newdisk_nhd_ex_CHS(lpPath, _mt_diskC, _mt_diskH, _mt_diskS, _mt_diskSS, _mt_blank, &mt_progressvalue, &_mt_cancel);
 		}
 	}
 	else if (!file_cmpname(ext, str_hdi))
@@ -914,46 +962,68 @@ static DWORD WINAPI newdisk_ThreadFunc(LPVOID vdParam)
 	else if (!file_cmpname(ext, str_vhd))
 	{
 		if(_mt_diskSize){
-			// ‘S—e—Êw’èƒ‚[ƒh
-			newdisk_vpcvhd_ex(lpPath, _mt_diskSize, _mt_dyndisk, _mt_blank, &_mt_progressvalue, &_mt_cancel);
+			// å…¨å®¹é‡æŒ‡å®šãƒ¢ãƒ¼ãƒ‰
+			newdisk_vpcvhd_ex(lpPath, _mt_diskSize, _mt_dyndisk, _mt_blank, &mt_progressvalue, &_mt_cancel);
 		}else{
-			// CHSw’èƒ‚[ƒh
-			newdisk_vpcvhd_ex_CHS(lpPath, _mt_diskC, _mt_diskH, _mt_diskS, _mt_diskSS, _mt_dyndisk, _mt_blank, &_mt_progressvalue, &_mt_cancel);
+			// CHSæŒ‡å®šãƒ¢ãƒ¼ãƒ‰
+			newdisk_vpcvhd_ex_CHS(lpPath, _mt_diskC, _mt_diskH, _mt_diskS, _mt_diskSS, _mt_dyndisk, _mt_blank, &mt_progressvalue, &_mt_cancel);
 		}
 	}
 #endif
-	_mt_progressvalue = _mt_progressmax;
+	mt_progressvalue = mt_progressmax;
 	return 0;
 }
 
 /**
- * V‹KƒfƒBƒXƒNì¬ ƒ_ƒCƒAƒƒO
- * @param[in] hWnd eƒEƒBƒ“ƒhƒE
+ * æ–°è¦ãƒ‡ã‚£ã‚¹ã‚¯ä½œæˆ ãƒ€ã‚¤ã‚¢ãƒ­ã‚°
+ * @param[in] hWnd è¦ªã‚¦ã‚£ãƒ³ãƒ‰ã‚¦
  */
-void dialog_newdisk(HWND hWnd)
+void dialog_newdisk_ex(HWND hWnd, int mode)
 {
-	DWORD dwID;
-	TCHAR szPath[MAX_PATH];
-	file_cpyname(szPath, fddfolder, _countof(szPath));
-	file_cutname(szPath);
-	file_catname(szPath, str_newdisk, _countof(szPath));
-
-	std::tstring rTitle(LoadTString(IDS_NEWDISKTITLE));
-	std::tstring rDefExt(LoadTString(IDS_NEWDISKEXT));
+	unsigned int dwID;
+	char szPath[MAX_PATH];
+	char szName[MAX_PATH];
+	std::tstring rTitle;
+	std::tstring rDefExt;
+	std::tstring rFilter;
+	if(mode == NEWDISKMODE_HD){
+		file_cpyname(szPath, hddfolder, _countof(szPath));
+		file_cutname(szPath);
+		file_catname(szPath, str_newdisk, _countof(szPath));
+		rTitle = std::tstring(LoadTString(IDS_NEWDISKTITLE));
+		rDefExt = std::tstring(OEMTEXT("nhd"));
 #if defined(SUPPORT_SCSI)
-	std::tstring rFilter(LoadTString(IDS_NEWDISKFILTER));
+		rFilter = std::tstring(LoadTString(IDS_NEWDISKHDFILTER));
 #else	// defined(SUPPORT_SCSI)
-	std::tstring rFilter(LoadTString(IDS_NEWDISKFILTER2));
+		rFilter = std::tstring(LoadTString(IDS_NEWDISKHDFILTER2));
 #endif	// defined(SUPPORT_SCSI)
+	}else if(mode == NEWDISKMODE_FD){
+		file_cpyname(szPath, fddfolder, _countof(szPath));
+		file_cutname(szPath);
+		file_catname(szPath, str_newdisk, _countof(szPath));
+		rTitle = std::tstring(LoadTString(IDS_NEWDISKTITLE));
+		rDefExt = std::tstring(LoadTString(IDS_NEWDISKEXT));
+		rFilter = std::tstring(LoadTString(IDS_NEWDISKFDFILTER));
+	}else{
+		file_cpyname(szPath, fddfolder, _countof(szPath));
+		file_cutname(szPath);
+		file_catname(szPath, str_newdisk, _countof(szPath));
+		rTitle = std::tstring(LoadTString(IDS_NEWDISKTITLE));
+		rDefExt = std::tstring(LoadTString(IDS_NEWDISKEXT));
+#if defined(SUPPORT_SCSI)
+		rFilter = std::tstring(LoadTString(IDS_NEWDISKFILTER));
+#else	// defined(SUPPORT_SCSI)
+		rFilter = std::tstring(LoadTString(IDS_NEWDISKFILTER2));
+#endif	// defined(SUPPORT_SCSI)
+	}
 
-	CFileDlg fileDlg(FALSE, rDefExt.c_str(), szPath, OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY, rFilter.c_str(), hWnd);
-	fileDlg.m_ofn.lpstrTitle = rTitle.c_str();
-	if (fileDlg.DoModal() != IDOK)
+	OPENFILENAMEW ofnw;
+	if (WinFileDialogW(hWnd, &ofnw, WINFILEDIALOGW_MODE_SET, szPath, szName, rDefExt.c_str(), rTitle.c_str(), rFilter.c_str(), 0))
 	{
 		return;
 	}
 
-	LPCTSTR lpPath = fileDlg.GetPathName();
+	LPCTSTR lpPath = szPath;
 	LPCTSTR ext = file_getext(lpPath);
 	if (!file_cmpname(ext, str_thd))
 	{
@@ -981,15 +1051,16 @@ void dialog_newdisk(HWND hWnd)
 			_mt_blank = dlg.IsBlankDisk();
 			_mt_dyndisk = 0;
 			_mt_cancel = 0;
-			_mt_progressvalue = 0;
-			_mt_progressmax = 100;
+			mt_progressvalue = 0;
+			mt_progressmax = 100;
 			_tcscpy(_mt_lpPath, lpPath);
-			newdisk_hThread = CreateThread(NULL , 0 , newdisk_ThreadFunc  , NULL , 0 , &dwID);
-			CNewHddDlgProg dlg2(hWnd, _mt_progressmax, _mt_progressvalue);
+			newdisk_hThread = (HANDLE)_beginthreadex(NULL , 0 , newdisk_ThreadFunc  , NULL , 0 , &dwID);
+			CNewHddDlgProg dlg2(hWnd, mt_progressmax, mt_progressvalue);
 			if (dlg2.DoModal() != IDOK)
 			{
 				_mt_cancel = 1;
 				WaitForSingleObject(newdisk_ThreadFunc, INFINITE);
+				CloseHandle(newdisk_ThreadFunc);
 			}
 			_mt_cancel = 1;
 		}
@@ -1013,7 +1084,7 @@ void dialog_newdisk(HWND hWnd)
 	}
 	else if (!file_cmpname(ext, str_hdn))
 	{
-		CNewHddDlg dlg(hWnd, 2, 399);
+		CNewHddDlg dlg(hWnd, 2, 6399);
 		if (dlg.DoModal() == IDOK)
 		{
 			newdisk_hdn(lpPath, dlg.GetSize());
@@ -1040,15 +1111,16 @@ void dialog_newdisk(HWND hWnd)
 			_mt_blank = dlg.IsBlankDisk();
 			_mt_dyndisk = dlg.IsDynamicDisk();
 			_mt_cancel = 0;
-			_mt_progressvalue = 0;
-			_mt_progressmax = 100;
+			mt_progressvalue = 0;
+			mt_progressmax = 100;
 			_tcscpy(_mt_lpPath, lpPath);
-			newdisk_hThread = CreateThread(NULL , 0 , newdisk_ThreadFunc  , NULL , 0 , &dwID);
-			CNewHddDlgProg dlg2(hWnd, _mt_progressmax, _mt_progressvalue);
+			newdisk_hThread = (HANDLE)_beginthreadex(NULL , 0 , newdisk_ThreadFunc  , NULL , 0 , &dwID);
+			CNewHddDlgProg dlg2(hWnd, mt_progressmax, mt_progressvalue);
 			if (dlg2.DoModal() != IDOK)
 			{
 				_mt_cancel = 1;
 				WaitForSingleObject(newdisk_ThreadFunc, INFINITE);
+				CloseHandle(newdisk_ThreadFunc);
 			}
 			_mt_cancel = 1;
 		}
@@ -1065,4 +1137,22 @@ void dialog_newdisk(HWND hWnd)
 			newdisk_fdd(lpPath, dlg.GetType(), dlg.GetLabel());
 		}
 	}
+	else if (!file_cmpname(ext, str_hdm))
+	{
+		newdisk_123mb_fdd(lpPath);
+	}
+	else if (!file_cmpname(ext, str_hd4))
+	{
+		newdisk_144mb_fdd(lpPath);
+	}
 }
+
+/**
+ * æ–°è¦ãƒ‡ã‚£ã‚¹ã‚¯ä½œæˆ ãƒ€ã‚¤ã‚¢ãƒ­ã‚°
+ * @param[in] hWnd è¦ªã‚¦ã‚£ãƒ³ãƒ‰ã‚¦
+ */
+void dialog_newdisk(HWND hWnd)
+{
+	dialog_newdisk_ex(hWnd, NEWDISKMODE_ALL);
+}
+

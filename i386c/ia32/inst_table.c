@@ -45,6 +45,9 @@
 #include "ia32/instructions/fpu/fp.h"
 #include "ia32/instructions/mmx/mmx.h"
 #include "ia32/instructions/mmx/3dnow.h"
+#include "ia32/instructions/sse/sse.h"
+#include "ia32/instructions/sse2/sse2.h"
+#include "ia32/instructions/sse3/sse3.h"
 
 /*
  * UNDEF OP
@@ -890,6 +893,559 @@ void (*insttable_1byte[2][256])(void) = {
 	},
 };
 
+
+void (*insttable_1byte_repfunc[2][256])(int reptype) = {
+	/* 16bit */
+	{
+		NULL,		/* 00 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* 08 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,		/* 10 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* 18 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,		/* 20 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* 28 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,		/* 30 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* 38 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,			/* 40 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,			/* 48 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,		/* 50 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* 58 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,	/* 60 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,	/* 68 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,		/* 70 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* 78 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,		/* 80 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* 88 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,	/* 90 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,	/* 98 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,	/* A0 */
+		NULL,
+		NULL,
+		NULL,
+		MOVSB_XbYb_rep,
+		MOVSW_XwYw_rep,
+		CMPSB_XbYb_rep,
+		CMPSW_XwYw_rep,
+		NULL,	/* A8 */
+		NULL,
+		STOSB_YbAL_rep,
+		STOSW_YwAX_rep,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,		/* B0 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* B8 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,	/* C0 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* C8 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,	/* D0 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* undoc(8086) */
+		NULL,
+		NULL,			/* D8 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,		/* E0 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,	/* E8 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,		/* F0 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* F8 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+	},
+
+	/* 32bit */
+	{
+		NULL,		/* 00 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* 08 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,		/* 10 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* 18 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,		/* 20 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* 28 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,		/* 30 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* 38 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,			/* 40 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,			/* 48 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,		/* 50 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* 58 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,	/* 60 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,	/* 68 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,		/* 70 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* 78 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,		/* 80 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* 88 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,	/* 90 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,	/* 98 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,	/* A0 */
+		NULL,
+		NULL,
+		NULL,
+		MOVSB_XbYb_rep,
+		MOVSD_XdYd_rep,
+		CMPSB_XbYb_rep,
+		CMPSD_XdYd_rep,
+		NULL,	/* A8 */
+		NULL,
+		STOSB_YbAL_rep,
+		STOSD_YdEAX_rep,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,		/* B0 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* B8 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,	/* C0 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* C8 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,	/* D0 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* undoc(8086) */
+		NULL,
+		NULL,			/* D8 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,		/* E0 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,	/* E8 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+
+		NULL,		/* F0 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,		/* F8 */
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+	},
+};
+
 void (*insttable_2byte[2][256])(void) = {
 	/* 16bit */
 	{
@@ -910,22 +1466,22 @@ void (*insttable_2byte[2][256])(void) = {
 		AMD3DNOW_FEMMS,
 		undef_op,
 
-		undef_op,		/* 10 */
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,		/* 18 */
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
+		SSE_MOVUPSmem2xmm,		/* 10 */
+		SSE_MOVUPSxmm2mem,
+		SSE_MOVLPSmem2xmm, // + MOVHLPS
+		SSE_MOVLPSxmm2mem,
+		SSE_UNPCKLPS,
+		SSE_UNPCKHPS,
+		SSE_MOVHPSmem2xmm, // + MOVLHPS
+		SSE_MOVHPSxmm2mem,
+		SSE_PREFETCHTx,		/* 18 */
+		SSE_NOPPREFETCH,
+		SSE_NOPPREFETCH,
+		SSE_NOPPREFETCH,
+		SSE_NOPPREFETCH,
+		SSE_NOPPREFETCH,
+		SSE_NOPPREFETCH,
+		SSE_NOPPREFETCH,
 
 		MOV_RdCd,		/* 20 */
 		MOV_RdDd,
@@ -935,21 +1491,21 @@ void (*insttable_2byte[2][256])(void) = {
 		undef_op,
 		MOV_TdRd,
 		undef_op,
-		undef_op,		/* 28 */
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
+		SSE_MOVAPSmem2xmm,		/* 28 */
+		SSE_MOVAPSxmm2mem,
+		SSE_CVTPI2PS,
+		SSE_MOVNTPS,
+		SSE_CVTTPS2PI,
+		SSE_CVTPS2PI,
+		SSE_UCOMISS,
+		SSE_COMISS,
 
 		WRMSR,			/* 30 */
 		RDTSC,
 		RDMSR,
 		RDPMC,
-		undef_op,
-		undef_op,
+		SYSENTER,
+		SYSEXIT,
 		undef_op,
 		undef_op,
 		undef_op,		/* 38 */
@@ -978,22 +1534,22 @@ void (*insttable_2byte[2][256])(void) = {
 		CMOVLE_GwEw,
 		CMOVNLE_GwEw,
 
-		undef_op,		/* 50 */
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,		/* 58 */
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
+		SSE_MOVMSKPS,		/* 50 */
+		SSE_SQRTPS,
+		SSE_RSQRTPS,
+		SSE_RCPPS,
+		SSE_ANDPS,
+		SSE_ANDNPS,
+		SSE_ORPS,
+		SSE_XORPS,
+		SSE_ADDPS,		/* 58 */
+		SSE_MULPS,
+		SSE2_CVTPS2PD,
+		SSE2_CVTDQ2PS,
+		SSE_SUBPS,
+		SSE_MINPS,
+		SSE_DIVPS,
+		SSE_MAXPS,
 		
 		MMX_PUNPCKLBW,		/* 60 */
 		MMX_PUNPCKLWD,
@@ -1012,7 +1568,7 @@ void (*insttable_2byte[2][256])(void) = {
 		MMX_MOVD_mm_rm32,
 		MMX_MOVQ_mm_mmm64,
 
-		undef_op,		/* 70 */
+		SSE_PSHUFW,		/* 70 */
 		MMX_PSxxW_imm8,
 		MMX_PSxxD_imm8,
 		MMX_PSxxQ_imm8,
@@ -1077,7 +1633,7 @@ void (*insttable_2byte[2][256])(void) = {
 		BTS_EwGw,
 		SHRD_EwGwIb,
 		SHRD_EwGwCL,
-		NOFPU_FPU_FXSAVERSTOR,
+		NOFPU_FPU_FXSAVERSTOR, // + LDMXCSR + STMXCSR + SFENCE + LFENCE + CLFLUSH
 		IMUL_GwEw,
 
 		CMPXCHG_EbGb,		/* B0 */
@@ -1099,11 +1655,11 @@ void (*insttable_2byte[2][256])(void) = {
 
 		XADD_EbGb,		/* C0 */
 		XADD_EwGw,
+		SSE_CMPPS,
 		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
+		SSE_PINSRW,
+		SSE_PEXTRW,
+		SSE_SHUFPS,
 		Grp9,
 		BSWAP_EAX,		/* C8 */
 		BSWAP_ECX,
@@ -1118,48 +1674,48 @@ void (*insttable_2byte[2][256])(void) = {
 		MMX_PSRLW,
 		MMX_PSRLD,
 		MMX_PSRLQ,
-		undef_op,
+		SSE2_PADDQmm,
 		MMX_PMULLW,
 		undef_op,
-		undef_op,
+		SSE_PMOVMSKB,
 		MMX_PSUBUSB,		/* D8 */
 		MMX_PSUBUSW,
-		undef_op,
+		SSE_PMINUB,
 		MMX_PAND,
 		MMX_PADDUSB,
 		MMX_PADDUSW,
-		undef_op,
+		SSE_PMAXUB,
 		MMX_PANDN,
 
-		undef_op,		/* E0 */
+		SSE_PAVGB,		/* E0 */
 		MMX_PSRAW,
 		MMX_PSRAD,
-		undef_op,
-		MMX_PMULHUW,
+		SSE_PAVGW,
+		SSE_PMULHUW,
 		MMX_PMULHW,
 		undef_op,
-		undef_op,
+		SSE_MOVNTQ,
 		MMX_PSUBSB,		/* E8 */
 		MMX_PSUBSW,
-		undef_op,
+		SSE_PMINSW,
 		MMX_POR,
 		MMX_PADDSB,
 		MMX_PADDSW,
-		undef_op,
+		SSE_PMAXSW,
 		MMX_PXOR,
 
 		AMD3DNOW_F0,		/* F0 */
 		MMX_PSLLW,
 		MMX_PSLLD,
 		MMX_PSLLQ,
-		undef_op,
+		SSE2_PMULUDQmm,
 		MMX_PMADDWD,
-		undef_op,
-		undef_op,
+		SSE_PSADBW,
+		SSE_MASKMOVQ,
 		MMX_PSUBB,		/* F8 */
 		MMX_PSUBW,
 		MMX_PSUBD,
-		undef_op,
+		SSE2_PSUBQmm,
 		MMX_PADDB,
 		MMX_PADDW,
 		MMX_PADDD,
@@ -1184,23 +1740,23 @@ void (*insttable_2byte[2][256])(void) = {
 		AMD3DNOW_PREFETCH,
 		AMD3DNOW_FEMMS,
 		undef_op,
-
-		undef_op,		/* 10 */
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,		/* 18 */
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
+		
+		SSE_MOVUPSmem2xmm,		/* 10 */
+		SSE_MOVUPSxmm2mem,
+		SSE_MOVLPSmem2xmm, // + MOVHLPS
+		SSE_MOVLPSxmm2mem,
+		SSE_UNPCKLPS,
+		SSE_UNPCKHPS,
+		SSE_MOVHPSmem2xmm, // + MOVLHPS
+		SSE_MOVHPSxmm2mem,
+		SSE_PREFETCHTx,		/* 18 */
+		SSE_NOPPREFETCH,
+		SSE_NOPPREFETCH,
+		SSE_NOPPREFETCH,
+		SSE_NOPPREFETCH,
+		SSE_NOPPREFETCH,
+		SSE_NOPPREFETCH,
+		SSE_NOPPREFETCH,
 
 		MOV_RdCd,		/* 20 */
 		MOV_RdDd,
@@ -1210,21 +1766,21 @@ void (*insttable_2byte[2][256])(void) = {
 		undef_op,
 		MOV_TdRd,
 		undef_op,
-		undef_op,		/* 28 */
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
+		SSE_MOVAPSmem2xmm,		/* 28 */
+		SSE_MOVAPSxmm2mem,
+		SSE_CVTPI2PS,
+		SSE_MOVNTPS,
+		SSE_CVTTPS2PI,
+		SSE_CVTPS2PI,
+		SSE_UCOMISS,
+		SSE_COMISS,
 
 		WRMSR,			/* 30 */
 		RDTSC,
 		RDMSR,
-		undef_op,
-		undef_op,
-		undef_op,
+		RDPMC,
+		SYSENTER,
+		SYSEXIT,
 		undef_op,
 		undef_op,
 		undef_op,		/* 38 */
@@ -1252,23 +1808,23 @@ void (*insttable_2byte[2][256])(void) = {
 		CMOVNL_GdEd,
 		CMOVLE_GdEd,
 		CMOVNLE_GdEd,
-
-		undef_op,		/* 50 */
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,		/* 58 */
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
+		
+		SSE_MOVMSKPS,		/* 50 */
+		SSE_SQRTPS,
+		SSE_RSQRTPS,
+		SSE_RCPPS,
+		SSE_ANDPS,
+		SSE_ANDNPS,
+		SSE_ORPS,
+		SSE_XORPS,
+		SSE_ADDPS,		/* 58 */
+		SSE_MULPS,
+		SSE2_CVTPS2PD,
+		SSE2_CVTDQ2PS,
+		SSE_SUBPS,
+		SSE_MINPS,
+		SSE_DIVPS,
+		SSE_MAXPS,
 
 		MMX_PUNPCKLBW,		/* 60 */
 		MMX_PUNPCKLWD,
@@ -1286,8 +1842,8 @@ void (*insttable_2byte[2][256])(void) = {
 		undef_op,
 		MMX_MOVD_mm_rm32,
 		MMX_MOVQ_mm_mmm64,
-
-		undef_op,		/* 70 */
+		
+		SSE_PSHUFW,		/* 70 */
 		MMX_PSxxW_imm8,
 		MMX_PSxxD_imm8,
 		MMX_PSxxQ_imm8,
@@ -1352,7 +1908,7 @@ void (*insttable_2byte[2][256])(void) = {
 		BTS_EdGd,
 		SHRD_EdGdIb,
 		SHRD_EdGdCL,
-		NOFPU_FPU_FXSAVERSTOR,
+		NOFPU_FPU_FXSAVERSTOR, // + LDMXCSR + STMXCSR + SFENCE + LFENCE + CLFLUSH
 		IMUL_GdEd,
 
 		CMPXCHG_EbGb,		/* B0 */
@@ -1374,11 +1930,11 @@ void (*insttable_2byte[2][256])(void) = {
 
 		XADD_EbGb,		/* C0 */
 		XADD_EdGd,
+		SSE_CMPPS,
 		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
-		undef_op,
+		SSE_PINSRW,
+		SSE_PEXTRW,
+		SSE_SHUFPS,
 		Grp9,
 		BSWAP_EAX,		/* C8 */
 		BSWAP_ECX,
@@ -1393,54 +1949,877 @@ void (*insttable_2byte[2][256])(void) = {
 		MMX_PSRLW,
 		MMX_PSRLD,
 		MMX_PSRLQ,
-		undef_op,
+		SSE2_PADDQmm,
 		MMX_PMULLW,
 		undef_op,
-		undef_op,
+		SSE_PMOVMSKB,
 		MMX_PSUBUSB,		/* D8 */
 		MMX_PSUBUSW,
-		undef_op,
+		SSE_PMINUB,
 		MMX_PAND,
 		MMX_PADDUSB,
 		MMX_PADDUSW,
-		undef_op,
+		SSE_PMAXUB,
 		MMX_PANDN,
-
-		undef_op,		/* E0 */
+		
+		SSE_PAVGB,		/* E0 */
 		MMX_PSRAW,
 		MMX_PSRAD,
-		undef_op,
-		MMX_PMULHUW,
+		SSE_PAVGW,
+		SSE_PMULHUW,
 		MMX_PMULHW,
 		undef_op,
-		undef_op,
+		SSE_MOVNTQ,
 		MMX_PSUBSB,		/* E8 */
 		MMX_PSUBSW,
-		undef_op,
+		SSE_PMINSW,
 		MMX_POR,
 		MMX_PADDSB,
 		MMX_PADDSW,
-		undef_op,
+		SSE_PMAXSW,
 		MMX_PXOR,
 
 		AMD3DNOW_F0,		/* F0 */
 		MMX_PSLLW,
 		MMX_PSLLD,
 		MMX_PSLLQ,
-		undef_op,
+		SSE2_PMULUDQmm,
 		MMX_PMADDWD,
-		undef_op,
-		undef_op,
+		SSE_PSADBW,
+		SSE_MASKMOVQ,
 		MMX_PSUBB,		/* F8 */
 		MMX_PSUBW,
 		MMX_PSUBD,
-		undef_op,
+		SSE2_PSUBQmm,
 		MMX_PADDB,
 		MMX_PADDW,
 		MMX_PADDD,
 		undef_op,
 	},
 };
+
+void (*insttable_2byte660F_32[256])(void) = {
+	NULL,		/* 00 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		
+	NULL,
+	NULL,
+	NULL,		/* 08 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	SSE2_MOVUPDmem2xmm,		/* 10 */
+	SSE2_MOVUPDxmm2mem,
+	SSE2_MOVLPDmem2xmm,
+	SSE2_MOVLPDxmm2mem,
+	SSE2_UNPCKLPD,
+	SSE2_UNPCKHPD,
+	SSE2_MOVHPDmem2xmm,
+	SSE2_MOVHPDxmm2mem,
+	NULL,		/* 18 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* 20 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	SSE2_MOVAPDmem2xmm,		/* 28 */
+	SSE2_MOVAPDxmm2mem,
+	SSE2_CVTPI2PD,
+	SSE2_MOVNTPD,
+	SSE2_CVTTPD2PI,
+	SSE2_CVTPD2PI,
+	SSE2_UCOMISD,
+	SSE2_COMISD,
+
+	NULL,		/* 30 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* 38 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* 40 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* 48 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	SSE2_MOVMSKPD,		/* 50 */
+	SSE2_SQRTPD,
+	NULL,
+	NULL,
+	SSE2_ANDPD,
+	SSE2_ANDNPD,
+	SSE2_ORPD,
+	SSE2_XORPD,
+	SSE2_ADDPD,		/* 58 */
+	SSE2_MULPD,
+	SSE2_CVTPD2PS,
+	SSE2_CVTPS2DQ,
+	SSE2_SUBPD,
+	SSE2_MINPD,
+	SSE2_DIVPD,
+	SSE2_MAXPD,
+
+	SSE2_PUNPCKLBW,		/* 60 */
+	SSE2_PUNPCKLWD,
+	SSE2_PUNPCKLDQ,
+	SSE2_PACKSSWB,
+	SSE2_PCMPGTB,
+	SSE2_PCMPGTW,
+	SSE2_PCMPGTD,
+	SSE2_PACKUSWB,
+	SSE2_PUNPCKHBW,		/* 68 */
+	SSE2_PUNPCKHWD,
+	SSE2_PUNPCKHDQ,
+	SSE2_PACKSSDW,
+	SSE2_PUNPCKLQDQ,
+	SSE2_PUNPCKHQDQ,
+	SSE2_MOVDrm2xmm,
+	SSE2_MOVDQAmem2xmm,
+
+	SSE2_PSHUFD,		/* 70 */
+	SSE2_PSxxWimm, // PSLLWimm + PSRAWimm + PSRLWimm
+	SSE2_PSxxDimm, // PSLLDimm + PSRADimm + PSRLDimm
+	SSE2_PSxxQimm, // PSLLQimm + PSRAQimm + PSRLQimm + PSLLDQ + PSRLDQ
+	SSE2_PCMPEQB,
+	SSE2_PCMPEQW,
+	SSE2_PCMPEQD,
+	NULL,
+	NULL,		/* 78 */
+	NULL,
+	NULL,
+	NULL,
+	SSE3_HADDPD,
+	SSE3_HSUBPD,
+	SSE2_MOVDxmm2rm,
+	SSE2_MOVDQAxmm2mem,
+
+	NULL,		/* 80 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* 88 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* 90 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* 98 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* A0 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		
+	NULL,		
+	NULL,		/* A8 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* B0 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* B8 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* C0 */
+	NULL,
+	SSE2_CMPPD,
+	SSE2_MOVNTI,
+	SSE2_PINSRW,
+	SSE2_PEXTRW,
+	SSE2_SHUFPD,
+	NULL,
+	NULL,		/* C8 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	SSE3_ADDSUBPD,		/* D0 */
+	SSE2_PSRLW,
+	SSE2_PSRLD,
+	SSE2_PSRLQ,
+	SSE2_PADDQxmm,
+	SSE2_PMULLW,
+	SSE2_MOVQxmm2mem,
+	SSE2_PMOVMSKB,
+	SSE2_PSUBUSB,		/* D8 */
+	SSE2_PSUBUSW,
+	SSE2_PMINUB,
+	SSE2_PAND,
+	SSE2_PADDUSB,
+	SSE2_PADDUSW,
+	SSE2_PMAXUB,
+	SSE2_PANDN,
+
+	SSE2_PAVGB,		/* E0 */
+	SSE2_PSRAW,
+	SSE2_PSRAD,
+	SSE2_PAVGW,
+	SSE2_PMULHUW,
+	SSE2_PMULHW,
+	SSE2_CVTTPD2DQ,
+	SSE2_MOVNTDQ,
+	SSE2_PSUBSB,		/* E8 */
+	SSE2_PSUBSW,
+	SSE2_PMINSW,
+	SSE2_POR,
+	SSE2_PADDSB,
+	SSE2_PADDSW,
+	SSE2_PMAXSW,
+	SSE2_PXOR,
+
+	NULL,		/* F0 */
+	SSE2_PSLLW,
+	SSE2_PSLLD,
+	SSE2_PSLLQ,
+	SSE2_PMULUDQxmm,
+	SSE2_PMADD,
+	SSE2_PSADBW,
+	SSE2_MASKMOVDQU,
+	SSE2_PSUBB,		/* F8 */
+	SSE2_PSUBW,
+	SSE2_PSUBD,
+	SSE2_PSUBQxmm,
+	SSE2_PADDB,
+	SSE2_PADDW,
+	SSE2_PADDD,
+	NULL,
+};
+
+void (*insttable_2byteF20F_32[256])(void) = {
+	NULL,		/* 00 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		
+	NULL,
+	NULL,
+	NULL,		/* 08 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	SSE2_MOVSDmem2xmm,		/* 10 */
+	SSE2_MOVSDxmm2mem,
+	SSE3_MOVDDUP,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* 18 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* 20 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* 28 */
+	NULL,
+	SSE2_CVTSI2SD,
+	NULL,
+	SSE2_CVTTSD2SI,
+	SSE2_CVTSD2SI,
+	NULL,
+	NULL,
+
+	NULL,		/* 30 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* 38 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* 40 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* 48 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* 50 */
+	SSE2_SQRTSD,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	SSE2_ADDSD,		/* 58 */
+	SSE2_MULSD,
+	SSE2_CVTSD2SS,
+	NULL,
+	SSE2_SUBSD,
+	SSE2_MINSD,
+	SSE2_DIVSD,
+	SSE2_MAXSD,
+
+	NULL,		/* 60 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* 68 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	SSE2_PSHUFLW,		/* 70 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* 78 */
+	NULL,
+	NULL,
+	NULL,
+	SSE3_HADDPS,
+	SSE3_HSUBPS,
+	NULL,
+	NULL,
+
+	NULL,		/* 80 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* 88 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* 90 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* 98 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* A0 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		
+	NULL,		
+	NULL,		/* A8 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* B0 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* B8 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* C0 */
+	NULL,
+	SSE2_CMPSD,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* C8 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	SSE3_ADDSUBPS,		/* D0 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	SSE2_MOVDQ2Q,
+	NULL,
+	NULL,		/* D8 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* E0 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	SSE2_CVTPD2DQ,
+	NULL,
+	NULL,		/* E8 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	SSE3_LDDQU,		/* F0 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* F8 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+};
+
+void (*insttable_2byteF30F_32[256])(void) = {
+	NULL,		/* 00 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		
+	NULL,
+	NULL,
+	NULL,		/* 08 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	SSE_MOVSSmem2xmm,		/* 10 */
+	SSE_MOVSSxmm2mem,
+	SSE3_MOVSLDUP,
+	NULL,
+	NULL,
+	NULL,
+	SSE3_MOVSHDUP,
+	NULL,
+	NULL,		/* 18 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* 20 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* 28 */
+	NULL,
+	SSE_CVTSI2SS,
+	NULL,
+	SSE_CVTTSS2SI,
+	SSE_CVTSS2SI,
+	NULL,
+	NULL,
+
+	NULL,		/* 30 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* 38 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* 40 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* 48 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* 50 */
+	SSE_SQRTSS,
+	SSE_RSQRTSS,
+	SSE_RCPSS,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	SSE_ADDSS,		/* 58 */
+	SSE_MULSS,
+	SSE2_CVTSS2SD,
+	SSE2_CVTTPS2DQ,
+	SSE_SUBSS,
+	SSE_MINSS,
+	SSE_DIVSS,
+	SSE_MAXSS,
+
+	NULL,		/* 60 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* 68 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	SSE2_MOVDQUmem2xmm,
+
+	SSE2_PSHUFHW,		/* 70 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* 78 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	SSE2_MOVQmem2xmm,
+	SSE2_MOVDQUxmm2mem,
+
+	NULL,		/* 80 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* 88 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* 90 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* 98 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* A0 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		
+	NULL,		
+	NULL,		/* A8 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* B0 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* B8 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* C0 */
+	NULL,
+	SSE_CMPSS,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* C8 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* D0 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	SSE2_MOVQ2DQ,
+	NULL,
+	NULL,		/* D8 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* E0 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	SSE2_CVTDQ2PD,
+	NULL,
+	NULL,		/* E8 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,		/* F0 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,		/* F8 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+};
+
 
 
 /*

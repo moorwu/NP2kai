@@ -1,13 +1,15 @@
 /**
  * @file	dialog.h
- * @breif	ƒ_ƒCƒAƒƒO‚ÌéŒ¾
+ * @breif	ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã®å®£è¨€
  */
 
 #pragma once
 
-#if defined(SUPPORT_BMS)
-LRESULT CALLBACK BMSDialogProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
-#endif
+enum {
+	NEWDISKMODE_ALL = 0,
+	NEWDISKMODE_FD = 1,
+	NEWDISKMODE_HD = 2,
+};
 
 // d_about.cpp
 void dialog_about(HWND hwndParent);
@@ -34,6 +36,7 @@ void dialog_configure(HWND hwndParent);
 // d_disk.cpp
 void dialog_changefdd(HWND hWnd, REG8 drv);
 void dialog_changehdd(HWND hWnd, REG8 drv);
+void dialog_newdisk_ex(HWND hWnd, int mode);
 void dialog_newdisk(HWND hWnd);
 
 // d_font.cpp
@@ -72,6 +75,11 @@ void dialog_ideopt(HWND hwndParent);
 // d_hostdrv.cpp
 #if defined(SUPPORT_HOSTDRV)
 void dialog_hostdrvopt(HWND hwndParent);
-void hostdrv_readini(); // b’è hostdrv.c‚ ‚½‚è‚ÉˆÚ“®‚·‚×‚«H
-void hostdrv_writeini(); // b’è hostdrv.c‚ ‚½‚è‚ÉˆÚ“®‚·‚×‚«H
+void hostdrv_readini(); // æš«å®š hostdrv.cã‚ãŸã‚Šã«ç§»å‹•ã™ã¹ãï¼Ÿ
+void hostdrv_writeini(); // æš«å®š hostdrv.cã‚ãŸã‚Šã«ç§»å‹•ã™ã¹ãï¼Ÿ
+#endif
+
+// d_pci.cpp
+#if defined(SUPPORT_PCI)
+void dialog_pciopt(HWND hWnd);
 #endif

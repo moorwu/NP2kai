@@ -53,6 +53,7 @@ static const struct {
 	gfloat		min;
 	gfloat		max;
 } mixer_vol_tbl[] = {
+	{ "Master", &np2cfg.vol_master, 0.0, 100.0 },
 	{ "FM",     &np2cfg.vol_fm,     0.0, 128.0 },
 	{ "PSG",    &np2cfg.vol_ssg,    0.0, 128.0 },
 	{ "ADPCM",  &np2cfg.vol_adpcm,  0.0, 128.0 },
@@ -231,6 +232,7 @@ static GtkWidget *snd118_int_pcm_entry;
 static GtkWidget *snd118_int_midi_entry;
 static GtkWidget *snd118_soundid_entry;
 static GtkWidget *snd118_dma_entry;
+static GtkWidget *snd118_rom_checkbutton;
 
 
 /*
@@ -410,6 +412,7 @@ ok_button_clicked(GtkButton *b, gpointer d)
 	const gchar *snd118_soundid;
 	const gchar *snd118_dma;
 	UINT16 snd118_ioport_temp;
+	gint snd118_rom;
 
 	/* Mate-X PCM */
 	const gchar *matex_pcm_intr;
@@ -451,16 +454,16 @@ ok_button_clicked(GtkButton *b, gpointer d)
 			*mixer_vol_tbl[i].valp = mixer_vol[i];
 #if defined(SUPPORT_FMGEN)
 			switch(i) {
-			case 0:
+			case 1:
 				OPNA_SetVolumeFM(g_opna[0].fmgen, pow((double)np2cfg.vol_fm / 128, 0.12) * (20 + 192) - 192);
 				break;
-			case 1:
+			case 2:
 				OPNA_SetVolumePSG(g_opna[0].fmgen, pow((double)np2cfg.vol_ssg / 128, 0.12) * (20 + 192) - 192);
 				break;
-			case 3:
+			case 4:
 				OPNA_SetVolumeADPCM(g_opna[0].fmgen, pow((double)np2cfg.vol_pcm / 128, 0.12) * (20 + 192) - 192);
 				break;
-			case 4:
+			case 5:
 				OPNA_SetVolumeRhythmTotal(g_opna[0].fmgen, pow((double)np2cfg.vol_rhythm / 128, 0.12) * (20 + 192) - 192);
 				break;
 			}
@@ -715,6 +718,12 @@ ok_button_clicked(GtkButton *b, gpointer d)
 			break;
 		}
 	}
+	if(np2cfg.snd118rom != gtk_toggle_button_get_active(
+	    GTK_TOGGLE_BUTTON(snd118_rom_checkbutton))) {
+	  np2cfg.snd118rom = gtk_toggle_button_get_active(
+	    GTK_TOGGLE_BUTTON(snd118_rom_checkbutton));
+		renewal = TRUE;
+	} 
 
 	if (renewal) {
 		sysmng_update(SYS_UPDATECFG);
@@ -1012,15 +1021,20 @@ mixer_default_button_clicked(GtkButton *b, gpointer d)
 {
 	int i;
 
-	for (i = 0; i < NELEMENTS(mixer_vol_tbl) - 1; i++) {
+#if !defined(SUPPORT_FMGEN)
+	gtk_adjustment_set_value(GTK_ADJUSTMENT(mixer_adj[0]), 100.0);
+	for (i = 1; i <= NELEMENTS(mixer_vol_tbl) - 1; i++) {
 		gtk_adjustment_set_value(GTK_ADJUSTMENT(mixer_adj[i]), 64.0);
 	}
-	gtk_adjustment_set_value(GTK_ADJUSTMENT(mixer_adj[5]), 128.0);
-#if defined(SUPPORT_FMGEN)
-	OPNA_SetVolumeFM(g_opna[0].fmgen, pow((double)np2cfg.vol_fm / 128, 0.12) * (20 + 192) - 192);
-	OPNA_SetVolumePSG(g_opna[0].fmgen, pow((double)np2cfg.vol_ssg / 128, 0.12) * (20 + 192) - 192);
-	OPNA_SetVolumeADPCM(g_opna[0].fmgen, pow((double)np2cfg.vol_pcm / 128, 0.12) * (20 + 192) - 192);
-	OPNA_SetVolumeRhythmTotal(g_opna[0].fmgen, pow((double)np2cfg.vol_rhythm / 128, 0.12) * (20 + 192) - 192);
+	gtk_adjustment_set_value(GTK_ADJUSTMENT(mixer_adj[6]), 128.0);
+#else  /* SUPPORT_FMGEN */
+	gtk_adjustment_set_value(GTK_ADJUSTMENT(mixer_adj[0]), 100.0);
+	gtk_adjustment_set_value(GTK_ADJUSTMENT(mixer_adj[1]), 64.0);
+	gtk_adjustment_set_value(GTK_ADJUSTMENT(mixer_adj[2]), 25.0);
+	gtk_adjustment_set_value(GTK_ADJUSTMENT(mixer_adj[3]), 64.0);
+	gtk_adjustment_set_value(GTK_ADJUSTMENT(mixer_adj[4]), 90.0);
+	gtk_adjustment_set_value(GTK_ADJUSTMENT(mixer_adj[5]), 64.0);
+	gtk_adjustment_set_value(GTK_ADJUSTMENT(mixer_adj[6]), 128.0);
 #endif	/* SUPPORT_FMGEN */
 
 }
@@ -1074,6 +1088,10 @@ snd118_default_button_clicked(GtkButton *b, gpointer d)
 	gtk_entry_set_text(GTK_ENTRY(snd118_int_midi_entry), "Disable");
 	gtk_entry_set_text(GTK_ENTRY(snd118_soundid_entry), "8x");
 	gtk_entry_set_text(GTK_ENTRY(snd118_dma_entry), "DMA #3");
+	if (!gtk_toggle_button_get_active(
+	    GTK_TOGGLE_BUTTON(snd118_rom_checkbutton)))
+		g_signal_emit_by_name(G_OBJECT(snd118_rom_checkbutton),
+		    "clicked");
 }
 
 static void
@@ -1440,7 +1458,7 @@ create_pc9801_118_note(void)
 	gtk_container_set_border_width(GTK_CONTAINER(root_widget), 5);
 	gtk_widget_show(root_widget);
 
-	table = gtk_table_new(4, 3, FALSE);
+	table = gtk_table_new(4, 4, FALSE);
 	gtk_table_set_row_spacings(GTK_TABLE(table), 5);
 	gtk_table_set_col_spacings(GTK_TABLE(table), 5);
 	gtk_box_pack_start(GTK_BOX(root_widget), table, FALSE, FALSE, 0);
@@ -1602,6 +1620,13 @@ create_pc9801_118_note(void)
 		break;
 	}
 	gtk_entry_set_text(GTK_ENTRY(snd118_int_midi_entry), temp);
+
+	/* ROM */
+	snd118_rom_checkbutton = gtk_check_button_new_with_label("ROM");
+	gtk_widget_show(snd118_rom_checkbutton);
+	gtk_table_attach_defaults(GTK_TABLE(table), snd118_rom_checkbutton, 2, 3, 3, 4);
+	if (np2cfg.snd118rom)
+		g_signal_emit_by_name(G_OBJECT(snd118_rom_checkbutton), "clicked");
 
 	/* "Default" button */
 	hbox = gtk_hbox_new(FALSE, 0);
@@ -2242,19 +2267,19 @@ create_driver_note(void)
 		g_signal_connect(G_OBJECT(driver_radiobutton[i]), "clicked",
 		    G_CALLBACK(driver_radiobutton_clicked), GINT_TO_POINTER(i));
 	}
-#if !defined(USE_SDLAUDIO) && !defined(USE_SDLMIXER)
+#if !defined(USE_SDLAUDIO) && !defined(USE_SDLMIXER) && !defined(USE_SDL2AUDIO) && !defined(USE_SDL2MIXER)
 	gtk_widget_set_sensitive(driver_radiobutton[SNDDRV_SDL], FALSE);
 #endif
 
 	switch (np2oscfg.snddrv) {
 	case SNDDRV_NODRV:
-#if defined(USE_SDLAUDIO) || defined(USE_SDLMIXER)
+#if defined(USE_SDLAUDIO) || defined(USE_SDLMIXER) || defined(USE_SDL2AUDIO) || defined(USE_SDL2MIXER)
 	case SNDDRV_SDL:
 #endif
 		g_signal_emit_by_name(G_OBJECT(driver_radiobutton[np2oscfg.snddrv]), "clicked");
 		break;
 
-#if !defined(USE_SDLAUDIO) && !defined(USE_SDLMIXER)
+#if !defined(USE_SDLAUDIO) && !defined(USE_SDLMIXER) && !defined(USE_SDL2AUDIO) && !defined(USE_SDL2MIXER)
 	case SNDDRV_SDL:
 #endif
 	case SNDDRV_DRVMAX:

@@ -14,13 +14,14 @@
 #include "joymng.h"
 #include "np2.h"
 #include "sysmng.h"
-#include "misc\PropProc.h"
+#include "misc/PropProc.h"
 #include "pccore.h"
 #include "iocore.h"
-#include "generic\dipswbmp.h"
-#include "sound\sound.h"
-#include "sound\fmboard.h"
-#include "sound\tms3631.h"
+#include "soundmng.h"
+#include "generic/dipswbmp.h"
+#include "sound/sound.h"
+#include "sound/fmboard.h"
+#include "sound/tms3631.h"
 #if defined(SUPPORT_FMGEN)
 #include "sound/opna.h"
 #endif	/* SUPPORT_FMGEN */
@@ -43,6 +44,7 @@ protected:
 	virtual LRESULT WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam);
 
 private:
+	CSliderValue m_master;		//!< マスター ヴォリューム
 	CSliderValue m_fm;			//!< FM ヴォリューム
 	CSliderValue m_psg;			//!< PSG ヴォリューム
 	CSliderValue m_adpcm;		//!< ADPCM ヴォリューム
@@ -73,6 +75,15 @@ SndOptMixerPage::~SndOptMixerPage()
  */
 BOOL SndOptMixerPage::OnInitDialog()
 {
+	m_master.SubclassDlgItem(IDC_VOLMASTER, this);
+	m_master.SetStaticId(IDC_VOLMASTERSTR);
+	m_master.SetRange(0, 100);
+	m_master.SetPos(np2cfg.vol_master);
+	if(!np2oscfg.usemastervolume){
+		m_master.SetPos(100);
+		m_master.EnableWindow(FALSE);
+	}
+
 	m_fm.SubclassDlgItem(IDC_VOLFM, this);
 	m_fm.SetStaticId(IDC_VOLFMSTR);
 	m_fm.SetRange(0, 128);
@@ -112,14 +123,28 @@ BOOL SndOptMixerPage::OnInitDialog()
 void SndOptMixerPage::OnOK()
 {
 	bool bUpdated = false;
+	
+	if(np2oscfg.usemastervolume){
+		const UINT8 cMaster = static_cast<UINT8>(m_master.GetPos());
+		if (np2cfg.vol_master != cMaster)
+		{
+			np2cfg.vol_master = cMaster;
+			soundmng_setvolume(cMaster);
+			bUpdated = true;
+		}
+	}
 
+	UINT volex = 15;
+	if(g_nSoundID==SOUNDID_WAVESTAR){
+		volex = cs4231.devvolume[0xff];
+	}
 	const UINT8 cFM = static_cast<UINT8>(m_fm.GetPos());
 	if (np2cfg.vol_fm != cFM)
 	{
 		np2cfg.vol_fm = cFM;
-		opngen_setvol(cFM);
+		opngen_setvol(cFM * volex / 15);
 #if defined(SUPPORT_FMGEN)
-		opna_fmgen_setallvolumeFM_linear(cFM);
+		opna_fmgen_setallvolumeFM_linear(cFM * volex / 15);
 #endif	/* SUPPORT_FMGEN */
 		bUpdated = true;
 	}
@@ -128,9 +153,9 @@ void SndOptMixerPage::OnOK()
 	if (np2cfg.vol_ssg != cPSG)
 	{
 		np2cfg.vol_ssg = cPSG;
-		psggen_setvol(cPSG);
+		psggen_setvol(cPSG * volex / 15);
 #if defined(SUPPORT_FMGEN)
-		opna_fmgen_setallvolumePSG_linear(cPSG);
+		opna_fmgen_setallvolumePSG_linear(cPSG * volex / 15);
 #endif	/* SUPPORT_FMGEN */
 		bUpdated = true;
 	}
@@ -163,9 +188,9 @@ void SndOptMixerPage::OnOK()
 	if (np2cfg.vol_rhythm != cRhythm)
 	{
 		np2cfg.vol_rhythm = cRhythm;
-		rhythm_setvol(cRhythm);
+		rhythm_setvol(cRhythm * volex / 15);
 #if defined(SUPPORT_FMGEN)
-		opna_fmgen_setallvolumeRhythmTotal_linear(cRhythm);
+		opna_fmgen_setallvolumeRhythmTotal_linear(cRhythm * volex / 15);
 #endif	/* SUPPORT_FMGEN */
 		for (UINT i = 0; i < _countof(g_opna); i++)
 		{
@@ -206,6 +231,17 @@ BOOL SndOptMixerPage::OnCommand(WPARAM wParam, LPARAM lParam)
 		m_cdda.SetPos(128);
 		return TRUE;
 	}
+	else if (LOWORD(wParam) == IDC_SNDMIXDEF2)
+	{
+		m_fm.SetPos(64);
+		m_psg.SetPos(25);
+		m_adpcm.SetPos(64);
+		m_pcm.SetPos(90);
+		m_rhythm.SetPos(64);
+		m_cdda.SetPos(128);
+		return TRUE;
+	}
+
 	return FALSE;
 }
 
@@ -222,6 +258,10 @@ LRESULT SndOptMixerPage::WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam)
 	{
 		switch (::GetDlgCtrlID(reinterpret_cast<HWND>(lParam)))
 		{
+			case IDC_VOLMASTER:
+				m_master.UpdateValue();
+				break;
+
 			case IDC_VOLFM:
 				m_fm.UpdateValue();
 				break;
@@ -883,12 +923,18 @@ private:
 	UINT8 m_snd118irqf;				//!< IRQ(FM)設定値
 	UINT8 m_snd118irqp;				//!< IRQ(PCM)設定値
 	UINT8 m_snd118irqm;				//!< IRQ(MIDI)設定値
+	UINT8 m_snd118rom;				//!< ROM設定値
 	CComboData m_cmbio;				//!< IO
 	CComboData m_cmbid;				//!< ID
 	CComboData m_cmbdma;			//!< DMA
 	CComboData m_cmbirqf;			//!< IRQ(FM)
 	CComboData m_cmbirqp;			//!< IRQ(PCM)
 	CComboData m_cmbirqm;			//!< IRQ(MIDI)
+	CWndProc m_chkrom;				//!< ROM
+	CStaticDipSw m_jumper;			//!< Jumper
+	void Set(UINT8 cValue);
+	void SetJumper(UINT cAdd, UINT cRemove);
+	void OnDipSw();
 };
 
 //! 118 I/O
@@ -958,6 +1004,7 @@ SndOpt118Page::SndOpt118Page()
 	, m_snd118irqf(0)
 	, m_snd118irqp(0)
 	, m_snd118irqm(0)
+	, m_snd118rom(0)
 {
 }
 
@@ -981,6 +1028,7 @@ BOOL SndOpt118Page::OnInitDialog()
 	m_snd118irqf = np2cfg.snd118irqf;
 	m_snd118irqp = np2cfg.snd118irqp;
 	m_snd118irqm = np2cfg.snd118irqm;
+	m_snd118rom = np2cfg.snd118rom;
 	
 	m_cmbio.SubclassDlgItem(IDC_SND118IO, this);
 	m_cmbio.Add(s_io118, _countof(s_io118));
@@ -1006,6 +1054,14 @@ BOOL SndOpt118Page::OnInitDialog()
 	m_cmbirqf.SetCurItemData(m_snd118irqf);
 	m_cmbirqp.SetCurItemData(m_snd118irqp);
 	m_cmbirqm.SetCurItemData(m_snd118irqm);
+	
+	m_chkrom.SubclassDlgItem(IDC_SND118ROM, this);
+	if(m_snd118rom)
+		m_chkrom.SendMessage(BM_SETCHECK , BST_CHECKED , 0);
+	else
+		m_chkrom.SendMessage(BM_SETCHECK , BST_UNCHECKED , 0);
+	
+	m_jumper.SubclassDlgItem(IDC_SND118JMP, this);
 
 	m_cmbio.SetFocus();
 
@@ -1047,6 +1103,11 @@ void SndOpt118Page::OnOK()
 		np2cfg.snd118irqm = m_snd118irqm;
 		::sysmng_update(SYS_UPDATECFG);
 	}
+	if (m_snd118rom!=np2cfg.snd118rom)
+	{
+		np2cfg.snd118rom = m_snd118rom;
+		::sysmng_update(SYS_UPDATECFG);
+	}
 }
 
 /**
@@ -1061,26 +1122,37 @@ BOOL SndOpt118Page::OnCommand(WPARAM wParam, LPARAM lParam)
 	{
 		case IDC_SND118IO:
 			m_snd118io = m_cmbio.GetCurItemData(0x0188);
+			m_jumper.Invalidate();
 			return TRUE;
 			
 		case IDC_SND118ID:
 			m_snd118id = m_cmbid.GetCurItemData(0x80);
+			m_jumper.Invalidate();
 			return TRUE;
 
 		case IDC_SND118DMA:
 			m_snd118dma = m_cmbdma.GetCurItemData(3);
+			m_jumper.Invalidate();
 			return TRUE;
 
 		case IDC_SND118INTF:
 			m_snd118irqf = m_cmbirqf.GetCurItemData(12);
+			m_jumper.Invalidate();
 			return TRUE;
 
 		case IDC_SND118INTP:
 			m_snd118irqp = m_cmbirqp.GetCurItemData(12);
+			m_jumper.Invalidate();
 			return TRUE;
 
 		case IDC_SND118INTM:
 			m_snd118irqm = m_cmbirqm.GetCurItemData(0xff);
+			m_jumper.Invalidate();
+			return TRUE;
+			
+		case IDC_SND118ROM:
+			m_snd118rom = (m_chkrom.SendMessage(BM_GETCHECK , 0 , 0) ? 1 : 0);
+			m_jumper.Invalidate();
 			return TRUE;
 
 		case IDC_SND118DEF:
@@ -1090,12 +1162,22 @@ BOOL SndOpt118Page::OnCommand(WPARAM wParam, LPARAM lParam)
 			m_snd118irqf = 12;
 			m_snd118irqp = 12;
 			m_snd118irqm = 0xff;
+			m_snd118rom = 0;
 			m_cmbio.SetCurItemData(m_snd118io);
 			m_cmbid.SetCurItemData(m_snd118id);
 			m_cmbdma.SetCurItemData(m_snd118dma);
 			m_cmbirqf.SetCurItemData(m_snd118irqf);
 			m_cmbirqp.SetCurItemData(m_snd118irqp);
 			m_cmbirqm.SetCurItemData(m_snd118irqm);
+			if(m_snd118rom)
+				m_chkrom.SendMessage(BM_SETCHECK , BST_CHECKED , 0);
+			else
+				m_chkrom.SendMessage(BM_SETCHECK , BST_UNCHECKED , 0);
+			m_jumper.Invalidate();
+			return TRUE;
+
+		case IDC_SND86DIP:
+			OnDipSw();
 			return TRUE;
 	}
 	return FALSE;
@@ -1113,9 +1195,24 @@ LRESULT SndOpt118Page::WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam)
 	switch (nMsg)
 	{
 		case WM_DRAWITEM:
+			if (LOWORD(wParam) == IDC_SND118JMP)
+			{
+				UINT8* pBitmap = dipswbmp_getsnd118(m_snd118io, m_snd118dma, m_snd118irqf, m_snd118irqp, m_snd118irqm, m_snd118rom);
+				m_jumper.Draw((reinterpret_cast<LPDRAWITEMSTRUCT>(lParam))->hDC, pBitmap);
+				_MFREE(pBitmap);
+			}
 			return FALSE;
 	}
 	return CDlgProc::WindowProc(nMsg, wParam, lParam);
+}
+
+/**
+ * DIPSW をタップした
+ */
+void SndOpt118Page::OnDipSw()
+{
+	// TODO: Jumperをクリックしたときの動作を実装する
+	m_jumper.Invalidate();
 }
 
 
@@ -1288,7 +1385,7 @@ protected:
 	virtual LRESULT WindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam);
 
 private:
-	UINT16 m_snd118io;				//!< IO設定値
+	UINT8 m_snd118io;				//!< IO設定値
 	UINT8 m_snd118dma;				//!< DMA設定値
 	UINT8 m_snd118irqf;				//!< IRQ設定値
 	CComboData m_cmbio;				//!< IO

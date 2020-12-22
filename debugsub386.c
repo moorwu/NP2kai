@@ -128,14 +128,14 @@ void debugwriteseg(const OEMCHAR *fname, const descriptor_t *sd,
 	if (limit <= addr) {
 		return;
 	}
-	size = np2min(limit - addr, size - 1) + 1;
+	size = MIN(limit - addr, size - 1) + 1;
 	fh = file_create_c(fname);
 	if (fh == FILEH_INVALID) {
 		return;
 	}
 	addr += sd->u.seg.segbase;
 	while(size) {
-		limit = np2min(size, sizeof(buf));
+		limit = MIN(size, sizeof(buf));
 		MEML_READS(addr, buf, limit);
 		file_write(fh, buf, limit);
 		addr += limit;
@@ -210,7 +210,7 @@ void debugsub_memorydumpall(void) {
 }
 
 
-#if 0	// 俺用デバグ
+#if 0	// 菫ｺ逕ｨ繝�繝舌げ
 
 void debugpageptr(UINT32 addr) {
 

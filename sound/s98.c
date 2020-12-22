@@ -39,7 +39,7 @@ typedef struct {
 	UINT8	device3clock[4];
 	UINT8	device3pan[4];
 	UINT8	device3reserved[4];
-	UINT8	title[0x30];
+	UINT8	title[0x40];
 } S98HDR;
 
 static struct {
@@ -125,22 +125,24 @@ BRESULT S98_open(const OEMCHAR *filename) {
 	UINT	i;
 	S98HDR	hdr;
 
-	// ƒtƒ@ƒCƒ‹‚ÌƒI[ƒvƒ“
+	// ãƒ•ã‚¡ã‚¤ãƒ«ã®ã‚ªãƒ¼ãƒ—ãƒ³
 	s98log.fh = file_create(filename);
 	if (s98log.fh == FILEH_INVALID) {
 		return(FAILURE);
 	}
 
-	// ‰Šú‰»
+	// åˆæœŸåŒ–
 	s98log.clock = pccore.realclock / 1000;
 	s98log.p = 0;
 
-	// ƒwƒbƒ_‚Ì•Û‘¶
+	// ãƒ˜ãƒƒãƒ€ã®ä¿å­˜
 	ZeroMemory(&hdr, sizeof(hdr));
 	hdr.magic[0] = 'S';
 	hdr.magic[1] = '9';
 	hdr.magic[2] = '8';
+	hdr.formatversion = '1';
 	STOREINTELDWORD(hdr.timerinfo, 1);
+	STOREINTELDWORD(hdr.offset, offsetof(S98HDR, title));
 	STOREINTELDWORD(hdr.dumpdata, sizeof(S98HDR));
 	switch(g_nSoundID) {
 	  case 0x02:
@@ -214,7 +216,31 @@ BRESULT S98_open(const OEMCHAR *filename) {
 		S98_putc(*(((UINT8 *)&hdr) + i));
 	}
 
-	// ˆê‰ƒpƒfƒBƒ“ƒO
+#if 1
+	// FM
+	for (i = 0x30; i < 0xb8; i++)
+	{
+		if ((i & 3) != 3)
+		{
+			S98_putc(NORMAL2608);
+			S98_putc((REG8)i);
+			S98_putc(g_opna[0].s.reg[i]);
+
+			S98_putc(EXTEND2608);
+			S98_putc((REG8)i);
+			S98_putc(g_opna[0].s.reg[i+0x100]);
+		}
+	}
+	// PSG
+	for (i = 0x00; i < 0x0e; i++)
+	{
+		S98_putc(NORMAL2608);
+		S98_putc((REG8)i);
+		S98_putc(g_opna[0].s.reg[i]);
+	}
+#endif
+
+	// ä¸€å¿œãƒ‘ãƒ‡ã‚£ãƒ³ã‚°
 	s98log.intcount = 10;
 
 	sets98event(NEVENT_ABSOLUTE);

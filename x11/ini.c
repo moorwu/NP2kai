@@ -507,6 +507,7 @@ enum {
 	INIRO_BOOL	= INIFLAG_RO | INITYPE_BOOL,
 	INIRO_BITMAP	= INIFLAG_RO | INITYPE_BITMAP,
 	INIRO_UINT8	= INIFLAG_RO | INITYPE_UINT8,
+	INIRO_HEX8	= INIFLAG_RO | INITYPE_HEX8,
 	INIMAX_UINT8	= INIFLAG_MAX | INITYPE_UINT8,
 	INIAND_UINT8	= INIFLAG_AND | INITYPE_UINT8,
 	INIROMAX_SINT32	= INIFLAG_RO | INIFLAG_MAX | INITYPE_SINT32,
@@ -575,14 +576,21 @@ static INITBL iniitem[] = {
 	{"optSPBVR", INITYPE_HEX8,	&np2cfg.spb_vrc,	0},
 	{"optSPBVL", INIMAX_UINT8,	&np2cfg.spb_vrl,	24},
 	{"optSPB_X", INITYPE_BOOL,	&np2cfg.spb_x,		0},
+	{"USEMPU98", INITYPE_BOOL,	&np2cfg.mpuenable,		0},
 	{"optMPU98", INITYPE_HEX8,	&np2cfg.mpuopt,		0},
 	{"optMPUAT", INITYPE_BOOL,	&np2cfg.mpu_at,		0},
+#if defined(SUPPORT_SMPU98)
+	{"USE_SMPU", INITYPE_BOOL,	&np2cfg.smpuenable,		0},
+	{"opt_SMPU", INITYPE_HEX8,	&np2cfg.smpuopt,		0},
+	{"SMPUMUTB", INITYPE_BOOL,	&np2cfg.smpumuteB,		0},
+#endif
 	{"opt118io", INITYPE_HEX16,	&np2cfg.snd118io,	0},
 	{"opt118id", INITYPE_HEX8,	&np2cfg.snd118id,	0},
 	{"opt118dm", INITYPE_UINT8,	&np2cfg.snd118dma,	0},
 	{"opt118if", INITYPE_UINT8,	&np2cfg.snd118irqf,	0},
 	{"opt118ip", INITYPE_UINT8,	&np2cfg.snd118irqp,	0},
 	{"opt118im", INITYPE_UINT8,	&np2cfg.snd118irqm,	0},
+	{"opt118ro", INITYPE_UINT8,	&np2cfg.snd118rom,	0},
 
 	{"optwssid", INITYPE_HEX8,	&np2cfg.sndwssid,	0},
 	{"optwssdm", INITYPE_UINT8,	&np2cfg.sndwssdma,	0},
@@ -592,6 +600,7 @@ static INITBL iniitem[] = {
 	{"optsb16p", INITYPE_HEX8,	&np2cfg.sndsb16io,	0},
 	{"optsb16d", INITYPE_UINT8,	&np2cfg.sndsb16dma,	0},
 	{"optsb16i", INITYPE_UINT8,	&np2cfg.sndsb16irq,	0},
+	{"optsb16A", INITYPE_BOOL,	&np2cfg.sndsb16at,	0},
 #endif	/* SUPPORT_SOUND_SB16 */
 
 	{"volume_F", INIMAX_UINT8,	&np2cfg.vol_fm,		128},
@@ -663,6 +672,8 @@ static INITBL iniitem[] = {
 	{"USE_CLGD", INITYPE_BOOL,	&np2cfg.usegd5430,	0},
 	{"CLGDTYPE", INITYPE_UINT16,	&np2cfg.gd5430type,	0},
 	{"CLGDFCUR", INITYPE_BOOL,	&np2cfg.gd5430fakecur,	0},
+	{"GDMELOFS", INITYPE_UINT8,	&np2cfg.gd5430melofs,	0},
+	{"GANBBSEX", INITYPE_BOOL,	&np2cfg.ga98nb_bigscrn_ex,	0},
 #endif
 	{"TIMERFIX", INITYPE_BOOL,	&np2cfg.timerfix,	0},
 
@@ -681,8 +692,24 @@ static INITBL iniitem[] = {
 	{"cpu_feat", INITYPE_HEX32,	&np2cfg.cpu_feature,	0},
 	{"cpu_f_ex", INITYPE_HEX32,	&np2cfg.cpu_feature_ex,	0},
 	{"cpu_bran", INIRO_STR,		np2cfg.cpu_brandstring_o, 63},
+	{"cpu_brid", INITYPE_HEX32,	&np2cfg.cpu_brandid,	0},
+	{"cpu_fecx", INITYPE_HEX32,	&np2cfg.cpu_feature_ecx,	0},
+	{"cpu_eflg", INITYPE_HEX32,	&np2cfg.cpu_eflags_mask,	0},
 
 	{"FPU_TYPE", INITYPE_UINT8,	&np2cfg.fpu_type,	0},
+#if defined(SUPPORT_FAST_MEMORYCHECK)
+	{"memckspd", INITYPE_UINT8,	&np2cfg.memcheckspeed,	0},
+#endif
+	{"USERAM_D", INITYPE_BOOL,	&np2cfg.useram_d,	0},
+#if defined(SUPPORT_ASYNC_CPU)
+	{"ASYNCCPU", INITYPE_BOOL,	&np2cfg.asynccpu,	0},
+#endif
+#if defined(SUPPORT_IDEIO)
+	{"IDEBADDR", INIRO_HEX8,	&np2cfg.idebaddr,	0},
+#endif
+#if defined(SUPPORT_GAMEPORT)
+	{"GAMEPORT", INITYPE_BOOL,	&np2cfg.gameport,	0},
+#endif
 
 	{"keyboard", INITYPE_KB,	&np2oscfg.KEYBOARD,	0},
 	{"F12_COPY", INITYPE_UINT8,	&np2oscfg.F12KEY,	0},
@@ -699,7 +726,19 @@ static INITBL iniitem[] = {
 	{"mpu98mdl", INITYPE_STR,	np2oscfg.mpu.mdl,	64},
 	{"mpu98def", INITYPE_STR,	np2oscfg.mpu.def,	MAX_PATH},
 
+#if defined(SUPPORT_SMPU98)
+	{"smpuAmap", INITYPE_STR,	np2oscfg.smpuA.mout,	MAX_PATH},
+	{"smpuAmin", INITYPE_STR,	np2oscfg.smpuA.min,	MAX_PATH},
+	{"smpuAmdl", INITYPE_STR,	np2oscfg.smpuA.mdl,	64},
+	{"smpuAdef", INITYPE_STR,	np2oscfg.smpuA.def,	MAX_PATH},
+	{"smpuBmap", INITYPE_STR,	np2oscfg.smpuB.mout,	MAX_PATH},
+	{"smpuBmin", INITYPE_STR,	np2oscfg.smpuB.min,	MAX_PATH},
+	{"smpuBmdl", INITYPE_STR,	np2oscfg.smpuB.mdl,	64},
+	{"smpuBdef", INITYPE_STR,	np2oscfg.smpuB.def,	MAX_PATH},
+#endif
+
 	{"com1port", INIMAX_UINT8,	&np2oscfg.com[0].port,	COMPORT_MIDI},
+	{"com1dir",  INITYPE_BOOL,	&np2oscfg.com[0].direct,	1},
 	{"com1para", INITYPE_UINT8,	&np2oscfg.com[0].param,	0},
 	{"com1_bps", INITYPE_UINT32,	&np2oscfg.com[0].speed,	0},
 	{"com1mmap", INITYPE_STR,	np2oscfg.com[0].mout,	MAX_PATH},
@@ -707,6 +746,7 @@ static INITBL iniitem[] = {
 	{"com1mdef", INITYPE_STR,	np2oscfg.com[0].def,	MAX_PATH},
 
 	{"com2port", INIMAX_UINT8,	&np2oscfg.com[1].port,	COMPORT_MIDI},
+	{"com2dir",  INITYPE_BOOL,	&np2oscfg.com[1].direct,	1},
 	{"com2para", INITYPE_UINT8,	&np2oscfg.com[1].param,	0},
 	{"com2_bps", INITYPE_UINT32,	&np2oscfg.com[1].speed,	0},
 	{"com2mmap", INITYPE_STR,	np2oscfg.com[1].mout,	MAX_PATH},
@@ -714,6 +754,7 @@ static INITBL iniitem[] = {
 	{"com2mdef", INITYPE_STR,	np2oscfg.com[1].def,	MAX_PATH},
 
 	{"com3port", INIMAX_UINT8,	&np2oscfg.com[2].port,	COMPORT_MIDI},
+	{"com3dir",  INITYPE_BOOL,	&np2oscfg.com[2].direct,	1},
 	{"com3para", INITYPE_UINT8,	&np2oscfg.com[2].param,	0},
 	{"com3_bps", INITYPE_UINT32,	&np2oscfg.com[2].speed,	0},
 	{"com3mmap", INITYPE_STR,	np2oscfg.com[2].mout,	MAX_PATH},
@@ -733,17 +774,24 @@ static INITBL iniitem[] = {
 	{"keydispl", INITYPE_BOOL,	&np2oscfg.keydisp,	0},
 	{"soft_kbd", INITYPE_BOOL,	&np2oscfg.softkbd,	0},
 	{"jast_snd", INITYPE_BOOL,	&np2oscfg.jastsnd,	0},
+	{"xrollkey", INITYPE_BOOL,	&np2oscfg.xrollkey,	0},
 
 	{"sounddrv", INITYPE_SNDDRV,	&np2oscfg.snddrv,	0},
 	{"MIDIOUTd", INITYPE_STR,	&np2oscfg.MIDIDEV[0],	MAX_PATH},
 	{"MIDIIN_d", INITYPE_STR,	&np2oscfg.MIDIDEV[1],	MAX_PATH},
+#if defined(SUPPORT_SMPU98)
+	{"MIDIOUAd", INITYPE_STR,	&np2oscfg.MIDIDEVA[0],	MAX_PATH},
+	{"MIDIINAd", INITYPE_STR,	&np2oscfg.MIDIDEVA[1],	MAX_PATH},
+	{"MIDIOUBd", INITYPE_STR,	&np2oscfg.MIDIDEVB[0],	MAX_PATH},
+	{"MIDIINBd", INITYPE_STR,	&np2oscfg.MIDIDEVB[1],	MAX_PATH},
+#endif
 	{"MIDIWAIT", INITYPE_UINT32,	&np2oscfg.MIDIWAIT,	0},
 
 	{"dinterp_", INITYPE_INTERP,	&np2oscfg.drawinterp,	0},
 	{"fullscrn", INITYPE_UINT32,	&ignore_fullscreen_mode,0},
 	{"F11_KEY_", INITYPE_UINT8,	&np2oscfg.F11KEY,	0},
-	{"READONLY", INIRO_BOOL,	&np2oscfg.cfgreadonly,	0},
 
+	{"READONLY", INIRO_BOOL,	&np2oscfg.readonly,	0},
 	{"I286SAVE", INIRO_BOOL,	&np2oscfg.I286SAVE,	0},
 };
 #define	INIITEMS	(sizeof(iniitem) / sizeof(iniitem[0]))

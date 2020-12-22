@@ -56,6 +56,9 @@ static const char str_rightrol[] = "Right Rotated";
 static const char str_dispsync[] = "Disp Vsync";
 static const char str_realpal[] = "Real Palettes";
 static const char str_nowait[] = "No Wait";
+#if defined(SUPPORT_ASYNC_CPU)
+static const char str_asynccpu[] = "Async CPU";
+#endif
 static const char str_autoframe[] = "Auto frame";
 static const char str_60fps[] = "Full frame";
 static const char str_30fps[] = "1/2 frame";
@@ -72,6 +75,7 @@ static const char str_mousekey[] = "Mouse-Key";
 static const char str_mecshift[] = "mechanical SHIFT";
 static const char str_mecctrl[] = "mechanical CTRL";
 static const char str_mecgrph[] = "mechanical GRPH";
+static const char str_xroll[] = "Swap PageUp/PageDown";
 
 static const char str_keyboard_106[] = "JP Keyboard 106";
 static const char str_keyboard_101[] = "US Keyboard 101";
@@ -102,19 +106,30 @@ static const char str_pc980126k86[] = "PC-9801-26K + 86";
 static const char str_pc980186cb[] = "PC-9801-86 + Chibi-oto";
 static const char str_pc9801118[] = "PC-9801-118";
 static const char str_pc980186mx[] = "PC-9801-86 + Mate-X PCM(B460)";
-static const char str_pc9801mx[] = "Mate-X PCM(B460)";
+static const char str_pc980186118[] = "PC-9801-86 + 118(B460)";
+static const char str_pc9801mx[] = "Mate-X PCM";
 static const char str_spreakboard[] = "Speak board";
+static const char str_spreakboard86[] = "PC-9801-86 + Speak board";
 static const char str_sparkboard[] = "Spark board";
 static const char str_sndorchestra[] = "Sound Orchestra";
 static const char str_sndorchestrav[] = "Sound Orchestra-V";
+static const char str_littleorchestral[] = "Little Orchestra L";
+static const char str_mmorchestra[] = "Multimedia Orchestra";
 #if defined(SUPPORT_SOUND_SB16)
 static const char str_sb16[] = "Sound Blaster 16";
-#endif	/* SUPPORT_SOUND_SB16 */
+static const char str_86sb16[] = "PC-9801-86 + Sound Blaster 16";
+static const char str_mxsb16[] = "Mate-X PCM + Sound Blaster 16";
+static const char str_118sb16[] = "PC-9801-118 + Sound Blaster 16";
+static const char str_86mxsb16[] = "PC-9801-86 + Mate-X PCM(B460) + Sound Blaster 16";
+static const char str_86118sb16[] = "PC-9801-86 + 118(B460) + Sound Blaster 16";
+#endif
 static const char str_amd98[] = "AMD-98";
+static const char str_wavestar[] = "WaveStar";
 #if defined(SUPPORT_PX)
 static const char str_px1[] = "Otomi-chanx2";
 static const char str_px2[] = "Otomi-chanx2 + 86";
-#endif	/* defined(SUPPORT_PX) */
+#endif
+static const char str_pc9801118rom[] = "118 ROM";
 #if defined(SUPPORT_FMGEN)
 static const char str_fmgen[] = "fmgen";
 #endif	/* SUPPORT_FMGEN */
@@ -133,6 +148,8 @@ static const char str_mem326[] = "32.6MB";
 static const char str_mem646[] = "64.6MB";
 static const char str_mem1206[] = "120.6MB";
 static const char str_mem2306[] = "230.6MB";
+static const char str_mem5126[] = "512.6MB";
+static const char str_mem10246[] = "10240.6MB";
 
 static const char str_seropt[] = "Serial option...";
 static const char str_midiopt[] = "MIDI option...";
@@ -141,6 +158,7 @@ static const char str_sndopt[] = "Sound option...";
 
 static const char str_other[] = "Other";
 static const char str_bmpsave[] = "BMP Save...";
+static const char str_hf_enable[] = "Fontrom hook";
 static const char str_s98log[] = "S98 logging...";
 static const char str_calendar[] = "Calendar...";
 static const char str_shortcut[] = "Shortcut Key";
@@ -153,7 +171,11 @@ static const char str_joyrapid[] = "Joy Rapid";
 static const char str_mouserapid[] = "Mouse Rapid";
 static const char str_itfwork[] = "ITF work";
 static const char str_fixmmtimer[] = "Fix MMTimer";
+static const char str_winntfix[] = "WinNT4/2000 IDE Fix";
 static const char str_skip16mbmemchk[] = "Skip over 16MB memcheck";
+#if defined(SUPPORT_FAST_MEMORYCHECK)
+static const char str_fastmemchk[] = "Fast memcheck";
+#endif
 static const char str_about[] = "About...";
 
 static const MSYSITEM s_emu[] = {
@@ -307,13 +329,22 @@ static const MSYSITEM s_screen[] = {
 		{str_window,		NULL,		MID_WINDOW,			MENU_GRAY},
 		{str_fullscrn,		NULL,		MID_FULLSCREEN,		MENU_GRAY},
 		{NULL,				NULL,		MID_STATIC,			MENU_SEPARATOR},
+#if SDL_MAJOR_VERSION == 1
 		{str_normal,		NULL,		MID_ROLNORMAL,		MENU_GRAY},
 		{str_leftrol,		NULL,		MID_ROLLEFT,		MENU_GRAY},
 		{str_rightrol,		NULL,		MID_ROLRIGHT,		MENU_GRAY},
+#else
+		{str_normal,		NULL,		MID_ROLNORMAL,		0},
+		{str_leftrol,		NULL,		MID_ROLLEFT,		0},
+		{str_rightrol,		NULL,		MID_ROLRIGHT,		0},
+#endif
 		{NULL,				NULL,		MID_STATIC,			MENU_SEPARATOR},
 		{str_dispsync,		NULL,		MID_DISPSYNC,		0},
 		{str_realpal,		NULL,		MID_RASTER,			0},
 		{str_nowait,		NULL,		MID_NOWAIT,			0},
+#if defined(SUPPORT_ASYNC_CPU)
+		{str_asynccpu,		NULL,		MID_ASYNCCPU,			0},
+#endif
 		{str_autoframe,		NULL,		MID_AUTOFPS,		0},
 		{str_60fps,			NULL,		MID_60FPS,			0},
 		{str_30fps,			NULL,		MID_30FPS,			0},
@@ -325,7 +356,7 @@ static const MSYSITEM s_screen[] = {
 		{NULL,				NULL,		MID_STATIC,			MENU_SEPARATOR},
 		{str_wabopt,		NULL,		MID_WABOPT,		MENU_DELETED}};
 #else
-		{str_scropt,		NULL,		MID_SCREENOPT,		0}};
+		{str_scropt,		NULL,		MID_SCREENOPT,		MENU_DELETED}};
 #endif
 
 static const MSYSITEM s_keybd[] = {
@@ -341,6 +372,7 @@ static const MSYSITEM s_keybd[] = {
 		{str_mecshift,		NULL,		MID_XSHIFT,			0},
 		{str_mecctrl,		NULL,		MID_XCTRL,			0},
 		{str_mecgrph,		NULL,		MID_XGRPH,			0},
+		{str_xroll,		NULL,		MID_XROLL,			0},
 		{NULL,			NULL,		MID_STATIC,			MENU_SEPARATOR},
 		{str_sndcad,		NULL,		MID_SNDCAD,			MENU_DELETED}};
 #else
@@ -373,19 +405,30 @@ static const MSYSITEM s_snd[] = {
 		{str_pc980186cb,	NULL,		MID_PC9801_86_CB,	0},
 		{str_pc9801118,		NULL,		MID_PC9801_118,		0},
 		{str_pc980186mx,	NULL,		MID_PC9801_86_MX,	0},
+		{str_pc980186118,	NULL,		MID_PC9801_86_118,	0},
 		{str_pc9801mx,		NULL,		MID_PC9801_MX,		0},
 		{str_spreakboard,	NULL,		MID_SPEAKBOARD,		0},
+		{str_spreakboard86,	NULL,		MID_SPEAKBOARD86,		0},
 		{str_sparkboard,	NULL,		MID_SPARKBOARD,		0},
 		{str_sndorchestra,	NULL,		MID_SOUNDORCHESTRA,	0},
 		{str_sndorchestrav,	NULL,		MID_SOUNDORCHESTRAV,	0},
+		{str_littleorchestral,	NULL,		MID_LITTLEORCHESTRAL,	0},
+		{str_mmorchestra,	NULL,		MID_MMORCHESTRA,	0},
 #if defined(SUPPORT_SOUND_SB16)
 		{str_sb16,		NULL,		MID_SB16,		0},
-#endif	/* SUPPORT_SOUND_SB16 */
+		{str_86sb16,		NULL,		MID_86_SB16,		0},
+		{str_mxsb16,		NULL,		MID_MX_SB16,		0},
+		{str_118sb16,		NULL,		MID_118_SB16,		0},
+		{str_86mxsb16,		NULL,		MID_86MXSB16,		0},
+		{str_86118sb16,		NULL,		MID_86118SB16,		0},
+#endif
 		{str_amd98,			NULL,		MID_AMD98,			0},
+		{str_wavestar,		NULL,		MID_WAVESTAR,			0},
 #if defined(SUPPORT_PX)
 		{str_px1,			NULL,		MID_PX1,			0},
 		{str_px2,			NULL,		MID_PX2,			0},
-#endif	/* defined(SUPPORT_PX) */
+#endif
+		{str_pc9801118rom,	NULL,		MID_PC9801_118_ROM,	0},
 		{str_jastsnd,		NULL,		MID_JASTSND,		0},
 		{NULL,				NULL,		MID_STATIC,			MENU_SEPARATOR},
 		{str_seeksound,		NULL,		MID_SEEKSND,		MENU_DELETED}};
@@ -397,11 +440,23 @@ static const MSYSITEM s_mem[] = {
 		{str_mem76,			NULL,		MID_MEM76,			0},
 		{str_mem96,			NULL,		MID_MEM96,			0},
 		{str_mem136,			NULL,		MID_MEM136,			0},
+#if defined(CPUCORE_IA32)
 		{str_mem166,			NULL,		MID_MEM166,			0},
 		{str_mem326,			NULL,		MID_MEM326,			0},
 		{str_mem646,			NULL,		MID_MEM646,			0},
 		{str_mem1206,			NULL,		MID_MEM1206,			0},
-		{str_mem2306,			NULL,		MID_MEM2306,			MENU_DELETED}};
+		{str_mem2306,			NULL,		MID_MEM2306,			0},
+		{str_mem5126,			NULL,		MID_MEM5126,			0},
+		{str_mem10246,		NULL,		MID_MEM10246,			MENU_DELETED}};
+#else
+		{str_mem166,			NULL,		MID_MEM166,			MENU_GRAY},
+		{str_mem326,			NULL,		MID_MEM326,			MENU_GRAY},
+		{str_mem646,			NULL,		MID_MEM646,			MENU_GRAY},
+		{str_mem1206,			NULL,		MID_MEM1206,			MENU_GRAY},
+		{str_mem2306,			NULL,		MID_MEM2306,			MENU_GRAY},
+		{str_mem5126,			NULL,		MID_MEM5126,			MENU_GRAY},
+		{str_mem10246,		NULL,		MID_MEM10246,			MENU_GRAY | MENU_DELETED}};
+#endif
 
 static const MSYSITEM s_device[] = {
 #if !defined(__LIBRETRO__)
@@ -431,6 +486,7 @@ static const MSYSITEM s_sc[] = {
 static const MSYSITEM s_other[] = {
 		{str_bmpsave,		NULL,		MID_BMPSAVE,			0},
 		{str_s98log,		NULL,		MID_S98LOGGING,		MENU_GRAY},
+		{str_hf_enable,			NULL,		MID_HF_ENABLE,		0},
 #if !defined(__LIBRETRO__)
 		{str_calendar,		NULL,		MID_CALENDAR,		MENU_GRAY},
 		{str_shortcut,		s_sc,		MID_STATIC,			MENU_GRAY},
@@ -441,7 +497,11 @@ static const MSYSITEM s_other[] = {
 		{str_mouserapid,	NULL,		MID_MSRAPID,		MENU_GRAY},
 		{str_itfwork,		NULL,		MID_ITFWORK,			0},
 		{str_fixmmtimer,	NULL,		MID_FIXMMTIMER,			0},
+		{str_winntfix,		NULL,		MID_WINNTIDEFIX,	 	0},		
 		{str_skip16mbmemchk,	NULL,		MID_SKIP16MBMEMCHK,		0},
+#if defined(SUPPORT_FAST_MEMORYCHECK)
+		{str_fastmemchk,	NULL,		MID_FASTMEMCHK,			0},
+#endif
 #endif
 		{NULL,				NULL,		MID_STATIC,			MENU_SEPARATOR},
 		{str_about,			NULL,		MID_ABOUT,			MENU_DELETED}};

@@ -53,6 +53,10 @@
 #include "scrnmng.h"
 #include "sysmng.h"
 
+#if defined(SUPPORT_SMPU98)
+#include "smpu98.h"
+#endif
+
 #include "gtk2/xnp2.h"
 #include "gtk2/gtk_menu.h"
 #include "gtk2/gtk_keyboard.h"
@@ -64,6 +68,10 @@
 
 #ifndef	NSTATSAVE
 #define	NSTATSAVE	10
+#endif
+
+#ifdef SUPPORT_NVL_IMAGES
+BOOL nvl_check();
 #endif
 
 /* normal */
@@ -78,7 +86,8 @@ static void cb_atapiopen(GtkAction *action, gpointer user_data);
 static void cb_atapiremove(GtkAction *action, gpointer user_data);
 #endif
 static void cb_midipanic(GtkAction *action, gpointer user_data);
-static void cb_newdisk(GtkAction *action, gpointer user_data);
+static void cb_newfdisk(GtkAction *action, gpointer user_data);
+static void cb_newhdisk(GtkAction *action, gpointer user_data);
 static void cb_reset(GtkAction *action, gpointer user_data);
 #if !defined(SUPPORT_IDEIO)
 static void cb_sasiopen(GtkAction *action, gpointer user_data);
@@ -105,6 +114,7 @@ static GtkActionEntry menu_entries[] = {
 { "StatMenu",     NULL, "Stat",     NULL, NULL, NULL },
 
 /* Submenu */
+{ "NewDiskMenu",  NULL, "_New disk", NULL, NULL, NULL },
 { "Drive1Menu",   NULL, "Drive_1",   NULL, NULL, NULL },
 { "Drive2Menu",   NULL, "Drive_2",   NULL, NULL, NULL },
 { "Drive3Menu",   NULL, "Drive_3",   NULL, NULL, NULL },
@@ -138,7 +148,9 @@ static GtkActionEntry menu_entries[] = {
 { "disk4eject",  NULL, "_Eject",            NULL, NULL, G_CALLBACK(cb_diskeject), },
 { "disk4open",   NULL, "_Open...",          NULL, NULL, G_CALLBACK(cb_diskopen), },
 { "exit",        NULL, "E_xit",             NULL, NULL, G_CALLBACK(gtk_main_quit) },
-{ "font",        NULL, "_Font...",          NULL, NULL, G_CALLBACK(cb_change_font), },
+//{ "font",        NULL, "_Font...",          NULL, NULL, G_CALLBACK(cb_change_font), },
+{ "newfdisk",    NULL, "_Floppy disk image...", NULL, NULL, G_CALLBACK(cb_newfdisk) },
+{ "newhdisk",    NULL, "_Hard disk image...",   NULL, NULL, G_CALLBACK(cb_newhdisk) },
 #if defined(SUPPORT_IDEIO)
 { "ata00open",   NULL, "_Open...",          NULL, NULL, G_CALLBACK(cb_ataopen), },
 { "ata00remove", NULL, "_Remove",           NULL, NULL, G_CALLBACK(cb_ataremove), },
@@ -149,7 +161,6 @@ static GtkActionEntry menu_entries[] = {
 #endif
 { "midiopt",     NULL, "MIDI _option...",   NULL, NULL, G_CALLBACK(cb_dialog) },
 { "midipanic",   NULL, "MIDI _panic",       NULL, NULL, G_CALLBACK(cb_midipanic) },
-{ "newdisk",     NULL, "_New disk...",      NULL, NULL, G_CALLBACK(cb_newdisk), },
 #if !defined(SUPPORT_IDEIO)
 { "sasi1open",   NULL, "_Open...",          NULL, NULL, G_CALLBACK(cb_sasiopen), },
 { "sasi1remove", NULL, "_Remove",           NULL, NULL, G_CALLBACK(cb_sasiremove), },
@@ -166,6 +177,9 @@ static GtkActionEntry menu_entries[] = {
 #if defined(SUPPORT_WAB)
 { "wabopt",      NULL, "Window Accelerator option...", NULL, NULL, G_CALLBACK(cb_dialog) },
 #endif	/* SUPPORT_WAB */
+#if defined(SUPPORT_PCI)
+{ "pciopt",      NULL, "PCI option...",     NULL, NULL, G_CALLBACK(cb_dialog) },
+#endif	/* SUPPORT_PCI */
 #if defined(SUPPORT_HOSTDRV)
 { "hostdrvopt",  NULL, "Hostdrv option...", NULL, NULL, G_CALLBACK(cb_dialog) },
 #endif	/* SUPPORT_HOSTDRV */
@@ -208,6 +222,7 @@ static void cb_keydisplay(GtkToggleAction *action, gpointer user_data);
 static void cb_mousemode(GtkToggleAction *action, gpointer user_data);
 static void cb_mouserapid(GtkToggleAction *action, gpointer user_data);
 static void cb_nowait(GtkToggleAction *action, gpointer user_data);
+static void cb_asynccpu(GtkToggleAction *action, gpointer user_data);
 static void cb_realpalettes(GtkToggleAction *action, gpointer user_data);
 static void cb_s98logging(GtkToggleAction *action, gpointer user_data);
 static void cb_seeksound(GtkToggleAction *action, gpointer user_data);
@@ -216,10 +231,17 @@ static void cb_toolwindow(GtkToggleAction *action, gpointer user_data);
 static void cb_xctrlkey(GtkToggleAction *action, gpointer user_data);
 static void cb_xgrphkey(GtkToggleAction *action, gpointer user_data);
 static void cb_xshiftkey(GtkToggleAction *action, gpointer user_data);
+static void cb_xrollkey(GtkToggleAction *action, gpointer user_data);
 static void cb_itfwork(GtkToggleAction *action, gpointer user_data);
 static void cb_fixmmtimer(GtkToggleAction *action, gpointer user_data);
 static void cb_16mbmemchk(GtkToggleAction *action, gpointer user_data);
+#if defined(SUPPORT_FAST_MEMORYCHECK)
+static void cb_fastmemchk(GtkToggleAction *action, gpointer user_data);
+#endif
+#if defined(SUPPORT_FMGEN)
 static void cb_fmgen(GtkToggleAction *action, gpointer user_data);
+#endif
+static void cb_hf_enable(GtkToggleAction *action, gpointer user_data);
 
 static GtkToggleActionEntry togglemenu_entries[] = {
 { "clockdisp",    NULL, "_Clock disp",        NULL, NULL, G_CALLBACK(cb_clockdisp), FALSE },
@@ -232,6 +254,9 @@ static GtkToggleActionEntry togglemenu_entries[] = {
 { "mousemode",    NULL, "_Mouse mode",        NULL, NULL, G_CALLBACK(cb_mousemode), FALSE },
 { "mouserapid",   NULL, "_Mouse rapid",       NULL, NULL, G_CALLBACK(cb_mouserapid), FALSE },
 { "nowait",       NULL, "_No wait",           NULL, NULL, G_CALLBACK(cb_nowait), FALSE },
+#if defined(SUPPORT_ASYNC_CPU)
+{ "asynccpu",     NULL, "_Async CPU(experimental)", NULL, NULL, G_CALLBACK(cb_asynccpu), FALSE },
+#endif
 { "realpalettes", NULL, "Real _palettes",     NULL, NULL, G_CALLBACK(cb_realpalettes), FALSE },
 { "s98logging",   NULL, "_S98 logging",       NULL, NULL, G_CALLBACK(cb_s98logging), FALSE },
 { "seeksound",    NULL, "_Seek sound",        NULL, NULL, G_CALLBACK(cb_seeksound), FALSE },
@@ -240,12 +265,17 @@ static GtkToggleActionEntry togglemenu_entries[] = {
 { "xctrlkey",     NULL, "mechanical _CTRL",   NULL, NULL, G_CALLBACK(cb_xctrlkey), FALSE },
 { "xgrphkey",     NULL, "mechanical _GRPH",   NULL, NULL, G_CALLBACK(cb_xgrphkey), FALSE },
 { "xshiftkey",    NULL, "mechanical _SHIFT",  NULL, NULL, G_CALLBACK(cb_xshiftkey), FALSE },
+{ "xrollkey",     NULL, "Swap PageUp/PageDown", NULL, NULL, G_CALLBACK(cb_xrollkey), FALSE },
 { "itfwork",      NULL, "ITF work",           NULL, NULL, G_CALLBACK(cb_itfwork), FALSE },
 { "fixmmtimer",   NULL, "Fix MMTimer",        NULL, NULL, G_CALLBACK(cb_fixmmtimer), FALSE },
 { "16mbmemchk",   NULL, "Skip over 16MB memcheck", NULL, NULL, G_CALLBACK(cb_16mbmemchk), FALSE },
+#if defined(SUPPORT_FAST_MEMORYCHECK)
+{ "fastmemchk",   NULL, "Fast memcheck", NULL, NULL, G_CALLBACK(cb_fastmemchk), FALSE },
+#endif
 #if defined(SUPPORT_FMGEN)
 { "fmgen",        NULL, "fmgen",              NULL, NULL, G_CALLBACK(cb_fmgen), FALSE },
-#endif	/* SUPPORT_FMGEN */
+#endif
+{ "hf_enable",    NULL, "Fontrom hook",       NULL, NULL, G_CALLBACK(cb_hf_enable), FALSE },
 };
 static const guint n_togglemenu_entries = G_N_ELEMENTS(togglemenu_entries);
 
@@ -298,27 +328,37 @@ static GtkRadioActionEntry beepvol_entries[] = {
 static const guint n_beepvol_entries = G_N_ELEMENTS(beepvol_entries);
 
 static GtkRadioActionEntry soundboard_entries[] = {
-{ "disableboards",  NULL, "_Disable boards",         NULL, NULL, 0x00 },
-{ "pc-9801-14",     NULL, "PC-9801-_14",             NULL, NULL, 0x01 },
-{ "pc-9801-26k",    NULL, "PC-9801-_26K",            NULL, NULL, 0x02 },
-{ "pc-9801-86",     NULL, "PC-9801-8_6",             NULL, NULL, 0x04 },
-{ "pc-9801-26k-86", NULL, "PC-9801-26_K + 86",       NULL, NULL, 0x06 },
-{ "pc-9801-86-cb",  NULL, "PC-9801-86 + _Chibi-oto", NULL, NULL, 0x14 },
-{ "pc-9801-118",    NULL, "PC-9801-11_8",            NULL, NULL, 0x08 },
-{ "pc-9801-86-mx",  NULL, "PC-9801-86 + Mate-X PCM(B460)", NULL, NULL, 0x64 },
-{ "pc-9801-mx",     NULL, "Mate-X PCM(B460)",        NULL, NULL, 0x60 },
-{ "speakboard",     NULL, "S_peak board",            NULL, NULL, 0x20 },
-{ "sparkboard",     NULL, "Sp_ark board",            NULL, NULL, 0x40 },
-{ "sndorchestra",   NULL, "Sound Orchestra",         NULL, NULL, 0x32 },
-{ "sndorchestrav",  NULL, "Sound Orchestra-V",       NULL, NULL, 0x82 },
+{ "disableboards",         NULL, "_Disable boards",                                  NULL, NULL, SOUNDID_NONE },
+{ "pc-9801-14",            NULL, "PC-9801-_14",                                      NULL, NULL, SOUNDID_PC_9801_14 },
+{ "pc-9801-26k",           NULL, "PC-9801-_26K",                                     NULL, NULL, SOUNDID_PC_9801_26K },
+{ "pc-9801-86",            NULL, "PC-9801-8_6",                                      NULL, NULL, SOUNDID_PC_9801_86 },
+{ "pc-9801-26k-86",        NULL, "PC-9801-26_K + 86",                                NULL, NULL, SOUNDID_PC_9801_26K },
+{ "pc-9801-86-cb",         NULL, "PC-9801-86 + _Chibi-oto",                          NULL, NULL, SOUNDID_PC_9801_86_ADPCM },
+{ "pc-9801-118",           NULL, "PC-9801-11_8",                                     NULL, NULL, SOUNDID_PC_9801_118 },
+{ "pc-9801-86-mx",         NULL, "PC-9801-86 + Mate-X PCM(B460)",                    NULL, NULL, SOUNDID_PC_9801_86_WSS },
+{ "pc-9801-86-118",        NULL, "PC-9801-86 + 118(B460)",                           NULL, NULL, SOUNDID_PC_9801_86_118 },
+{ "pc-9801-mx",            NULL, "Mate-X PCM",                                       NULL, NULL, SOUNDID_MATE_X_PCM },
+{ "speakboard",            NULL, "S_peak board",                                     NULL, NULL, SOUNDID_SPEAKBOARD },
+{ "speakboard86",          NULL, "PC-9801-86 + Speak board",                         NULL, NULL, SOUNDID_86_SPEAKBOARD },
+{ "sparkboard",            NULL, "Sp_ark board",                                     NULL, NULL, SOUNDID_SPARKBOARD },
+{ "sndorchestra",          NULL, "Sound Orchestra",                                  NULL, NULL, SOUNDID_SOUNDORCHESTRA },
+{ "sndorchestrav",         NULL, "Sound Orchestra-V",                                NULL, NULL, SOUNDID_SOUNDORCHESTRAV },
+{ "littleorchestral",      NULL, "Little Orchestra L",                               NULL, NULL, SOUNDID_LITTLEORCHESTRAL },
+{ "multiorchestra",        NULL, "Multimedia Orchestra",                             NULL, NULL, SOUNDID_MMORCHESTRA },
 #if defined(SUPPORT_SOUND_SB16)
-{ "sb16",	    NULL, "Sound Blaster 16",        NULL, NULL, 0x41 },
-#endif	/* SUPPORT_SOUND_SB16 */
-{ "amd98",          NULL, "_AMD98",                  NULL, NULL, 0x80 },
+{ "sb16",	                 NULL, "Sound Blaster 16",                                 NULL, NULL, SOUNDID_SB16 },
+{ "pc-9801-86-sb16",       NULL, "PC-9801-86 + Sound Blaster 16",                    NULL, NULL, SOUNDID_PC_9801_86_SB16 },
+{ "pc-9801-mx-sb16",       NULL, "Mate-X PCM + Sound Blaster 16",                    NULL, NULL, SOUNDID_WSS_SB16 },
+{ "pc-9801-118-sb16",      NULL, "PC-9801-118 + Sound Blaster 16",                   NULL, NULL, SOUNDID_PC_9801_118_SB16 },
+{ "pc-9801-86-mx-sb16",    NULL, "PC-9801-86 + Mate-X PCM(B460) + Sound Blaster 16", NULL, NULL, SOUNDID_PC_9801_86_WSS_SB16 },
+{ "pc-9801-86-118-sb16",   NULL, "PC-9801-86 + 118(B460) + Sound Blaster 16",        NULL, NULL, SOUNDID_PC_9801_86_118_SB16 },
+#endif
+{ "amd98",                 NULL, "_AMD98",                                           NULL, NULL, SOUNDID_AMD98 },
+{ "wavestar",              NULL, "_WaveStar",                                        NULL, NULL, SOUNDID_WAVESTAR },
 #if defined(SUPPORT_PX)
-{ "px1",            NULL, "Otomi-chanx2",            NULL, NULL, 0x30 },
-{ "px2",            NULL, "Otomi-chanx2 + 86",       NULL, NULL, 0x50 },
-#endif	/* SUPPORT_PX */
+{ "px1",                   NULL, "Otomi-chanx2",                                     NULL, NULL, SOUNDID_PX1 },
+{ "px2",                   NULL, "Otomi-chanx2 + 86",                                NULL, NULL, SOUNDID_PX2 },
+#endif
 };
 static const guint n_soundboard_entries = G_N_ELEMENTS(soundboard_entries);
 
@@ -335,6 +375,8 @@ static GtkRadioActionEntry memory_entries[] = {
 { "64.6mb", NULL, "64.6MB", NULL, NULL, 64 },
 { "120.6mb", NULL, "120.6MB", NULL, NULL, 120 },
 { "230.6mb", NULL, "230.6MB", NULL, NULL, 230 },
+{ "512.6mb", NULL, "512.6MB", NULL, NULL, 512 },
+{ "1024.6mb", NULL, "1024.6MB", NULL, NULL, 1024 },
 };
 static const guint n_memory_entries = G_N_ELEMENTS(memory_entries);
 
@@ -409,8 +451,11 @@ static const gchar *ui_info =
 "   <menuitem action='reset'/>\n"
 "   <separator/>\n"
 "   <menuitem action='configure'/>\n"
-"   <menuitem action='newdisk'/>\n"
-"   <menuitem action='font'/>\n"
+"   <menu name='NewDisk' action='NewDiskMenu'>\n"
+"    <menuitem action='newfdisk'/>\n"
+"    <menuitem action='newhdisk'/>\n"
+"   </menu>\n"
+//"   <menuitem action='font'/>\n"
 "   <separator/>\n"
 "   <menuitem action='exit'/>\n"
 "  </menu>\n"
@@ -458,6 +503,9 @@ static const gchar *ui_info =
 "   <menuitem action='dispvsync'/>\n"
 "   <menuitem action='realpalettes'/>\n"
 "   <menuitem action='nowait'/>\n"
+#if defined(SUPPORT_ASYNC_CPU)
+"   <menuitem action='asynccpu'/>\n"
+#endif
 "   <menuitem action='autoframe'/>\n"
 "   <menuitem action='fullframe'/>\n"
 "   <menuitem action='1/2 frame'/>\n"
@@ -489,6 +537,7 @@ static const gchar *ui_info =
 "    <menuitem action='xshiftkey'/>\n"
 "    <menuitem action='xctrlkey'/>\n"
 "    <menuitem action='xgrphkey'/>\n"
+"    <menuitem action='xrollkey'/>\n"
 "    <separator/>\n"
 "    <menuitem action='f11none'/>\n"
 "    <menuitem action='f11menu'/>\n"
@@ -520,13 +569,22 @@ static const gchar *ui_info =
 "    <menuitem action='pc-9801-86-mx'/>\n"
 "    <menuitem action='pc-9801-mx'/>\n"
 "    <menuitem action='speakboard'/>\n"
+"    <menuitem action='speakboard86'/>\n"
 "    <menuitem action='sparkboard'/>\n"
 "    <menuitem action='sndorchestra'/>\n"
 "    <menuitem action='sndorchestrav'/>\n"
+"    <menuitem action='littleorchestral'/>\n"
+"    <menuitem action='multiorchestra'/>\n"
 #if defined(SUPPORT_SOUND_SB16)
 "    <menuitem action='sb16'/>\n"
+"    <menuitem action='pc-9801-86-sb16'/>\n"
+"    <menuitem action='pc-9801-mx-sb16'/>\n"
+"    <menuitem action='pc-9801-118-sb16'/>\n"
+"    <menuitem action='pc-9801-86-mx-sb16'/>\n"
+"    <menuitem action='pc-9801-86-118-sb16'/>\n"
 #endif	/* SUPPORT_SOUND_SB16 */
 "    <menuitem action='amd98'/>\n"
+"    <menuitem action='wavestar'/>\n"
 #if defined(SUPPORT_PX)
 "    <menuitem action='px1'/>\n"
 "    <menuitem action='px2'/>\n"
@@ -548,11 +606,15 @@ static const gchar *ui_info =
 "    <menuitem action='7.6mb'/>\n"
 "    <menuitem action='9.6mb'/>\n"
 "    <menuitem action='13.6mb'/>\n"
+#if defined(CPUCORE_IA32)
 "    <menuitem action='16.6mb'/>\n"
 "    <menuitem action='32.6mb'/>\n"
 "    <menuitem action='64.6mb'/>\n"
 "    <menuitem action='120.6mb'/>\n"
 "    <menuitem action='230.6mb'/>\n"
+"    <menuitem action='512.6mb'/>\n"
+"    <menuitem action='1024.6mb'/>\n"
+#endif
 "   </menu>\n"
 "   <menu name='FPU' action='FPUMenu'>\n"
 "    <menuitem action='fpu80'/>\n"
@@ -575,6 +637,10 @@ static const gchar *ui_info =
 "   <separator/>\n"
 "   <menuitem action='wabopt'/>\n"
 #endif	/* SUPPORT_WAB */
+#if defined(SUPPORT_PCI)
+"   <separator/>\n"
+"   <menuitem action='pciopt'/>\n"
+#endif	/* SUPPORT_PCI */
 #if defined(SUPPORT_HOSTDRV)
 "   <separator/>\n"
 "   <menuitem action='hostdrvopt'/>\n"
@@ -582,6 +648,7 @@ static const gchar *ui_info =
 "  </menu>\n"
 "  <menu name='Other' action='OtherMenu'>\n"
 "   <menuitem action='bmpsave'/>\n"
+"   <menuitem action='hf_enable'/>\n"
 "   <menuitem action='s98logging'/>\n"
 "   <menuitem action='calendar'/>\n"
 "   <menuitem action='clockdisp'/>\n"
@@ -590,8 +657,11 @@ static const gchar *ui_info =
 "   <menuitem action='joyrapid'/>\n"
 "   <menuitem action='mouserapid'/>\n"
 "   <menuitem action='itfwork'/>\n"
-"   <menuitem action='fixmmtimer'/>\n"
-"   <menuitem action='16mbmemchk'/>\n"
+//"   <menuitem action='fixmmtimer'/>\n"
+//"   <menuitem action='16mbmemchk'/>\n"
+#if defined(SUPPORT_FAST_MEMORYCHECK)
+"   <menuitem action='fastmemchk'/>\n"
+#endif
 "   <separator/>\n"
 "   <menuitem action='toolwindow'/>\n"
 "   <menuitem action='keydisplay'/>\n"
@@ -1038,7 +1108,18 @@ cb_ataopen(GtkAction *action, gpointer user_data)
 		gtk_file_filter_add_pattern(filter, "*.[hH][dD][iI]");
 		gtk_file_filter_add_pattern(filter, "*.[nN][hH][dD]");
 		gtk_file_filter_add_pattern(filter, "*.[vV][hH][dD]");
-		gtk_file_filter_add_pattern(filter, "*.[sS][lL][nN]");
+		gtk_file_filter_add_pattern(filter, "*.[sS][lL][hH]");
+#ifdef SUPPORT_NVL_IMAGES
+		if(nvl_check()) {
+			gtk_file_filter_add_pattern(filter, "*.[vV][mM][dD][kK]");
+			gtk_file_filter_add_pattern(filter, "*.[dD][sS][kK]");
+			gtk_file_filter_add_pattern(filter, "*.[vV][mM][dD][xX]");
+			gtk_file_filter_add_pattern(filter, "*.[vV][dD][iI]");
+			gtk_file_filter_add_pattern(filter, "*.[qQ][cC][oO][wW]");
+			gtk_file_filter_add_pattern(filter, "*.[qQ][cC][oO][wW]2");
+			gtk_file_filter_add_pattern(filter, "*.[hH][dD][dD]");
+		}
+#endif	/* SUPPORT_NVL_IMAGES */
 		gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
 	}
 	gtk_file_chooser_set_filter(GTK_FILE_CHOOSER(dialog), filter);
@@ -1169,11 +1250,14 @@ cb_midipanic(GtkAction *action, gpointer user_data)
 
 	rs232c_midipanic();
 	mpu98ii_midipanic();
+#if defined(SUPPORT_SMPU98)
+	smpu98_midipanic();
+#endif
 	pc9861k_midipanic();
 }
 
 static void
-cb_newdisk(GtkAction *action, gpointer user_data)
+cb_newfdisk(GtkAction *action, gpointer user_data)
 {
 	static const struct {
 		const char *name;
@@ -1183,14 +1267,12 @@ cb_newdisk(GtkAction *action, gpointer user_data)
 		{ "88d", 0 },
 		{ "d98", 0 },
 		{ "98d", 0 },
-		{ "hdi", 1 },
-		{ "thd", 2 },
-		{ "nhd", 3 },
-		{ "hdn", 4 },
+		{ "hdm", 1 },
+		{ "hd4", 2 },
 	};
-	static const char *extname[5] = { "d88", "hdi", "thd", "nhd", "hdn" };
+	static const char *extname[3] = { "d88", "hdm", "hd4" };
 	GtkWidget *dialog = NULL;
-	GtkFileFilter *f, *filter[5];
+	GtkFileFilter *f, *filter[3];
 	gchar *utf8, *path, *tmp;
 	const char *ext;
 	int kind;
@@ -1198,7 +1280,7 @@ cb_newdisk(GtkAction *action, gpointer user_data)
 
 	uninstall_idle_process();
 
-	dialog = gtk_file_chooser_dialog_new("Create new disk image file",
+	dialog = gtk_file_chooser_dialog_new("Create new floppy disk image file",
 	    GTK_WINDOW(main_window), GTK_FILE_CHOOSER_ACTION_SAVE,
 	    GTK_STOCK_SAVE, GTK_RESPONSE_OK,
 	    GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -1228,7 +1310,7 @@ cb_newdisk(GtkAction *action, gpointer user_data)
 
 	filter[0] = gtk_file_filter_new();
 	if (filter[0]) {
-		gtk_file_filter_set_name(filter[0], "D88 floppy disk image (*.d88,*.d98,*.88d,*.98d)");
+		gtk_file_filter_set_name(filter[0], "D88 image files (*.d88,*.d98,*.88d,*.98d)");
 		gtk_file_filter_add_pattern(filter[0], "*.[dD]88");
 		gtk_file_filter_add_pattern(filter[0], "*.88[dD]");
 		gtk_file_filter_add_pattern(filter[0], "*.[dD]98");
@@ -1237,27 +1319,15 @@ cb_newdisk(GtkAction *action, gpointer user_data)
 	}
 	filter[1] = gtk_file_filter_new();
 	if (filter[1]) {
-		gtk_file_filter_set_name(filter[1], "Anex86 hard disk image (*.hdi)");
-		gtk_file_filter_add_pattern(filter[1], "*.[hH][dD][iI]");
+		gtk_file_filter_set_name(filter[1], "1.25MB raw image file (*.hdm)");
+		gtk_file_filter_add_pattern(filter[1], "*.[hH][dD][mM]");
 		gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter[1]);
 	}
 	filter[2] = gtk_file_filter_new();
 	if (filter[2]) {
-		gtk_file_filter_set_name(filter[2], "T98 hard disk image (*.thd)");
-		gtk_file_filter_add_pattern(filter[2], "*.[tT][hH][dD]");
+		gtk_file_filter_set_name(filter[2], "1.44MB raw image file (*.hd4)");
+		gtk_file_filter_add_pattern(filter[2], "*.[hH][dD]4");
 		gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter[2]);
-	}
-	filter[3] = gtk_file_filter_new();
-	if (filter[3]) {
-		gtk_file_filter_set_name(filter[3], "T98-Next hard disk image (*.nhd)");
-		gtk_file_filter_add_pattern(filter[3], "*.[nN][hH][dD]");
-		gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter[3]);
-	}
-	filter[4] = gtk_file_filter_new();
-	if (filter[4]) {
-		gtk_file_filter_set_name(filter[4], "RaSCSI hard disk image (*.nhd)");
-		gtk_file_filter_add_pattern(filter[4], "*.[hH][dD][nN]");
-		gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter[4]);
 	}
 	gtk_file_chooser_set_filter(GTK_FILE_CHOOSER(dialog), filter[0]);
 
@@ -1304,16 +1374,166 @@ cb_newdisk(GtkAction *action, gpointer user_data)
 		create_newdisk_fd_dialog(path);
 		break;
 
-	case 1: /* HDI */
-	case 2: /* THD */
-	case 3: /* NHD */
-	case 4: /* HDN */
-		create_newdisk_hd_dialog(path, kind);
+	case 1: /* HDM */
+		newdisk_123mb_fdd(path);
+		break;
+
+	case 2: /* HD4 */
+		newdisk_144mb_fdd(path);
 		break;
 
 	default:
 		break;
 	}
+	g_free(path);
+
+	install_idle_process();
+	return;
+
+end:
+	if (dialog)
+		gtk_widget_destroy(dialog);
+	install_idle_process();
+}
+
+static void
+cb_newhdisk(GtkAction *action, gpointer user_data)
+{
+	static const struct {
+		const char *name;
+		int         kind;
+	} exttbl[] = {
+		{ "nhd", 0 },
+		{ "vhd", 1 },
+		{ "hdi", 2 },
+		{ "thd", 3 },
+		{ "hdd", 4 },
+#if defined(SUPPORT_SCSI)
+		{ "hdn", 5 },
+#endif	// defined(SUPPORT_SCSI)
+	};
+#if defined(SUPPORT_SCSI)
+	static const char *extname[6] = { "nhd", "vhd", "hdi", "thd", "hdd", "hdn" };
+	GtkFileFilter *f, *filter[6];
+#else	// defined(SUPPORT_SCSI)
+	static const char *extname[5] = { "nhd", "vhd", "hdi", "thd", "hdd" };
+	GtkFileFilter *f, *filter[5];
+#endif	// defined(SUPPORT_SCSI)
+	GtkWidget *dialog = NULL;
+	gchar *utf8, *path, *tmp;
+	const char *ext;
+	int kind;
+	int i;
+
+	uninstall_idle_process();
+
+	dialog = gtk_file_chooser_dialog_new("Create new hard disk image file",
+	    GTK_WINDOW(main_window), GTK_FILE_CHOOSER_ACTION_SAVE,
+	    GTK_STOCK_SAVE, GTK_RESPONSE_OK,
+	    GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+	    NULL);
+	if (dialog == NULL)
+		goto end;
+
+	gtk_file_chooser_set_show_hidden(GTK_FILE_CHOOSER(dialog), TRUE);
+#if GTK_MAJOR_VERSION > 2 || (GTK_MAJOR_VERSION == 2 && GTK_MINOR_VERSION >= 8)
+	gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(dialog),
+	    TRUE);
+#endif
+	if (strlen(fddfolder) == 0) {
+		g_strlcpy(fddfolder, modulefile, sizeof(fddfolder));
+		file_cutname(fddfolder);
+	}
+	utf8 = g_filename_to_utf8(fddfolder, -1, NULL, NULL, NULL);
+	if (utf8) {
+		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), utf8);
+		g_free(utf8);
+	}
+	utf8 = g_filename_to_utf8("newdisk", -1, NULL, NULL, NULL);
+	if (utf8) {
+		gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog), utf8);
+		g_free(utf8);
+	}
+
+	filter[0] = gtk_file_filter_new();
+	if (filter[0]) {
+		gtk_file_filter_set_name(filter[0], "T98-Next harddisk image files (*.nhd)");
+		gtk_file_filter_add_pattern(filter[0], "*.[nN][hH][dD]");
+		gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter[0]);
+	}
+	filter[1] = gtk_file_filter_new();
+	if (filter[1]) {
+		gtk_file_filter_set_name(filter[1], "VirtualPC harddisk image files (*.vhd)");
+		gtk_file_filter_add_pattern(filter[1], "*.[vV][hH][dD]");
+		gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter[1]);
+	}
+	filter[2] = gtk_file_filter_new();
+	if (filter[2]) {
+		gtk_file_filter_set_name(filter[2], "Anex86 harddisk image files (*.hdi)");
+		gtk_file_filter_add_pattern(filter[2], "*.[hH][dD][iI]");
+		gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter[2]);
+	}
+	filter[3] = gtk_file_filter_new();
+	if (filter[3]) {
+		gtk_file_filter_set_name(filter[3], "T98 harddisk image files (*.thd)");
+		gtk_file_filter_add_pattern(filter[3], "*.[tT][hH][dD]");
+		gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter[3]);
+	}
+	filter[4] = gtk_file_filter_new();
+	if (filter[4]) {
+		gtk_file_filter_set_name(filter[4], "Virtual98 harddisk image files (*.hdd)");
+		gtk_file_filter_add_pattern(filter[4], "*.[hH][hH][dD]");
+		gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter[4]);
+	}
+#if defined(SUPPORT_SCSI)
+	filter[5] = gtk_file_filter_new();
+	if (filter[5]) {
+		gtk_file_filter_set_name(filter[5], "RaSCSI harddisk image files (*.hdn)");
+		gtk_file_filter_add_pattern(filter[5], "*.[hH][dD][nN]");
+		gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter[5]);
+	}
+#endif	// defined(SUPPORT_SCSI)
+	gtk_file_chooser_set_filter(GTK_FILE_CHOOSER(dialog), filter[0]);
+
+	if (gtk_dialog_run(GTK_DIALOG(dialog)) != GTK_RESPONSE_OK)
+		goto end;
+
+	utf8 = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+	if (utf8 == NULL)
+		goto end;
+
+	path = g_filename_from_utf8(utf8, -1, NULL, NULL, NULL);
+	g_free(utf8);
+	if (path == NULL)
+		goto end;
+
+	kind = -1;
+	ext = file_getext(path);
+	for (i = 0; i < NELEMENTS(exttbl); i++) {
+		if (g_ascii_strcasecmp(ext, exttbl[i].name) == 0) {
+			kind = exttbl[i].kind;
+			break;
+		}
+	}
+	if (i == NELEMENTS(exttbl)) {
+		f = gtk_file_chooser_get_filter(GTK_FILE_CHOOSER(dialog));
+		for (i = 0; i < NELEMENTS(filter); i++) {
+			if (f == filter[i]) {
+				kind = i;
+				tmp = g_strjoin(".", path, extname[i], NULL);
+				if (tmp) {
+					g_free(path);
+					path = tmp;
+				}
+				break;
+			}
+		}
+	}
+
+	/* XXX system has only one modal dialog? */
+	gtk_widget_destroy(dialog);
+
+	create_newdisk_hd_dialog(path, kind);
 	g_free(path);
 
 	install_idle_process();
@@ -1378,7 +1598,18 @@ cb_sasiopen(GtkAction *action, gpointer user_data)
 		gtk_file_filter_add_pattern(filter, "*.[hH][dD][iI]");
 		gtk_file_filter_add_pattern(filter, "*.[nN][hH][dD]");
 		gtk_file_filter_add_pattern(filter, "*.[vV][hH][dD]");
-		gtk_file_filter_add_pattern(filter, "*.[sS][lL][nN]");
+		gtk_file_filter_add_pattern(filter, "*.[sS][lL][hH]");
+#ifdef SUPPORT_NVL_IMAGES
+		if(nvl_check()) {
+			gtk_file_filter_add_pattern(filter, "*.[vV][mM][dD][kK]");
+			gtk_file_filter_add_pattern(filter, "*.[dD][sS][kK]");
+			gtk_file_filter_add_pattern(filter, "*.[vV][mM][dD][xX]");
+			gtk_file_filter_add_pattern(filter, "*.[vV][dD][iI]");
+			gtk_file_filter_add_pattern(filter, "*.[qQ][cC][oO][wW]");
+			gtk_file_filter_add_pattern(filter, "*.[qQ][cC][oO][wW]2");
+			gtk_file_filter_add_pattern(filter, "*.[hH][dD][dD]");
+		}
+#endif	/* SUPPORT_NVL_IMAGES */
 		gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
 	}
 	gtk_file_chooser_set_filter(GTK_FILE_CHOOSER(dialog), filter);
@@ -1481,6 +1712,10 @@ cb_dialog(GtkAction *action, gpointer user_data)
 	} else if (g_ascii_strcasecmp(name, "wabopt") == 0) {
 		create_wab_dialog();
 #endif	/* SUPPORT_WAB */
+#if defined(SUPPORT_PCI)
+	} else if (g_ascii_strcasecmp(name, "pciopt") == 0) {
+		create_pci_dialog();
+#endif	/* SUPPORT_PCI */
 #if defined(SUPPORT_NET)
 	} else if (g_ascii_strcasecmp(name, "networkopt") == 0) {
 		create_network_dialog();
@@ -1642,6 +1877,21 @@ cb_nowait(GtkToggleAction *action, gpointer user_data)
 	}
 }
 
+#if defined(SUPPORT_ASYNC_CPU)
+static void
+cb_asynccpu(GtkToggleAction *action, gpointer user_data)
+{
+	gboolean b = gtk_toggle_action_get_active(action);
+	gboolean f;
+
+	f = (np2cfg.asynccpu ? 1 : 0) ^ (b ? 1 : 0);
+	if (f) {
+		np2cfg.asynccpu = !np2cfg.asynccpu;
+		sysmng_update(SYS_UPDATECFG);
+	}
+}
+#endif
+
 static void
 cb_realpalettes(GtkToggleAction *action, gpointer user_data)
 {
@@ -1761,10 +2011,23 @@ cb_xshiftkey(GtkToggleAction *action, gpointer user_data)
 	gboolean b = gtk_toggle_action_get_active(action);
 	gboolean f;
 
-	f = (np2cfg.ITF_WORK & 1) ^ (b ? 1 : 0);
+	f = (np2cfg.XSHIFT & 1) ^ (b ? 1 : 0);
 	if (f) {
-		np2cfg.ITF_WORK ^= 1;
+		np2cfg.XSHIFT ^= 1;
 		sysmng_update(SYS_UPDATECFG);
+	}
+}
+
+static void
+cb_xrollkey(GtkToggleAction *action, gpointer user_data)
+{
+	gboolean b = gtk_toggle_action_get_active(action);
+	gboolean f;
+
+	f = (np2oscfg.xrollkey ? 1 : 0) ^ (b ? 1 : 0);
+	if (f) {
+		np2oscfg.xrollkey = !np2oscfg.xrollkey;
+		sysmng_update(SYS_UPDATEOSCFG);
 	}
 }
 
@@ -1794,15 +2057,30 @@ cb_16mbmemchk(GtkToggleAction *action, gpointer user_data)
 	}
 }
 
+#if defined(SUPPORT_FAST_MEMORYCHECK)
+static void
+cb_fastmemchk(GtkToggleAction *action, gpointer user_data)
+{
+	gboolean b = gtk_toggle_action_get_active(action);
+	gboolean f;
+
+	f = (np2cfg.memcheckspeed > 1) ^ (b ? 1 : 0);
+	if (f) {
+		np2cfg.memcheckspeed = (b ? 8 : 1);
+		sysmng_update(SYS_UPDATECFG);
+	}
+}
+#endif
+
 static void
 cb_itfwork(GtkToggleAction *action, gpointer user_data)
 {
 	gboolean b = gtk_toggle_action_get_active(action);
 	gboolean f;
 
-	f = (np2cfg.XSHIFT & 1) ^ (b ? 1 : 0);
+	f = (np2cfg.ITF_WORK & 1) ^ (b ? 1 : 0);
 	if (f) {
-		np2cfg.XSHIFT ^= 1;
+		np2cfg.ITF_WORK ^= 1;
 		sysmng_update(SYS_UPDATECFG);
 	}
 }
@@ -1820,7 +2098,23 @@ cb_fmgen(GtkToggleAction *action, gpointer user_data)
 		sysmng_update(SYS_UPDATECFG);
 	}
 }
-#endif	/* SUPPORT_FMGEN */
+#endif
+
+static void
+cb_hf_enable(GtkToggleAction *action, gpointer user_data) {
+	gboolean b = gtk_toggle_action_get_active(action);
+	gboolean f;
+
+	f = (hf_enable & 1) ^ (b ? 1 : 0);
+	if (f) {
+		hf_enable ^= 1;
+		if(hf_enable) {
+			hook_fontrom_defenable();
+		} else {
+			hook_fontrom_defdisable();
+		}
+	}
+}
 
 static void
 cb_sndus(GtkToggleAction *action, gpointer user_data)
@@ -2264,19 +2558,26 @@ create_menu(void)
 	xmenu_toggle_item(NULL, "xctrlkey", np2cfg.XSHIFT & 2);
 	xmenu_toggle_item(NULL, "xgrphkey", np2cfg.XSHIFT & 4);
 	xmenu_toggle_item(NULL, "xshiftkey", np2cfg.XSHIFT & 1);
+	xmenu_toggle_item(NULL, "xrollkey", np2oscfg.xrollkey);
 	xmenu_toggle_item(NULL, "itfwork", np2cfg.ITF_WORK);
+#if defined(SUPPORT_FAST_MEMORYCHECK)
+	xmenu_toggle_item(NULL, "fastmemchk", np2cfg.memcheckspeed > 1);
+#endif
 	xmenu_toggle_item(NULL, "fixmmtimer", np2cfg.timerfix);
 	xmenu_toggle_item(NULL, "16mbmemchk", np2cfg.memchkmx == 15);
 #if defined(SUPPORT_FMGEN)
 	xmenu_toggle_item(NULL, "fmgen", np2cfg.usefmgen & 1);
-#endif	/* SUPPORT_FMGEN */
-
+#endif
+	xmenu_toggle_item(NULL, "hf_enable", hf_enable & 1);
 	xmenu_toggle_item(NULL, "clockdisp", np2oscfg.DISPCLK & 1);
 	xmenu_toggle_item(NULL, "framedisp", np2oscfg.DISPCLK & 2);
 	xmenu_toggle_item(NULL, "jastsound", np2oscfg.jastsnd);
 	xmenu_toggle_item(NULL, "keydisplay", np2oscfg.keydisp);
 	xmenu_toggle_item(NULL, "mousemode", np2oscfg.MOUSE_SW);
 	xmenu_toggle_item(NULL, "nowait", np2oscfg.NOWAIT);
+#if defined(SUPPORT_ASYNC_CPU)
+	xmenu_toggle_item(NULL, "asynccpu", np2cfg.asynccpu);
+#endif
 	xmenu_toggle_item(NULL, "softkeyboard", np2oscfg.softkbd);
 	xmenu_toggle_item(NULL, "toolwindow", np2oscfg.toolwin);
 

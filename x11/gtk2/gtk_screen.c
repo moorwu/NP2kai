@@ -141,8 +141,8 @@ renewal_client_size(void)
 	int scrnheight;
 	int multiple;
 
-	width = np2min(scrnstat.width, drawmng.width);
-	height = np2min(scrnstat.height, drawmng.height);
+	width = MIN(scrnstat.width, drawmng.width);
+	height = MIN(scrnstat.height, drawmng.height);
 	extend = 0;
 
 	if (drawmng.scrnmode & SCRNMODE_FULLSCREEN) {
@@ -168,7 +168,7 @@ renewal_client_size(void)
 		multiple = scrnstat.multiple;
 		if (!(drawmng.scrnmode & SCRNMODE_ROTATE)) {
 			if ((np2oscfg.paddingx > 0) && (multiple == SCREEN_DEFMUL)) {
-				extend = np2min(scrnstat.extend, drawmng.extend);
+				extend = MIN(scrnstat.extend, drawmng.extend);
 			}
 			scrnwidth = (width * multiple) / SCREEN_DEFMUL;
 			scrnheight = (height * multiple) / SCREEN_DEFMUL;
@@ -183,7 +183,7 @@ renewal_client_size(void)
 			drawmng.scrn.top = np2oscfg.paddingy;
 		} else {
 			if ((np2oscfg.paddingy > 0) && (multiple == SCREEN_DEFMUL)) {
-				extend = np2min(scrnstat.extend, drawmng.extend);
+				extend = MIN(scrnstat.extend, drawmng.extend);
 			}
 			scrnwidth = (height * multiple) / SCREEN_DEFMUL;
 			scrnheight = (width * multiple) / SCREEN_DEFMUL;
@@ -230,8 +230,8 @@ clear_out_of_rect(const RECT_T *target, const RECT_T *base)
 		    rect.left, rect.top, rect.right, rect.bottom);
 	}
 
-	rect.top = np2max(base->top, target->top);
-	rect.bottom = np2min(base->bottom, target->bottom);
+	rect.top = MAX(base->top, target->top);
+	rect.bottom = MIN(base->bottom, target->bottom);
 	if (rect.top < rect.bottom) {
 		rect.left = base->left;
 		rect.right = target->left;
@@ -693,6 +693,8 @@ void scrnmng_bltwab() {
 	GdkRectangle	src;
 	GdkRectangle	dstmp;
 	int exmgn = 0;
+	GdkPixbuf* partbuf;
+	GdkPixbuf* rotatebuf;
 	if (np2wabwnd.multiwindow) return;
 	if (drawmng.backsurf != NULL) {
 		dst = &drawmng.rect;
@@ -705,10 +707,32 @@ void scrnmng_bltwab() {
 		memcpy(&dstmp, dst, sizeof(GdkRectangle));
 		dstmp.x += exmgn;
 		dstmp.width = scrnstat.width;
-		gdk_pixbuf_scale(np2wabwnd.pPixbuf, drawmng.backsurf,
-			0, 0, dstmp.width, dstmp.height,
-			0, 0, 1, 1,
-			GDK_INTERP_NEAREST);
+		dstmp.height = scrnstat.height;
+		if (!(drawmng.scrnmode & SCRNMODE_ROTATE)) {
+			gdk_pixbuf_scale(np2wabwnd.pPixbuf, drawmng.backsurf,
+				0, 0, dstmp.width, dstmp.height,
+				0, 0, 1, 1,
+				GDK_INTERP_NEAREST);
+		} else {
+			partbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, dstmp.width, dstmp.height);
+			gdk_pixbuf_scale(np2wabwnd.pPixbuf, partbuf,
+				0, 0, dstmp.width, dstmp.height,
+				0, 0, 1, 1,
+				GDK_INTERP_NEAREST);
+			if (!(drawmng.scrnmode & SCRNMODE_ROTATEDIR)) {
+				/* rotate left */
+				rotatebuf = gdk_pixbuf_rotate_simple(partbuf, GDK_PIXBUF_ROTATE_COUNTERCLOCKWISE);
+			} else {
+				/* rotate right */
+				rotatebuf = gdk_pixbuf_rotate_simple(partbuf, GDK_PIXBUF_ROTATE_CLOCKWISE);
+			}
+			gdk_pixbuf_unref(partbuf);
+			gdk_pixbuf_scale(rotatebuf, drawmng.backsurf,
+				0, 0, dstmp.height, dstmp.width,
+				0, 0, 1, 1,
+				GDK_INTERP_NEAREST);
+			gdk_pixbuf_unref(rotatebuf);
+		}
 	}
 #endif
 }

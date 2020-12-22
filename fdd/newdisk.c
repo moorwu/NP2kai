@@ -36,6 +36,49 @@ void newdisk_fdd(const OEMCHAR *fname, REG8 type, const OEMCHAR *label) {
 	}
 }
 
+void newdisk_123mb_fdd(const OEMCHAR *fname) {
+	
+	FILEH		fh;
+	char databuf[8192] = {0};
+	int fdsize = 1261568;
+
+	fh = file_create(fname);
+	if (fh != FILEH_INVALID) {
+		while(fdsize){
+			if(fdsize < sizeof(databuf)){
+				file_write(fh, &databuf, fdsize);
+				break;
+			}else{
+				file_write(fh, &databuf, sizeof(databuf));
+				fdsize -= sizeof(databuf);
+			}
+		}
+		file_close(fh);
+	}
+}
+
+void newdisk_144mb_fdd(const OEMCHAR *fname) {
+	
+	FILEH		fh;
+	char databuf[8192] = {0};
+	int fdsize = 1474560;
+
+	fh = file_create(fname);
+	if (fh != FILEH_INVALID) {
+		while(fdsize){
+			if(fdsize < sizeof(databuf)){
+				file_write(fh, &databuf, fdsize);
+				break;
+			}else{
+				file_write(fh, &databuf, sizeof(databuf));
+				fdsize -= sizeof(databuf);
+			}
+		}
+		file_close(fh);
+	}
+}
+
+
 
 // ---- hdd
 
@@ -46,7 +89,7 @@ static BRESULT writezero(FILEH fh, FILELEN size) {
 
 	ZeroMemory(work, sizeof(work));
 	while(size) {
-		wsize = np2min(size, sizeof(work));
+		wsize = MIN(size, sizeof(work));
 		if (file_write(fh, work, (UINT)wsize) != wsize) {
 			return(FAILURE);
 		}
@@ -78,7 +121,7 @@ static BRESULT writehddiplex2(FILEH fh, UINT ssize, FILELEN tsize, int blank, in
 		tsize -= sizeof(work);
 		ZeroMemory(work, sizeof(work));
 		while(tsize) {
-			size = np2min(tsize, sizeof(work));
+			size = MIN(tsize, sizeof(work));
 			tsize -= size;
 			if (file_write(fh, work, (UINT)size) != size) {
 				return(FAILURE);
@@ -171,7 +214,7 @@ void newdisk_nhd_ex_CHS(const OEMCHAR *fname, UINT32 C, UINT16 H, UINT16 S, UINT
 
 	hddsize = (FILELEN)C * H * S * SS / 1024 / 1024;
 	
-	if ((fname == NULL) || (hddsize < 5) || (hddsize > NHD_MAXSIZE2)) {
+	if ((fname == NULL) || (hddsize < 1) || (hddsize > NHD_MAXSIZE2)) {
 		goto ndnhd_err;
 	}
 	fh = file_create(fname);
@@ -300,7 +343,7 @@ void newdisk_hdn(const OEMCHAR *fname, UINT hddsize) {
 	// heads         :  8 (fixed)
 	// cylinders     : up to 4095 (12bits) (for old BIOS) =  399MiB
 	//                      65535 (16bits)                = 6399MiB
-	if ((fname == NULL) || (hddsize < 2) || (hddsize > 399)) {
+	if ((fname == NULL) || (hddsize < 2) || (hddsize > 6399)) {
 		goto ndhdn_err;
 	}
 	fh = file_create(fname);
@@ -334,7 +377,7 @@ void newdisk_vpcvhd_ex_CHS(const OEMCHAR *fname, UINT32 C, UINT16 H, UINT16 S, U
 	FILEH   fh;
 	VPCVHDFOOTER    vpcvhd;
 	VPCVHDDDH		vpcvhd_dh;
-	BRESULT r;
+	BRESULT r = 0;
 	UINT64  origsize;
 	UINT32  checksum;
 	size_t footerlen;
@@ -342,7 +385,7 @@ void newdisk_vpcvhd_ex_CHS(const OEMCHAR *fname, UINT32 C, UINT16 H, UINT16 S, U
    
 	hddsize = (UINT32)((FILELEN)C * H * S * SS / 1024 / 1024);
 	
-	if ((fname == NULL) || (hddsize < 5) || (hddsize > NHD_MAXSIZE2)) {
+	if ((fname == NULL) || (hddsize < 1) || (hddsize > NHD_MAXSIZE2)) {
 		goto vpcvhd_err;
 	}
 	fh = file_create(fname);
@@ -375,7 +418,7 @@ void newdisk_vpcvhd_ex_CHS(const OEMCHAR *fname, UINT32 C, UINT16 H, UINT16 S, U
 		UINT32 blocksize = 0x00200000;
 		UINT32 nodata = 0xffffffff;
 		
-		STOREMOTOROLAQWORD(vpcvhd.DataOffset, sizeof(VPCVHDFOOTER));
+		STOREMOTOROLAQWORD(vpcvhd.DataOffset, (UINT64)(sizeof(VPCVHDFOOTER)));
 		STOREMOTOROLADWORD(vpcvhd.DiskType, 3);
 
 		checksum = vpc_calc_checksum((UINT8*)(&vpcvhd), footerlen);
@@ -385,7 +428,7 @@ void newdisk_vpcvhd_ex_CHS(const OEMCHAR *fname, UINT32 C, UINT16 H, UINT16 S, U
 		ZeroMemory(&vpcvhd_dh, sizeof(VPCVHDDDH));
 		CopyMemory(&vpcvhd_dh.Cookie, vpcvhd_sigDH, 8);
 		STOREMOTOROLAQWORD(vpcvhd_dh.DataOffset, (SINT64)-1);
-		STOREMOTOROLAQWORD(vpcvhd_dh.TableOffset, sizeof(VPCVHDFOOTER) + sizeof(VPCVHDDDH));
+		STOREMOTOROLAQWORD(vpcvhd_dh.TableOffset, (UINT64)(sizeof(VPCVHDFOOTER) + sizeof(VPCVHDDDH)));
 		STOREMOTOROLADWORD(vpcvhd_dh.HeaderVersion, 0x00010000);
 		STOREMOTOROLADWORD(vpcvhd_dh.MaxTableEntries, blockcount);
 		STOREMOTOROLADWORD(vpcvhd_dh.BlockSize, blocksize);

@@ -55,7 +55,7 @@ static void streamprepare(UINT samples) {
 	CBTBL	*cb;
 	UINT	count;
 
-	count = np2min(sndstream.remain, samples);
+	count = MIN(sndstream.remain, samples);
 	if (count) {
 		ZeroMemory(sndstream.ptr, count * 2 * sizeof(SINT32));
 		cb = sndstream.cb;
@@ -133,7 +133,7 @@ static void streamfilewrite(UINT nSamples)
 
 	while (nSamples)
 	{
-		nCount = np2min(nSamples, 512);
+		nCount = MIN(nSamples, 512);
 		memset(buf32, 0, nCount * 2 * sizeof(buf32[0]));
 		cb = sndstream.cb;
 		while (cb < sndstream.cbreg)
@@ -141,7 +141,7 @@ static void streamfilewrite(UINT nSamples)
 			cb->cbfn(cb->hdl, buf32, nCount);
 			cb++;
 		}
-		r = np2min(sndstream.remain, nCount);
+		r = MIN(sndstream.remain, nCount);
 		if (r)
 		{
 			memcpy(sndstream.ptr, buf32, r * 2 * sizeof(buf32[0]));
@@ -159,7 +159,7 @@ static void streamfilewrite(UINT nSamples)
 			{
 				nSample = -32768;
 			}
-			// little endian‚È‚Ì‚Å satuation_s16‚Íg‚¦‚È‚¢
+			// little endianãªã®ã§ satuation_s16ã¯ä½¿ãˆãªã„
 			buf[i][0] = (UINT8)nSample;
 			buf[i][1] = (UINT8)(nSample >> 8);
 		}
@@ -179,7 +179,7 @@ static void filltailsample(UINT nCount)
 	SINT32 nSampleL;
 	SINT32 nSampleR;
 
-	nCount = np2min(sndstream.remain, nCount);
+	nCount = MIN(sndstream.remain, nCount);
 	if (nCount)
 	{
 		ptr = sndstream.ptr;
@@ -297,11 +297,11 @@ void sound_changeclock(void) {
 		return;
 	}
 
-	// ‚Æ‚è‚ ‚¦‚¸ 25‚ÅŠ„‚èØ‚ê‚éB
+	// ã¨ã‚Šã‚ãˆãš 25ã§å‰²ã‚Šåˆ‡ã‚Œã‚‹ã€‚
 	clk = pccore.realclock / 25;
 	hz = soundcfg.rate / 25;
 
-	// ‚ÅAƒNƒƒbƒN”‚É‡‚¹‚Ä’²®B(64bit‰‰Z‚µ‚ë‚æ‚È“I)
+	// ã§ã€ã‚¯ãƒ­ãƒƒã‚¯æ•°ã«åˆã›ã¦èª¿æ•´ã€‚(64bitæ¼”ç®—ã—ã‚ã‚ˆãªçš„)
 	hzmax = (1 << (32 - 8)) / (clk >> 8);
 	while(hzmax < hz) {
 		clk = (clk + 1) >> 1;

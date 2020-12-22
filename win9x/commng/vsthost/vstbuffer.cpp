@@ -1,13 +1,13 @@
 /**
  * @file	vstbuffer.cpp
- * @brief	VST ƒoƒbƒtƒ@ ƒNƒ‰ƒX‚Ì“®ì‚Ì’è‹`‚ğs‚¢‚Ü‚·
+ * @brief	VST ãƒãƒƒãƒ•ã‚¡ ã‚¯ãƒ©ã‚¹ã®å‹•ä½œã®å®šç¾©ã‚’è¡Œã„ã¾ã™
  */
 
 #include "compiler.h"
 #include "vstbuffer.h"
 
 /**
- * ƒRƒ“ƒXƒgƒ‰ƒNƒ^
+ * ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
  */
 CVstBuffer::CVstBuffer()
 	: m_nChannels(0)
@@ -17,9 +17,9 @@ CVstBuffer::CVstBuffer()
 }
 
 /**
- * ƒRƒ“ƒXƒgƒ‰ƒNƒ^
- * @param[in] nChannels ƒ`ƒƒƒlƒ‹”
- * @param[in] nSamples ƒTƒ“ƒvƒ‹”
+ * ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
+ * @param[in] nChannels ãƒãƒ£ãƒãƒ«æ•°
+ * @param[in] nSamples ã‚µãƒ³ãƒ—ãƒ«æ•°
  */
 CVstBuffer::CVstBuffer(UINT nChannels, UINT nSamples)
 	: m_nChannels(0)
@@ -31,7 +31,7 @@ CVstBuffer::CVstBuffer(UINT nChannels, UINT nSamples)
 }
 
 /**
- * ƒfƒXƒgƒ‰ƒNƒ^
+ * ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
  */
 CVstBuffer::~CVstBuffer()
 {
@@ -39,9 +39,9 @@ CVstBuffer::~CVstBuffer()
 }
 
 /**
- * ƒRƒ“ƒXƒgƒ‰ƒNƒ^
- * @param[in] nChannels ƒ`ƒƒƒlƒ‹”
- * @param[in] nSamples ƒTƒ“ƒvƒ‹”
+ * ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
+ * @param[in] nChannels ãƒãƒ£ãƒãƒ«æ•°
+ * @param[in] nSamples ã‚µãƒ³ãƒ—ãƒ«æ•°
  */
 void CVstBuffer::Alloc(UINT nChannels, UINT nSamples)
 {
@@ -67,15 +67,19 @@ void CVstBuffer::Alloc(UINT nChannels, UINT nSamples)
 }
 
 /**
- * ”jŠü
+ * ç ´æ£„
  */
 void CVstBuffer::Delloc()
 {
 	for (UINT i = 0; i < m_nChannels; i++)
 	{
-		delete[] m_pBuffers[i];
+		if(m_pBuffers[i]){
+			delete[] m_pBuffers[i];
+		}
 	}
-	delete[] m_pBuffers;
+	if(m_pBuffers){
+		delete[] m_pBuffers;
+	}
 
 	m_nChannels = 0;
 	m_nSamples = 0;
@@ -94,8 +98,8 @@ void CVstBuffer::ZeroFill()
 }
 
 /**
- * ƒTƒ“ƒvƒ‹‚ğ“¾‚é
- * @param[out] lpBuffer ƒoƒbƒtƒ@
+ * ã‚µãƒ³ãƒ—ãƒ«ã‚’å¾—ã‚‹
+ * @param[out] lpBuffer ãƒãƒƒãƒ•ã‚¡
  */
 void CVstBuffer::GetShort(short* lpBuffer) const
 {

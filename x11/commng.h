@@ -10,7 +10,12 @@ enum {
 	COMCREATE_PC9861K1,
 	COMCREATE_PC9861K2,
 	COMCREATE_PRINTER,
-	COMCREATE_MPU98II
+	COMCREATE_MPU98II,
+#if defined(SUPPORT_SMPU98)
+	COMCREATE_SMPU98_A,
+	COMCREATE_SMPU98_B,
+#endif
+	COMCREATE_NULL			= 0xffff,
 };
 
 enum {
@@ -27,7 +32,9 @@ enum {
 #if defined(VAEG_FIX)
 	COMMSG_SETRSFLAG,
 #endif
-	COMMSG_USER
+	COMMSG_CHANGESPEED,
+	COMMSG_CHANGEMODE,
+	COMMSG_USER			    = 0x80,
 };
 
 struct _commng;
@@ -38,9 +45,14 @@ struct _commng {
 	UINT	connect;
 	UINT	(*read)(COMMNG self, UINT8 *data);
 	UINT	(*write)(COMMNG self, UINT8 data);
+	UINT	(*writeretry)(COMMNG self);
+	UINT	(*lastwritesuccess)(COMMNG self);
 	UINT8	(*getstat)(COMMNG self);
 	INTPTR	(*msg)(COMMNG self, UINT msg, INTPTR param);
 	void	(*release)(COMMNG self);
+	UINT8 lastdata;
+	UINT8 lastdatafail;
+	UINT lastdatatime;
 };
 
 typedef struct {

@@ -1,5 +1,5 @@
 
-// ‚Ë‚±ê—pƒwƒbƒ_
+// ã­ã“å°‚ç”¨ãƒ˜ãƒƒãƒ€
 
 enum {
 	MPU98_EXCVBUFS		= 512,
@@ -35,6 +35,8 @@ typedef struct {
 } MPURECV;
 
 typedef struct {
+	UINT8	enable;
+
 	UINT16	port;
 	UINT8	irqnum;
 	UINT8	data;
@@ -95,6 +97,8 @@ void mpu98ii_bind(void);
 
 void mpu98ii_callback(void);
 void mpu98ii_midipanic(void);
+
+void mpu98ii_changeclock(void);
 
 void IOOUTCALL mpu98ii_o0(UINT port, REG8 dat);
 void IOOUTCALL mpu98ii_o2(UINT port, REG8 dat);

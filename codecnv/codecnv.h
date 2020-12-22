@@ -11,6 +11,9 @@ extern "C"
 {
 #endif
 
+UINT codecnv_jistoucs2_1(UINT* puType, UINT16 *lpOutput, const char *lpInput, const UINT uType);
+UINT codecnv_jistoucs2(UINT* puType, UINT16 *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput, const UINT uType);
+
 UINT codecnv_sjistoeuc(char *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput);
 UINT codecnv_sjistoucs2(UINT16 *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput);
 UINT codecnv_sjistoutf8(char *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput);
@@ -21,8 +24,19 @@ UINT codecnv_euctoucs2(UINT16 *lpOutput, UINT cchOutput, const char *lpInput, UI
 UINT codecnv_utf8toucs2(UINT16 *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput);
 UINT codecnv_utf8tosjis(char *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput);
 
+UINT codecnv_ucs2len(const UINT16 *lpString);
 UINT codecnv_ucs2tosjis(char *lpOutput, UINT cchOutput, const UINT16 *lpInput, UINT cchInput);
 UINT codecnv_ucs2toutf8(char *lpOutput, UINT cchOutput, const UINT16 *lpInput, UINT cchInput);
+UINT codecnv_utf8toucs2(UINT16 *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput);
+
+UINT codecnv_utf8toucs4_1(UINT32 *lpOutput, const char *lpInput, UINT cchInput);
+UINT codecnv_utf8toucs4(UINT32 *lpOutput, UINT cchOutput, const char *lpInput, UINT cchInput);
+UINT codecnv_ucs4toutf8(char *lpOutput, UINT cchOutput, const UINT32 *lpInput, UINT cchInput);
+
+UINT codecnv_ucs4len(const UINT32 *lpString);
+UINT codecnv_ucs4toucs2_1(UINT16 *lpOutput, UINT cchOutput, const UINT32 *lpInput);
+UINT codecnv_ucs2toucs4(UINT32 *lpOutput, UINT cchOutput, const UINT16 *lpInput, UINT cchInput);
+UINT codecnv_ucs4toucs2(UINT16 *lpOutput, UINT cchOutput, const UINT32 *lpInput, UINT cchInput);
 
 #ifdef __cplusplus
 }
@@ -33,25 +47,25 @@ UINT codecnv_ucs2toutf8(char *lpOutput, UINT cchOutput, const UINT16 *lpInput, U
 
 
 
-// codecnvd—l
+// codecnvä»•æ§˜
 //
-//	(dst != NULL) ‚ÍƒeƒXƒg‚Ì‚İs‚È‚¤B‚±‚Ìê‡dcnt=–³ŒÀ‚Æˆµ‚¤B
+//	(dst != NULL) æ™‚ã¯ãƒ†ã‚¹ãƒˆã®ã¿è¡Œãªã†ã€‚ã“ã®å ´åˆdcnt=ç„¡é™ã¨æ‰±ã†ã€‚
 //
-//	scnt == -1 ‚Ìê‡AString Mode‚Æ‚È‚éB
-//	ENULL‚Ü‚Å•ÏŠ·‚·‚é
-//	Edcnt‚ª‘«‚è‚È‚­‚Ä‚à dst‚Í•K‚¸NULL Terminate‚Æ‚È‚éB
+//	scnt == -1 ã®å ´åˆã€String Modeã¨ãªã‚‹ã€‚
+//	ãƒ»NULLã¾ã§å¤‰æ›ã™ã‚‹
+//	ãƒ»dcntãŒè¶³ã‚Šãªãã¦ã‚‚ dstã¯å¿…ãšNULL Terminateã¨ãªã‚‹ã€‚
 //
-//	–ß‚è’l: ‘‚«‚İƒoƒbƒtƒ@”‚ª•Ô‚éB(NULL Terminate‚àŠÜ‚Ş)
+//	æˆ»ã‚Šå€¤: æ›¸ãè¾¼ã¿ãƒãƒƒãƒ•ã‚¡æ•°ãŒè¿”ã‚‹ã€‚(NULL Terminateã‚‚å«ã‚€)
 //
 //	codecnv_AtoB(NULL, 0, "ABC\0DEF", -1) == 4
 //	codecnv_AtoB(buf, 5, "ABC\0DEF", -1) == 4 / Copy(buf, "ABC\0", 4)
 //	codecnv_AtoB(buf, 3, "ABC\0DEF", -1) == 3 / Copy(buf, "AB\0", 3)
 //
 //
-//	scnt != -1 ‚Ìê‡ABinary Mode‚Æ‚È‚éB
-//	Escnt•ª•ÏŠ·‚ğs‚È‚¤
+//	scnt != -1 ã®å ´åˆã€Binary Modeã¨ãªã‚‹ã€‚
+//	ãƒ»scntåˆ†å¤‰æ›ã‚’è¡Œãªã†
 //
-//	–ß‚è’l: ‘‚«‚İƒoƒbƒtƒ@”‚ª•Ô‚éB
+//	æˆ»ã‚Šå€¤: æ›¸ãè¾¼ã¿ãƒãƒƒãƒ•ã‚¡æ•°ãŒè¿”ã‚‹ã€‚
 //
 //	codecnv_AtoB(NULL, 0, "ABC\0DEF", 7) == 7
 //	codecnv_AtoB(NULL, 0, "ABC\0DEF", 4) == 4

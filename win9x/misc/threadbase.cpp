@@ -1,6 +1,6 @@
 /*!
  * @file	threadbase.cpp
- * @brief	ƒXƒŒƒbƒhŠî’êƒNƒ‰ƒX‚Ì“®ì‚Ì’è‹`‚ğs‚¢‚Ü‚·
+ * @brief	ã‚¹ãƒ¬ãƒƒãƒ‰åŸºåº•ã‚¯ãƒ©ã‚¹ã®å‹•ä½œã®å®šç¾©ã‚’è¡Œã„ã¾ã™
  */
 
 #include "compiler.h"
@@ -8,7 +8,7 @@
 #include <process.h>
 
 /*!
- * @brief ƒRƒ“ƒXƒgƒ‰ƒNƒ^
+ * @brief ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
  */
 CThreadBase::CThreadBase()
 	: m_hThread(INVALID_HANDLE_VALUE)
@@ -20,7 +20,7 @@ CThreadBase::CThreadBase()
 }
 
 /*!
- * @brief ƒfƒXƒgƒ‰ƒNƒ^
+ * @brief ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
  */
 CThreadBase::~CThreadBase()
 {
@@ -28,9 +28,9 @@ CThreadBase::~CThreadBase()
 }
 
 /*!
- * @brief ƒXƒŒƒbƒhŠJn
+ * @brief ã‚¹ãƒ¬ãƒƒãƒ‰é–‹å§‹
  *
- * @retval true ¬Œ÷
+ * @retval true æˆåŠŸ
  */
 bool CThreadBase::Start()
 {
@@ -41,8 +41,10 @@ bool CThreadBase::Start()
 
 	m_bAbort = false;
 	m_bDone = false;
-	DWORD dwThreadId = 0;
-	HANDLE hThread = ::CreateThread(NULL, m_nStackSize, &ThreadProc, this, 0, &dwThreadId);
+	//DWORD dwThreadId = 0;
+	unsigned int dwThreadId = 0;
+	//HANDLE hThread = ::CreateThread(NULL, m_nStackSize, &ThreadProc, this, 0, &dwThreadId);
+	HANDLE hThread = (HANDLE)_beginthreadex(NULL, m_nStackSize, &ThreadProc, this, 0, &dwThreadId);
 	if (hThread == INVALID_HANDLE_VALUE)
 	{
 		return false;
@@ -54,9 +56,9 @@ bool CThreadBase::Start()
 }
 
 /*!
- * @brief ƒXƒŒƒbƒhI—¹
+ * @brief ã‚¹ãƒ¬ãƒƒãƒ‰çµ‚äº†
  *
- * @retval true ¬Œ÷
+ * @retval true æˆåŠŸ
  */
 void CThreadBase::Stop()
 {
@@ -70,9 +72,9 @@ void CThreadBase::Stop()
 }
 
 /*!
- * @brief ƒXƒŒƒbƒhÄŠJ
+ * @brief ã‚¹ãƒ¬ãƒƒãƒ‰å†é–‹
  *
- * @retval true ¬Œ÷
+ * @retval true æˆåŠŸ
  */
 bool CThreadBase::Restart()
 {
@@ -84,11 +86,12 @@ bool CThreadBase::Restart()
 }
 
 /*!
- * ƒXƒŒƒbƒhˆ—
- * @param[in] pParam this ƒ|ƒCƒ“ƒ^
- * @retval 0 í‚É0
+ * ã‚¹ãƒ¬ãƒƒãƒ‰å‡¦ç†
+ * @param[in] pParam this ãƒã‚¤ãƒ³ã‚¿
+ * @retval 0 å¸¸ã«0
  */
-DWORD __stdcall CThreadBase::ThreadProc(LPVOID pParam)
+//DWORD __stdcall CThreadBase::ThreadProc(LPVOID pParam)
+unsigned int __stdcall  CThreadBase::ThreadProc(LPVOID pParam)
 {
 	CThreadBase& obj = *(static_cast<CThreadBase*>(pParam));
 	while ((!obj.m_bAbort) && (obj.Task()))

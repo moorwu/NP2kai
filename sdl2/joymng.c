@@ -61,9 +61,9 @@ BYTE joymng_getstat(void) {
 	if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT))cJoyFlag &= ~JOY_RIGHT_BIT;
 
 	if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A) )cJoyFlag &= ~JOY_BTN1_BIT;
-	if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B) )cJoyFlag &= ~JOY_BTN2_BIT;
-	if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X) )cJoyFlag &= ~JOY_BTN3_BIT;
-	if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y) )cJoyFlag &= ~JOY_BTN4_BIT;
+	if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B) )cJoyFlag &= ~JOY_BTN3_BIT;
+	if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X) )cJoyFlag &= ~JOY_BTN4_BIT;
+	if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y) )cJoyFlag &= ~JOY_BTN2_BIT;
 
 	s_cJoyFlag = cJoyFlag;
 
@@ -209,8 +209,8 @@ joymng_getstat(void)
 
 #if defined(USE_SDL_JOYSTICK)
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_joystick.h>
+#include <SDL.h>
+#include <SDL_joystick.h>
 
 typedef struct {
 	joymng_devinfo_t	dev;

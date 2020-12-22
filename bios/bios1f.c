@@ -36,9 +36,9 @@ static REG8 bios0x1f_90(void) {
 	leng = LOW16(CPU_CX - 1) + 1;
 //	TRACEOUT(("move %.8x %.8x %.4x", srcbase + srcaddr, dstbase + dstaddr, leng));
 	do {
-		l = np2min(leng, sizeof(work));
-		l = np2min(l, srclimit - srcaddr);
-		l = np2min(l, dstlimit - dstaddr);
+		l = MIN(leng, sizeof(work));
+		l = MIN(l, srclimit - srcaddr);
+		l = MIN(l, dstlimit - dstaddr);
 		if (!l) {
 			CPU_A20EN(FALSE);
 			goto p90_err2;
@@ -61,6 +61,17 @@ p90_err:
 	return(C_FLAG);
 }
 
+static REG8 bios0x1f_CC(void) {
+	
+#if defined(SUPPORT_PCI)
+	// int 1Ah AH=B1と同じ？
+	if(pcidev.enable){
+		bios0x1a_pci_part(0);
+	}
+#endif
+
+	return(C_FLAG);
+}
 
 // ----
 
@@ -72,7 +83,10 @@ void bios0x1f(void) {
 	if (!(CPU_AH & 0x80)) {
 		return;
 	}
-	if (!(CPU_AH & 0x10)) {
+	if (CPU_AH == 0xCC) {
+		cflag = bios0x1f_CC();
+	}
+	else if (!(CPU_AH & 0x10)) {
 		cflag = 0;
 	}
 	else if (CPU_AH == 0x90) {

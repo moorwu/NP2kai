@@ -1847,13 +1847,13 @@ I286FN _popf(void) {						// 9D:	popf
 I286FN _sahf(void) {						// 9E:	sahf
 
 	I286_WORKCLOCK(2);
-	I286_FLAGL = I286_AH;
+	I286_FLAGL = (I286_AH & 0xfff);	// 286
 }
 
 I286FN _lahf(void) {						// 9F:	lahf
 
 	I286_WORKCLOCK(2);
-	I286_AH = I286_FLAGL;
+	I286_AH = (I286_FLAGL & 0xfff);	// 286
 }
 
 I286FN _mov_al_m8(void) {					// A0:	mov		al, m8
@@ -2214,7 +2214,7 @@ I286FN _enter(void) {						// C8:	enter	DATA16, DATA8
 			bp = I286_BP;
 			I286_BP = I286_SP;
 			while(level--) {
-#if 1											// Ç»Ç…Ç‚Ç¡ÇƒÇÒÇæÉíÉå
+#if 1											// „Å™„Å´„ÇÑ„Å£„Å¶„Çì„Å†„É≤„É¨
 				REG16 val;
 				bp -= 2;
 				I286_SP -= 2;
@@ -2681,7 +2681,7 @@ I286FN _sti(void) {							// FB:	sti
 #if defined(INTR_FAST)
 	if (I286_FLAG & I_FLAG) {
 		NEXT_OPCODE;
-		return;									// çXêVÇÃà”ñ°Ç»Çµ
+		return;									// Êõ¥Êñ∞„ÅÆÊÑèÂë≥„Å™„Åó
 	}
 #endif
 	I286_FLAG |= I_FLAG;

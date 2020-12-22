@@ -1,9 +1,6 @@
+GIT_VERSION := "$(shell git rev-parse --short HEAD)"
 real_topsrcdir=	$(top_srcdir)/..
 
-bin_PROGRAMS=	xnp2kai
-
-nodist_man1_MANS=	xnp2.1 xnp2.1j
-CLEANFILES=		$(nodist_man1_MANS)
 dist_pkgdata_DATA=	$(real_topsrcdir)/x11/resources/fddseek.wav \
 			$(real_topsrcdir)/x11/resources/fddseek1.wav \
 			$(real_topsrcdir)/x11/resources/relay1.wav
@@ -60,6 +57,7 @@ COMMON_SOURCES=	$(real_topsrcdir)/x11/main.c \
 		$(real_topsrcdir)/x11/gtk2/dialog_midi.c \
 		$(real_topsrcdir)/x11/gtk2/dialog_network.c \
 		$(real_topsrcdir)/x11/gtk2/dialog_newdisk.c \
+		$(real_topsrcdir)/x11/gtk2/dialog_pci.c \
 		$(real_topsrcdir)/x11/gtk2/dialog_screen.c \
 		$(real_topsrcdir)/x11/gtk2/dialog_serial.c \
 		$(real_topsrcdir)/x11/gtk2/dialog_sound.c \
@@ -68,7 +66,6 @@ COMMON_SOURCES=	$(real_topsrcdir)/x11/main.c \
 		$(real_topsrcdir)/x11/gtk2/window_softkbd.c \
 		$(real_topsrcdir)/x11/gtk2/gtk_drawmng.c \
 		$(real_topsrcdir)/x11/gtk2/gtk_screen.c \
-		$(real_topsrcdir)/x11/gtk2/gtk_font.c \
 		$(real_topsrcdir)/x11/gtk2/gtk_keyboard.c \
 		$(real_topsrcdir)/x11/gtk2/gtk_menu.c \
 		$(real_topsrcdir)/x11/gtk2/gtk_mouse.c \
@@ -87,6 +84,8 @@ COMMON_SOURCES=	$(real_topsrcdir)/x11/main.c \
 		$(real_topsrcdir)/timing.c \
 		$(real_topsrcdir)/statsave.c \
 		$(real_topsrcdir)/keystat.c \
+		$(real_topsrcdir)/np2_thread.c \
+		$(real_topsrcdir)/np2_tickcount.c \
 		\
 		$(real_topsrcdir)/common/strres.c \
 		$(real_topsrcdir)/common/milstr.c \
@@ -102,14 +101,19 @@ COMMON_SOURCES=	$(real_topsrcdir)/x11/main.c \
 		\
 		$(real_topsrcdir)/codecnv/eucsjis.c \
 		$(real_topsrcdir)/codecnv/eucucs2.c \
+		$(real_topsrcdir)/codecnv/jisucs2.c \
 		$(real_topsrcdir)/codecnv/sjiseuc.c \
 		$(real_topsrcdir)/codecnv/sjisucs2.c \
 		$(real_topsrcdir)/codecnv/tcswap16.c \
 		$(real_topsrcdir)/codecnv/tcswap32.c \
 		$(real_topsrcdir)/codecnv/textcnv.c \
 		$(real_topsrcdir)/codecnv/ucs2sjis.c \
+		$(real_topsrcdir)/codecnv/ucs2ucs4.c \
 		$(real_topsrcdir)/codecnv/ucs2utf8.c \
+		$(real_topsrcdir)/codecnv/ucs4ucs2.c \
+		$(real_topsrcdir)/codecnv/ucs4utf8.c \
 		$(real_topsrcdir)/codecnv/utf8ucs2.c \
+		$(real_topsrcdir)/codecnv/utf8ucs4.c \
 		\
 		$(real_topsrcdir)/bios/bios.c \
 		$(real_topsrcdir)/bios/bios09.c \
@@ -135,17 +139,21 @@ COMMON_SOURCES=	$(real_topsrcdir)/x11/main.c \
 		$(real_topsrcdir)/cbus/boardpx.c \
 		$(real_topsrcdir)/cbus/boardsb16.c \
 		$(real_topsrcdir)/cbus/boardso.c \
+		$(real_topsrcdir)/cbus/boardlol.c \
+		$(real_topsrcdir)/cbus/boardmo.c \
 		$(real_topsrcdir)/cbus/boardspb.c \
 		$(real_topsrcdir)/cbus/boardx2.c \
 		$(real_topsrcdir)/cbus/cs4231io.c \
 		$(real_topsrcdir)/cbus/ct1741io.c \
 		$(real_topsrcdir)/cbus/ct1745io.c \
+		$(real_topsrcdir)/cbus/gpibio.c \
 		$(real_topsrcdir)/cbus/pcm86io.c \
 		$(real_topsrcdir)/cbus/sasiio.c \
 		$(real_topsrcdir)/cbus/scsiio.c \
 		$(real_topsrcdir)/cbus/scsicmd.c \
 		$(real_topsrcdir)/cbus/ideio.c \
 		$(real_topsrcdir)/cbus/atapicmd.c \
+		$(real_topsrcdir)/cbus/smpu98.c \
 		\
 		$(real_topsrcdir)/fdd/diskdrv.c \
 		$(real_topsrcdir)/fdd/newdisk.c \
@@ -153,6 +161,7 @@ COMMON_SOURCES=	$(real_topsrcdir)/x11/main.c \
 		$(real_topsrcdir)/fdd/sxsi.c \
 		$(real_topsrcdir)/fdd/sxsihdd.c \
 		$(real_topsrcdir)/fdd/sxsicd.c \
+		$(real_topsrcdir)/fdd/sxsihdd_nvl.c \
 		\
 		$(real_topsrcdir)/font/font.c \
 		$(real_topsrcdir)/font/fontdata.c \
@@ -201,6 +210,9 @@ COMMON_SOURCES=	$(real_topsrcdir)/x11/main.c \
 		$(real_topsrcdir)/io/necio.c \
 		$(real_topsrcdir)/io/epsonio.c \
 		$(real_topsrcdir)/io/pcidev.c \
+		$(real_topsrcdir)/io/pegc.c \
+		$(real_topsrcdir)/io/pci/98graphbridge.c \
+		$(real_topsrcdir)/io/pci/cbusbridge.c \
 		\
 		$(real_topsrcdir)/lio/lio.c \
 		$(real_topsrcdir)/lio/gscreen.c \
@@ -296,8 +308,6 @@ COMMON_SOURCES=	$(real_topsrcdir)/x11/main.c \
 		$(real_topsrcdir)/wab/wab_rly.c \
 		$(real_topsrcdir)/wab/wab.c
 
-xnp2kai_SOURCES=	$(COMMON_SOURCES)
-
 AM_CPPFLAGS=	-I$(real_topsrcdir) \
 		-I$(real_topsrcdir)/x11 \
 		-I$(real_topsrcdir)/x11/gtk2 \
@@ -307,6 +317,7 @@ AM_CPPFLAGS=	-I$(real_topsrcdir) \
 		-I$(real_topsrcdir)/fdd \
 		-I$(real_topsrcdir)/generic \
 		-I$(real_topsrcdir)/io \
+		-I$(real_topsrcdir)/io/pci \
 		-I$(real_topsrcdir)/mem \
 		-I$(real_topsrcdir)/network \
 		-I$(real_topsrcdir)/sound \
@@ -315,11 +326,12 @@ AM_CPPFLAGS=	-I$(real_topsrcdir) \
 		-I$(real_topsrcdir)/wab \
 		$(GTK_CFLAGS) $(GDK_CFLAGS) $(GDK_PIXBUF_CFLAGS) $(SDL_CFLAGS) $(LIBUSB1_CFLAGS) \
 		$(X11_CFLAGS) $(XEXT_CFLAGS) \
-		-DNP2_X11 -DSUPPORT_LARGE_HDD -DSUPPORT_VPCVHD -DSUPPORT_KAI_IMAGES -DHOOK_SYSKEY -DALLOW_MULTIRUN -DSUPPORT_NET -DSUPPORT_LGY98 -DSUPPORT_WAB -DSUPPORT_CL_GD5430 -DUSE_MAME -DSUPPORT_SOUND_SB16
+		 -DGIT_VERSION=\"$(GIT_VERSION)\" -DNP2_X11 -DUSE_SDLAUDIO -DUSE_SDLMIXER -DBIOS_IO_EMULATION -DOSLANG_UTF8 -DOSLINEBREAK_LF -DSOUND_CRITICAL -DSUPPORT_16BPP -DSUPPORT_24BPP -DSUPPORT_32BPP -DSUPPORT_8BPP -DSUPPORT_BMS -DSUPPORT_CL_GD5430 -DSUPPORT_CRT15KHZ -DSUPPORT_FAST_MEMORYCHECK -DSUPPORT_FMGEN -DSUPPORT_GPIB -DSUPPORT_HOSTDRV -DSUPPORT_HRTIMER -DSUPPORT_IDEIO -DSUPPORT_KAI_IMAGES -DSUPPORT_LARGE_HDD -DSUPPORT_LGY98 -DSUPPORT_NET -DSUPPORT_NORMALDISP -DSUPPORT_NVL_IMAGES -DSUPPORT_PC9861K -DSUPPORT_PX -DSUPPORT_RESUME -DSUPPORT_RS232C_FIFO -DSUPPORT_S98 -DSUPPORT_SCSI -DSUPPORT_SMPU98 -DSUPPORT_SOFTKBD=0 -DSUPPORT_SOUND_SB16 -DSUPPORT_SWSEEKSND -DSUPPORT_SWWABRLYSND -DSUPPORT_STATSAVE=10 -DSUPPORT_UTF8 -DSUPPORT_V30EXT -DSUPPORT_V30ORIGINAL -DSUPPORT_VPCVHD -DSUPPORT_WAB -DUSE_MAME -DVAEG_FIX -DVERMOUTH_LIB -DSUPPORT_ASYNC_CPU -DSUPPORT_NP2_THREAD -DNP2_THREAD_POSIX -DSUPPORT_NP2_TICKCOUNT -DUSE_RESOURCE_BMP
+
+
 if BUILD_ALL
 AM_CPPFLAGS+=	-DX11_BUILD_ALL
 endif
-xnp2kai_CPPFLAGS=	$(AM_CPPFLAGS)
 
 if HAVE_GCC
 AM_CFLAGS=	-fsigned-char
@@ -330,7 +342,7 @@ endif
 
 LDADD=		$(GTK_LIBS) $(GDK_LIBS) $(GDK_PIXBUF_LIBS) $(SDL_LIBS) $(LIBUSB1_LIBS) \
 		$(X11_LIBS) $(XEXT_LIBS) \
-		$(X_LIBS) $(X_PRE_LIBS) $(XLIB) $(X_EXTRA_LIBS)
+		$(X_LIBS) $(X_PRE_LIBS) $(XLIB) $(X_EXTRA_LIBS) -ldl -lpthread
 
 DEFS=		@DEFS@ -DSYSRESPATH=\""$(pkgdatadir)"\"
 
@@ -383,10 +395,313 @@ IA32_SOURCES=	$(real_topsrcdir)/i386c/cpucore.c \
 		$(real_topsrcdir)/i386c/ia32/instructions/fpu/fpemul_dosbox.c \
 		$(real_topsrcdir)/i386c/ia32/instructions/fpu/fpemul_dosbox2.c \
 		$(real_topsrcdir)/i386c/ia32/instructions/fpu/fpemul_softfloat.c \
-		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/softfloat.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_eq128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_le128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_lt128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_shortShiftLeft128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_shortShiftRight128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_shortShiftRightJam64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_shortShiftRightJam64Extra.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_shortShiftRightJam128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_shortShiftRightJam128Extra.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_shiftRightJam32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_shiftRightJam64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_shiftRightJam64Extra.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_shiftRightJam128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_shiftRightJam128Extra.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_shiftRightJam256M.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_countLeadingZeros8.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_countLeadingZeros16.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_countLeadingZeros32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_countLeadingZeros64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_add128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_add256M.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_sub128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_sub256M.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_mul64ByShifted32To128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_mul64To128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_mul128By32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_mul128To256M.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_approxRecip_1Ks.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_approxRecip32_1.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_approxRecipSqrt_1Ks.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_approxRecipSqrt32_1.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_roundToUI32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_roundToUI64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_roundToI32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_roundToI64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_normSubnormalF16Sig.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_roundPackToF16.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_normRoundPackToF16.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_addMagsF16.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_subMagsF16.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_mulAddF16.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_normSubnormalF32Sig.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_roundPackToF32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_normRoundPackToF32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_addMagsF32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_subMagsF32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_mulAddF32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_normSubnormalF64Sig.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_roundPackToF64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_normRoundPackToF64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_addMagsF64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_subMagsF64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_mulAddF64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_normSubnormalExtF80Sig.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_roundPackToExtF80.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_normRoundPackToExtF80.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_addMagsExtF80.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_subMagsExtF80.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_normSubnormalF128Sig.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_roundPackToF128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_normRoundPackToF128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_addMagsF128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_subMagsF128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_mulAddF128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/softfloat_state.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/ui32_to_f16.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/ui32_to_f32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/ui32_to_f64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/ui32_to_extF80.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/ui32_to_extF80M.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/ui32_to_f128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/ui32_to_f128M.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/ui64_to_f16.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/ui64_to_f32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/ui64_to_f64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/ui64_to_extF80.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/ui64_to_extF80M.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/ui64_to_f128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/ui64_to_f128M.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/i32_to_f16.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/i32_to_f32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/i32_to_f64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/i32_to_extF80.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/i32_to_extF80M.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/i32_to_f128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/i32_to_f128M.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/i64_to_f16.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/i64_to_f32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/i64_to_f64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/i64_to_extF80.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/i64_to_extF80M.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/i64_to_f128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/i64_to_f128M.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_to_ui32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_to_ui64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_to_i32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_to_i64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_to_ui32_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_to_ui64_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_to_i32_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_to_i64_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_to_f32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_to_f64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_to_extF80.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_to_extF80M.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_to_f128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_to_f128M.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_roundToInt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_add.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_sub.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_mul.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_mulAdd.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_div.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_rem.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_sqrt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_eq.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_le.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_lt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_eq_signaling.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_le_quiet.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_lt_quiet.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f16_isSignalingNaN.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_to_ui32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_to_ui64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_to_i32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_to_i64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_to_ui32_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_to_ui64_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_to_i32_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_to_i64_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_to_f16.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_to_f64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_to_extF80.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_to_extF80M.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_to_f128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_to_f128M.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_roundToInt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_add.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_sub.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_mul.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_mulAdd.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_div.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_rem.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_sqrt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_eq.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_le.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_lt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_eq_signaling.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_le_quiet.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_lt_quiet.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f32_isSignalingNaN.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_to_ui32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_to_ui64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_to_i32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_to_i64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_to_ui32_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_to_ui64_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_to_i32_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_to_i64_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_to_f16.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_to_f32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_to_extF80.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_to_extF80M.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_to_f128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_to_f128M.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_roundToInt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_add.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_sub.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_mul.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_mulAdd.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_div.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_rem.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_sqrt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_eq.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_le.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_lt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_eq_signaling.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_le_quiet.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_lt_quiet.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f64_isSignalingNaN.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_to_ui32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_to_ui64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_to_i32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_to_i64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_to_ui32_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_to_ui64_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_to_i32_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_to_i64_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_to_f16.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_to_f32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_to_f64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_to_f128.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_roundToInt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_add.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_sub.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_mul.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_div.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_rem.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_sqrt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_eq.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_le.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_lt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_eq_signaling.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_le_quiet.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_lt_quiet.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80_isSignalingNaN.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_to_ui32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_to_ui64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_to_i32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_to_i64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_to_ui32_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_to_ui64_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_to_i32_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_to_i64_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_to_f16.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_to_f32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_to_f64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_to_f128M.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_roundToInt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_add.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_sub.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_mul.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_div.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_rem.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_sqrt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_eq.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_le.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_lt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_eq_signaling.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_le_quiet.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_lt_quiet.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_to_ui32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_to_ui64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_to_i32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_to_i64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_to_ui32_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_to_ui64_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_to_i32_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_to_i64_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_to_f16.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_to_f32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_to_extF80.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_to_f64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_roundToInt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_add.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_sub.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_mul.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_mulAdd.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_div.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_rem.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_sqrt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_eq.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_le.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_lt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_eq_signaling.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_le_quiet.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_lt_quiet.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128_isSignalingNaN.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_to_ui32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_to_ui64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_to_i32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_to_i64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_to_ui32_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_to_ui64_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_to_i32_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_to_i64_r_minMag.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_to_f16.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_to_f32.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_to_extF80M.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_to_f64.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_roundToInt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_add.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_sub.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_mul.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_mulAdd.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_div.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_rem.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_sqrt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_eq.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_le.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_lt.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_eq_signaling.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_le_quiet.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_lt_quiet.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/softfloat_raiseFlags.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_f16UIToCommonNaN.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_commonNaNToF16UI.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_propagateNaNF16UI.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_f32UIToCommonNaN.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_commonNaNToF32UI.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_propagateNaNF32UI.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_f64UIToCommonNaN.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_commonNaNToF64UI.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_propagateNaNF64UI.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/extF80M_isSignalingNaN.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_extF80UIToCommonNaN.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_commonNaNToExtF80UI.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_propagateNaNExtF80UI.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/f128M_isSignalingNaN.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_f128UIToCommonNaN.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_commonNaNToF128UI.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat/s_propagateNaNF128UI.c \
 		$(real_topsrcdir)/i386c/ia32/instructions/mmx/3dnow.c \
 		$(real_topsrcdir)/i386c/ia32/instructions/mmx/mmx.c \
 		$(real_topsrcdir)/i386c/ia32/instructions/sse/sse.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/sse2/sse2.c \
+		$(real_topsrcdir)/i386c/ia32/instructions/sse3/sse3.c \
 		$(real_topsrcdir)/debugsub386.c
 
 IA32_CPPFLAGS=	-I$(real_topsrcdir)/i386c \
@@ -396,28 +711,54 @@ IA32_CPPFLAGS=	-I$(real_topsrcdir)/i386c \
 		-I$(real_topsrcdir)/i386c/ia32/instructions/fpu/softfloat \
 		-I$(real_topsrcdir)/i386c/ia32/instructions/mmx \
 		-I$(real_topsrcdir)/i386c/ia32/instructions/sse \
-		-DCPUCORE_IA32 -DUSE_FPU -DSUPPORT_FPU_DOSBOX -DSUPPORT_FPU_DOSBOX2 -DSUPPORT_FPU_SOFTFLOAT -DUSE_MMX -DUSE_3DNOW -DUSE_SSE -DUSE_TSC
+		-I$(real_topsrcdir)/i386c/ia32/instructions/sse2 \
+		-I$(real_topsrcdir)/i386c/ia32/instructions/sse3 \
+		-DCPUCORE_IA32 -DIA32_PAGING_EACHSIZE -DIA32_REBOOT_ON_PANIC -DSUPPORT_CRT31KHZ -DSUPPORT_FPU_DOSBOX -DSUPPORT_FPU_DOSBOX2 -DSUPPORT_FPU_SOFTFLOAT -DSUPPORT_GAMEPORT -DSUPPORT_MEMDBG32 -DSUPPORT_LARGE_MEMORY -DSUPPORT_PC9801_119 -DSUPPORT_PC9821 -DSUPPORT_PCI -DSUPPORT_PEGC -DSUPPORT_SOUND_SB16 -DSUPPORT_VGA_MODEX -DUSE_3DNOW -DUSE_FASTPAGING -DUSE_FPU -DUSE_MMX -DUSE_SSE -DUSE_SSE2 -DUSE_SSE3 -DUSE_TSC -DUSE_VME
 
-if CPUCORE_IA32
+HAXM_SOURCES=	$(real_topsrcdir)/i386hax/haxcore.c \
+		$(real_topsrcdir)/i386hax/haxfunc.c
+HAXM_CPPFLAGS=	-I$(real_topsrcdir)/i386hax -DSUPPORT_IA32_HAXM -DUSE_CUSTOM_HOOKINST
+
 if BUILD_ALL
-bin_PROGRAMS+=	xnp21kai
-nodist_man1_MANS+= xnp21.1 xnp21.1j
+bin_PROGRAMS=	xnp2kai xnp21kai xnp21kai_haxm
+nodist_man1_MANS= xnp2kai.1 xnp2kai.1j xnp21kai.1 xnp21kai.1j
+xnp21kai_haxm_SOURCES=	$(COMMON_SOURCES) $(IA32_SOURCES) $(HAXM_SOURCES)
+xnp21kai_haxm_CPPFLAGS=	$(AM_CPPFLAGS) $(IA32_CPPFLAGS) $(HAXM_CPPFLAGS)
 xnp21kai_SOURCES=	$(COMMON_SOURCES) $(IA32_SOURCES)
 xnp21kai_CPPFLAGS=	$(AM_CPPFLAGS) $(IA32_CPPFLAGS)
-xnp2kai_SOURCES+=	$(I286C_SOURCES)
-xnp2kai_CPPFLAGS+=	$(I286C_CPPFLAGS)
-else	# !BUILD_ALL
-xnp2kai_SOURCES+=	$(IA32_SOURCES)
-xnp2kai_CPPFLAGS+=	$(IA32_CPPFLAGS)
-endif	# BUILD_ALL
-else	# !CPUCORE_IA32
-xnp2kai_SOURCES+=	$(I286C_SOURCES)
-xnp2kai_CPPFLAGS+=	$(I286C_CPPFLAGS)
+xnp2kai_SOURCES=	$(COMMON_SOURCES) $(I286C_SOURCES)
+xnp2kai_CPPFLAGS=	$(AM_CPPFLAGS) $(I286C_CPPFLAGS)
+else	# BUILD_ALL
+if CPUCORE_IA32
+if HAXM
+bin_PROGRAMS=	xnp21kai_haxm
+nodist_man1_MANS= xnp21kai.1 xnp21kai.1j
+xnp21kai_haxm_SOURCES=	$(COMMON_SOURCES) $(IA32_SOURCES) $(HAXM_SOURCES)
+xnp21kai_haxm_CPPFLAGS=	$(AM_CPPFLAGS) $(IA32_CPPFLAGS) $(HAXM_CPPFLAGS)
+else	# HAXM
+bin_PROGRAMS=	xnp21kai
+nodist_man1_MANS= xnp21kai.1 xnp21kai.1j
+xnp21kai_SOURCES=	$(COMMON_SOURCES) $(IA32_SOURCES)
+xnp21kai_CPPFLAGS=	$(AM_CPPFLAGS) $(IA32_CPPFLAGS)
+endif	# HAXM
+else	# CPUCORE_IA32
+bin_PROGRAMS=	xnp2kai
+nodist_man1_MANS= xnp2kai.1 xnp2kai.1j
+xnp2kai_SOURCES=	$(COMMON_SOURCES) $(I286C_SOURCES)
+xnp2kai_CPPFLAGS=	$(AM_CPPFLAGS) $(I286C_CPPFLAGS)
 endif	# CPUCORE_IA32
+endif	# BUILD_ALL
 
-CLEANFILES+=	make.log
+CLEANFILES=	$(nodist_man1_MANS) make.log
 
 cleandir:: distclean
 
 .man1.1 .jman1.1j:
 	@sed -e 's;@PKGDATADIR@;${DESTDIR}${pkgdatadir};' < $< > $@
+
+cppcheck: compile_commands.json
+	cppcheck --project=compile_commands.json --xml 2> cppcheck.xml
+
+compile_commands.json:
+	bear make -f Makefile
+

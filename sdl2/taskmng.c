@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 199309L
 #include	"compiler.h"
 #include	"inputmng.h"
 #include	"taskmng.h"
@@ -5,11 +6,13 @@
 #include	"vramhdl.h"
 #include	"menubase.h"
 #include	"sysmenu.h"
+#include	"scrnmng.h"
 #include	"mousemng.h"
+#include	"np2.h"
+#include	"np2_thread.h"
 
 #if defined(__LIBRETRO__)
 #include <retro_miscellaneous.h>
-#include <retro_timers.h>
 #include "libretro.h"
 
 extern retro_environment_t environ_cb;
@@ -35,10 +38,11 @@ void taskmng_exit(void) {
 	task_avail = FALSE;
 }
 
-#if defined(GCW0)
+#if defined(__OPENDINGUX__)
 
 int ENABLE_MOUSE=0; //0--disable
 
+#if SDL_MAJOR_VERSION != 1
 int convertKeyMap(int scancode){
   switch(scancode){
     case 82: //up
@@ -69,8 +73,11 @@ int convertKeyMap(int scancode){
       return 	999;
   }
 }
+#endif
 
-#endif //GCW0
+#endif  // __OPENDINGUX__
+
+int mx = 320, my = 240;
 
 void taskmng_rol(void) {
 
@@ -85,9 +92,18 @@ void taskmng_rol(void) {
 		case SDL_MOUSEMOTION:
 			if (menuvram == NULL) {
 				mousemng_onmove(&e.motion);
-			}
-			else {
-				menubase_moving(e.motion.x, e.motion.y, 0);
+			} else {
+				if((scrnmode & SCRNMODE_ROTATEMASK) == SCRNMODE_ROTATELEFT) {
+					mx = (menuvram->width - 1) - e.motion.y;
+					my = e.motion.x;
+				} else if((scrnmode & SCRNMODE_ROTATEMASK) == SCRNMODE_ROTATERIGHT) {
+					mx = e.motion.y;
+					my = (menuvram->height - 1) - e.motion.x;
+				} else {
+					mx = e.motion.x;
+					my = e.motion.y;
+				}
+				menubase_moving(mx, my, 0);
 			}
 			break;
 
@@ -96,11 +112,13 @@ void taskmng_rol(void) {
 				case SDL_BUTTON_LEFT:
 					if (menuvram != NULL)
 					{
-						menubase_moving(e.button.x, e.button.y, 2);
+//						menubase_moving(e.button.x, e.button.y, 2);
+						menubase_moving(mx, my, 2);
 					}
 #if defined(__IPHONEOS__)
 					else if (SDL_IsTextInputActive())
 					{
+
 						SDL_StopTextInput();
 					}
 					else if (e.button.y >= 320)
@@ -127,7 +145,8 @@ void taskmng_rol(void) {
 				case SDL_BUTTON_LEFT:
 					if (menuvram != NULL)
 					{
-						menubase_moving(e.button.x, e.button.y, 1);
+//						menubase_moving(e.button.x, e.button.y, 1);
+						menubase_moving(mx, my, 1);
 					} else {
 						mousemng_buttonevent(&e.button);
 					}
@@ -141,7 +160,8 @@ void taskmng_rol(void) {
 
 				case SDL_BUTTON_MIDDLE:
 					if (menuvram == NULL) {
-						sysmenu_menuopen(0, e.button.x, e.button.y);
+//						sysmenu_menuopen(0, e.button.x, e.button.y);
+						sysmenu_menuopen(0, mx, my);
 					} else {
 						menubase_close();
 					}
@@ -151,34 +171,55 @@ void taskmng_rol(void) {
 
 		case SDL_KEYDOWN:
 
-#if defined(GCW0)
+#if defined(__OPENDINGUX__)
+#if SDL_MAJOR_VERSION != 1
       e.key.keysym.scancode=convertKeyMap(e.key.keysym.scancode);
       if(e.key.keysym.scancode==SDL_SCANCODE_UNKNOWN || e.key.keysym.scancode ==999){
         return;
       }
-#endif //GCW0
+#endif
+#endif  // __OPENDINGUX__
+#if SDL_MAJOR_VERSION == 1
+			if (e.key.keysym.sym == SDLK_F11) {
+#else
 			if (e.key.keysym.scancode == SDL_SCANCODE_F11) {
+#endif
+			// EXIT ON L1
+			task_avail = FALSE;
+			break;
+			/*
 				if (menuvram == NULL) {
 					sysmenu_menuopen(0, 0, 0);
 				}
 				else {
 					menubase_close();
 				}
+			*/
 			}
 			else {
+#if SDL_MAJOR_VERSION == 1
+				sdlkbd_keydown(e.key.keysym.sym);
+#else
 				sdlkbd_keydown(e.key.keysym.scancode);
+#endif
 			}
 			break;
 
 		case SDL_KEYUP:
-#if defined(GCW0)
+#if defined(__OPENDINGUX__)
+#if SDL_MAJOR_VERSION != 1
       e.key.keysym.scancode=convertKeyMap(e.key.keysym.scancode);
       if(e.key.keysym.scancode==SDL_SCANCODE_UNKNOWN || e.key.keysym.scancode ==999){
         return;
       }
-#endif //GCW0
+#endif
+#endif  // __OPENDINGUX__
 
+#if SDL_MAJOR_VERSION == 1
+      sdlkbd_keyup(e.key.keysym.sym);
+#else
       sdlkbd_keyup(e.key.keysym.scancode);
+#endif
 			break;
 
 		case SDL_QUIT:
@@ -195,11 +236,7 @@ BOOL taskmng_sleep(UINT32 tick) {
 	base = GETTICK();
 	while((task_avail) && ((GETTICK() - base) < tick)) {
 		taskmng_rol();
-#if defined(__LIBRETRO__)
-      retro_sleep(1);
-#else	/* __LIBRETRO__ */
-		SDL_Delay(1);
-#endif	/* __LIBRETRO__ */
+		NP2_Sleep_ms(1);
 	}
 	return(task_avail);
 }

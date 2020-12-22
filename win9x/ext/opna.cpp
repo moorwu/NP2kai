@@ -3,6 +3,7 @@
  * @brief	Implementation of OPNA
  */
 
+#include <math.h>
 #include "compiler.h"
 #include "sound/opna.h"
 #include "pccore.h"
@@ -104,6 +105,7 @@ void opna_destruct(POPNA opna)
 #if defined(SUPPORT_FMGEN)
 	if(opna->fmgen) {
 		if(opna->fmgen) OPNA_Destruct(opna->fmgen);
+		opna->fmgen = NULL;
 		opnalist_remove(opna);
 	}
 #endif	/* SUPPORT_FMGEN */
@@ -186,6 +188,22 @@ void opna_reset(POPNA opna, REG8 cCaps)
 			CExternalChipManager::GetInstance()->Release(pExt);
 			opna->userdata = NULL;
 		}
+	}
+	
+	// âπó èâä˙âª
+	opngen_setvol(np2cfg.vol_fm);
+	psggen_setvol(np2cfg.vol_ssg);
+	rhythm_setvol(np2cfg.vol_rhythm);
+#if defined(SUPPORT_FMGEN)
+	if(np2cfg.usefmgen) {
+		opna_fmgen_setallvolumeFM_linear(np2cfg.vol_fm);
+		opna_fmgen_setallvolumePSG_linear(np2cfg.vol_ssg);
+		opna_fmgen_setallvolumeRhythmTotal_linear(np2cfg.vol_rhythm);
+	}
+#endif	/* SUPPORT_FMGEN */
+	for (UINT i = 0; i < NELEMENTS(g_opna); i++)
+	{
+		rhythm_update(&g_opna[i].rhythm);
 	}
 }
 
@@ -360,7 +378,10 @@ void opna_bind(POPNA opna)
 	
 #if defined(SUPPORT_FMGEN)
 	if(opna->usefmgen) {
-		sound_streamregist(opna->fmgen, (SOUNDCB)OPNA_Mix);
+		if (!pExt)
+		{
+			sound_streamregist(opna->fmgen, (SOUNDCB)OPNA_Mix);
+		}
 	} else {
 #endif	/* SUPPORT_FMGEN */
 		if (pExt)

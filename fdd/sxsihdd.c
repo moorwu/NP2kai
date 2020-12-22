@@ -58,7 +58,7 @@ static REG8 hdd_read(SXSIDEV sxsi, FILEPOS pos, UINT8 *buf, UINT size) {
 		return(0xd0);
 	}
 	while(size) {
-		rsize = np2min(size, sxsi->size);
+		rsize = MIN(size, sxsi->size);
 		CPU_REMCLOCK -= rsize;
 		if (file_read(fh, buf, rsize) != rsize) {
 			return(0xd0);
@@ -88,7 +88,7 @@ static REG8 hdd_write(SXSIDEV sxsi, FILEPOS pos, const UINT8 *buf, UINT size) {
 		return(0xd0);
 	}
 	while(size) {
-		wsize = np2min(size, sxsi->size);
+		wsize = MIN(size, sxsi->size);
 		CPU_REMCLOCK -= wsize;
 		if (file_write(fh, buf, wsize) != wsize) {
 			return(0x70);
@@ -124,7 +124,7 @@ static REG8 hdd_format(SXSIDEV sxsi, FILEPOS pos) {
 	for (i=0; i<sxsi->sectors; i++) {
 		size = sxsi->size;
 		while(size) {
-			wsize = np2min(size, sizeof(work));
+			wsize = MIN(size, sizeof(work));
 			size -= wsize;
 			CPU_REMCLOCK -= wsize;
 			if (file_write(fh, work, wsize) != wsize) {
@@ -143,7 +143,7 @@ static void hdd_close(SXSIDEV sxsi) {
 
 // ----
 
-// SASI規格HDDかチェック
+// SASI隕乗ｼHDD縺九メ繧ｧ繝�繧ｯ
 static UINT8 gethddtype(SXSIDEV sxsi) {
 
 const SASIHDD	*sasi;
@@ -237,7 +237,7 @@ const OEMCHAR	*ext;
 		size = 512;
 		surfaces = 8;
 		sectors = 25;
-		cylinders = fsize / (sectors * surfaces * size);
+		cylinders = (UINT32)(fsize / (sectors * surfaces * size));
 		totals = fsize / size;
 		// totals = (FILEPOS)cylinders * sectors * surfaces;
 	}
@@ -268,7 +268,7 @@ const OEMCHAR	*ext;
 		goto sxsiope_err2;
 	}
 
-	// フォーマット確認～
+	// 繝輔か繝ｼ繝槭ャ繝育｢ｺ隱阪�
 	if ((surfaces == 0) || (surfaces >= 256) ||
 		(cylinders == 0) || (cylinders >= 65536) ||
 		(sectors == 0) || (sectors >= 256) ||

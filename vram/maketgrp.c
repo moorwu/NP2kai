@@ -108,7 +108,7 @@ void maketextgrph(int plane, int text_renewal, int grph_renewal) {
 	GRPH_LR = gdc.s.para[GDC_CSRFORM] & 0x1f;
 	GRPH_LRcnt = GRPH_LR;
 
-	// グラフのほーが上…
+	// 繧ｰ繝ｩ繝輔�ｮ縺ｻ繝ｼ縺御ｸ岩ｦ
 	if (dsync.text_vbp > dsync.grph_vbp) {
 		UINT remain;
 		remain = dsync.text_vbp - dsync.grph_vbp;
@@ -136,7 +136,7 @@ void maketextgrph(int plane, int text_renewal, int grph_renewal) {
 
 	ppage = (plane)?VRAM_STEP:0;
 	gbit = 0x01010101 << plane;
-	ymax = np2min(dsync.textymax, dsync.grphymax);
+	ymax = MIN(dsync.textymax, dsync.grphymax);
 	q = np2_vram[plane] + dsync.textvad;
 	wait1 = 0;
 	TEXT_LRcnt = 0;
@@ -366,7 +366,7 @@ void maketextgrph40(int plane, int text_renewal, int grph_renewal) {
 	GRPH_LR = gdc.s.para[GDC_CSRFORM] & 0x1f;
 	GRPH_LRcnt = GRPH_LR;
 
-	// グラフのほーが上…
+	// 繧ｰ繝ｩ繝輔�ｮ縺ｻ繝ｼ縺御ｸ岩ｦ
 	if (dsync.text_vbp > dsync.grph_vbp) {
 		UINT remain;
 		remain = dsync.text_vbp - dsync.grph_vbp;
@@ -394,7 +394,7 @@ void maketextgrph40(int plane, int text_renewal, int grph_renewal) {
 
 	ppage = (plane)?VRAM_STEP:0;
 	gbit = 0x01010101 << plane;
-	ymax = np2min(dsync.textymax, dsync.grphymax);
+	ymax = MIN(dsync.textymax, dsync.grphymax);
 	q = np2_vram[plane] + dsync.textvad;
 	wait1 = 0;
 	TEXT_LRcnt = 0;

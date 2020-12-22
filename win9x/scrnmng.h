@@ -16,6 +16,21 @@ typedef struct {
 } SCRNSURF;
 
 enum {
+	DRAWTYPE_DIRECTDRAW_HW	= 0x00,
+	DRAWTYPE_DIRECTDRAW_SW	= 0x01,
+	DRAWTYPE_DIRECT3D		= 0x02,
+	DRAWTYPE_INVALID		= 0xff
+};
+
+enum {
+	D3D_IMODE_NEAREST_NEIGHBOR	= 0x00,
+	D3D_IMODE_BILINEAR	= 0x01,
+	D3D_IMODE_PIXEL		= 0x02,
+	D3D_IMODE_PIXEL2	= 0x03,
+	D3D_IMODE_PIXEL3	= 0x04,
+};
+
+enum {
 	SCRNMODE_FULLSCREEN		= 0x01,
 	SCRNMODE_HIGHCOLOR		= 0x02,
 	SCRNMODE_ROTATE			= 0x10,
@@ -48,7 +63,22 @@ typedef struct {
 	UINT8	bpp;
 	UINT8	allflash;
 	UINT8	palchanged;
+	UINT8	forcereset;
 } SCRNMNG;
+
+typedef struct {
+	int		width;
+	int		height;
+	int		extend;
+	int		multiple;
+} SCRNSTAT;
+
+typedef struct {
+	UINT8	hasfscfg;
+	UINT8	fscrnmod;
+	UINT8	scrn_mul;
+	UINT8	d3d_imode;
+} SCRNRESCFG;
 
 
 #ifdef __cplusplus
@@ -56,14 +86,29 @@ extern "C" {
 #endif
 
 extern	SCRNMNG		scrnmng;			// É}ÉNÉçóp
+extern	SCRNSTAT	scrnstat;
+extern	SCRNRESCFG	scrnrescfg;
+
+#define	FSCRNCFG_fscrnmod	(np2oscfg.fsrescfg && scrnrescfg.hasfscfg ? scrnrescfg.fscrnmod : np2oscfg.fscrnmod)
+#define	FSCRNCFG_d3d_imode	(np2oscfg.fsrescfg && scrnrescfg.hasfscfg ? scrnrescfg.d3d_imode : np2oscfg.d3d_imode)
+
+void scrnres_readini();
+void scrnres_readini_res(int width, int height);
+void scrnres_writeini();
+
+extern UINT8 scrnmng_current_drawtype;
+
+void scrnmng_setwindowsize(HWND hWnd, int width, int height);
 
 void scrnmng_initialize(void);
 BRESULT scrnmng_create(UINT8 scrnmode);
 void scrnmng_destroy(void);
+void scrnmng_shutdown(void);
 
 void scrnmng_setwidth(int posx, int width);
 void scrnmng_setextend(int extend);
 void scrnmng_setheight(int posy, int height);
+void scrnmng_setsize(int posx, int posy, int width, int height);
 #define scrnmng_setbpp(commendablebpp)
 const SCRNSURF *scrnmng_surflock(void);
 void scrnmng_surfunlock(const SCRNSURF *surf);
@@ -97,6 +142,8 @@ void scrnmng_exitsizing(void);
 void scrnmng_updatefsres(void);
 void scrnmng_blthdc(HDC hdc);
 void scrnmng_bltwab(void);
+
+void scrnmng_getrect(RECT *lpRect);
 
 #if defined(SUPPORT_DCLOCK)
 BOOL scrnmng_isdispclockclick(const POINT *pt);

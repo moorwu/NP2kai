@@ -15,11 +15,14 @@
 
 	UINT	sys_updates;
 
+	SYSMNGMISCINFO	sys_miscinfo = {0};
+
 
 // ----
 
-static	OEMCHAR	title[512];
-static	OEMCHAR	clock[64];
+static	OEMCHAR	title[2048] = {0};
+static	OEMCHAR	clock[256] = {0};
+static	OEMCHAR	misc[256] = {0};
 
 static struct {
 	UINT32	tick;
@@ -65,27 +68,23 @@ void sysmng_updatecaption(UINT8 flag) {
 #if defined(SUPPORT_IDEIO)||defined(SUPPORT_SCSI)
 	int i, cddrvnum = 1;
 #endif
-#if defined(SUPPORT_IDEIO)
 	static OEMCHAR hddimgmenustrorg[4][MAX_PATH] = {0};
 	static OEMCHAR hddimgmenustr[4][MAX_PATH] = {0};
-#endif
 #if defined(SUPPORT_SCSI)
 	static OEMCHAR scsiimgmenustrorg[4][MAX_PATH] = {0};
 	static OEMCHAR scsiimgmenustr[4][MAX_PATH] = {0};
 #endif
-	OEMCHAR	work[512];
-
+	OEMCHAR	work[2048] = {0};
+	OEMCHAR	fddtext[16] = {0};
+	
 	if (flag & 1) {
 		title[0] = '\0';
-		if (fdd_diskready(0)) {
-			milstr_ncat(title, OEMTEXT("  FDD1:"), NELEMENTS(title));
-			milstr_ncat(title, file_getname(fdd_diskname(0)),
-															NELEMENTS(title));
-		}
-		if (fdd_diskready(1)) {
-			milstr_ncat(title, OEMTEXT("  FDD2:"), NELEMENTS(title));
-			milstr_ncat(title, file_getname(fdd_diskname(1)),
-															NELEMENTS(title));
+		for(i=0;i<4;i++){
+			OEMSPRINTF(fddtext, OEMTEXT("  FDD%d:"), i+1);
+			if (fdd_diskready(i)) {
+				milstr_ncat(title, fddtext, NELEMENTS(title));
+				milstr_ncat(title, file_getname(fdd_diskname(i)), NELEMENTS(title));
+			}
 		}
 #ifdef SUPPORT_IDEIO
 		for(i=0;i<4;i++){
@@ -123,18 +122,18 @@ void sysmng_updatecaption(UINT8 flag) {
 						}else{
 							fnamenext = (OEMCHAR*)diskdrv_getsxsi(i);
 						}
-						if(fname && *fname && fnamenext && *fnamenext && (fnametmp = sysmng_file_getname(fname)) && (fnamenexttmp = sysmng_file_getname(fnamenext))){
+						if(fname && *fname && fnamenext && *fnamenext && (fnametmp = sysmng_file_getname(fname))!=NULL && (fnamenexttmp = sysmng_file_getname(fnamenext))!=NULL){
 							_tcscpy(newtext, hddimgmenustrorg[i]);
 							_tcscat(newtext, fnametmp);
 							if(_tcscmp(fname, fnamenext)){
 								_tcscat(newtext, OEMTEXT(" -> "));
 								_tcscat(newtext, fnamenexttmp);
 							}
-						}else if(fnamenext && *fnamenext && (fnamenexttmp = sysmng_file_getname(fnamenext))){
+						}else if(fnamenext && *fnamenext && (fnamenexttmp = sysmng_file_getname(fnamenext))!=NULL){
 							_tcscpy(newtext, hddimgmenustrorg[i]);
 							_tcscat(newtext, OEMTEXT("[none] -> "));
 							_tcscat(newtext, fnamenexttmp);
-						}else if(fname && *fname && (fnametmp = sysmng_file_getname(fname))){
+						}else if(fname && *fname && (fnametmp = sysmng_file_getname(fname))!=NULL){
 							_tcscpy(newtext, hddimgmenustrorg[i]);
 							_tcscat(newtext, fnametmp);
 							_tcscat(newtext, OEMTEXT(" -> [none]"));
@@ -142,6 +141,56 @@ void sysmng_updatecaption(UINT8 flag) {
 							_tcscpy(newtext, hddimgmenustrorg[i]);
 							_tcscat(newtext, OEMTEXT("[none]"));
 						}
+					}
+					if(_tcscmp(newtext, hddimgmenustr[i])){
+						_tcscpy(hddimgmenustr[i], newtext);
+						mii.fMask = MIIM_TYPE;
+						mii.fType = MFT_STRING;
+						mii.dwTypeData = hddimgmenustr[i];
+						mii.cch = (UINT)_tcslen(hddimgmenustr[i]);
+						SetMenuItemInfo(hMenuTgt, IDM_IDE0STATE+i, MF_BYCOMMAND, &mii);
+					}
+				}
+			}
+		}
+#else
+		for(i=0;i<2;i++){
+			if(g_hWndMain){
+				OEMCHAR newtext[MAX_PATH*2+100];
+				OEMCHAR *fname;
+				OEMCHAR *fnamenext;
+				OEMCHAR *fnametmp;
+				OEMCHAR *fnamenexttmp;
+				HMENU hMenu = np2class_gethmenu(g_hWndMain);
+				HMENU hMenuTgt;
+				int hMenuTgtPos;
+				MENUITEMINFO mii = {0};
+				menu_searchmenu(hMenu, IDM_IDE0STATE+i, &hMenuTgt, &hMenuTgtPos);
+				if(hMenu){
+					mii.cbSize = sizeof(MENUITEMINFO);
+					if(!hddimgmenustrorg[i][0]){
+						GetMenuString(hMenuTgt, IDM_IDE0STATE+i, hddimgmenustrorg[i], NELEMENTS(hddimgmenustrorg[0]), MF_BYCOMMAND);
+					}
+					fname = sxsi_getfilename(i);
+					fnamenext = (OEMCHAR*)diskdrv_getsxsi(i);
+					if(fname && *fname && fnamenext && *fnamenext && (fnametmp = sysmng_file_getname(fname))!=NULL && (fnamenexttmp = sysmng_file_getname(fnamenext))!=NULL){
+						_tcscpy(newtext, hddimgmenustrorg[i]);
+						_tcscat(newtext, fnametmp);
+						if(_tcscmp(fname, fnamenext)){
+							_tcscat(newtext, OEMTEXT(" -> "));
+							_tcscat(newtext, fnamenexttmp);
+						}
+					}else if(fnamenext && *fnamenext && (fnamenexttmp = sysmng_file_getname(fnamenext))!=NULL){
+						_tcscpy(newtext, hddimgmenustrorg[i]);
+						_tcscat(newtext, OEMTEXT("[none] -> "));
+						_tcscat(newtext, fnamenexttmp);
+					}else if(fname && *fname && (fnametmp = sysmng_file_getname(fname))!=NULL){
+						_tcscpy(newtext, hddimgmenustrorg[i]);
+						_tcscat(newtext, fnametmp);
+						_tcscat(newtext, OEMTEXT(" -> [none]"));
+					}else{
+						_tcscpy(newtext, hddimgmenustrorg[i]);
+						_tcscat(newtext, OEMTEXT("[none]"));
 					}
 					if(_tcscmp(newtext, hddimgmenustr[i])){
 						_tcscpy(hddimgmenustr[i], newtext);
@@ -175,18 +224,18 @@ void sysmng_updatecaption(UINT8 flag) {
 					}
 					fname = sxsi_getfilename(i+0x20);
 					fnamenext = (OEMCHAR*)diskdrv_getsxsi(i+0x20);
-					if(fname && *fname && fnamenext && *fnamenext && (fnametmp = sysmng_file_getname(fname)) && (fnamenexttmp = sysmng_file_getname(fnamenext))){
+					if(fname && *fname && fnamenext && *fnamenext && (fnametmp = sysmng_file_getname(fname))!=NULL && (fnamenexttmp = sysmng_file_getname(fnamenext))!=NULL){
 						_tcscpy(newtext, scsiimgmenustrorg[i]);
 						_tcscat(newtext, fnametmp);
 						if(_tcscmp(fname, fnamenext)){
 							_tcscat(newtext, OEMTEXT(" -> "));
 							_tcscat(newtext, fnamenexttmp);
 						}
-					}else if(fnamenext && *fnamenext && (fnamenexttmp = sysmng_file_getname(fnamenext))){
+					}else if(fnamenext && *fnamenext && (fnamenexttmp = sysmng_file_getname(fnamenext))!=NULL){
 						_tcscpy(newtext, scsiimgmenustrorg[i]);
 						_tcscat(newtext, OEMTEXT("[none] -> "));
 						_tcscat(newtext, fnamenexttmp);
-					}else if(fname && *fname && (fnametmp = sysmng_file_getname(fname))){
+					}else if(fname && *fname && (fnametmp = sysmng_file_getname(fname))!=NULL){
 						_tcscpy(newtext, scsiimgmenustrorg[i]);
 						_tcscat(newtext, fnametmp);
 						_tcscat(newtext, OEMTEXT(" -> [none]"));
@@ -233,7 +282,20 @@ void sysmng_updatecaption(UINT8 flag) {
 #endif
 		}
 	}
+	
+	if (flag & 4) {
+		misc[0] = '\0';
+		if(sys_miscinfo.showvolume && sys_miscinfo.showmousespeed){
+			OEMSPRINTF(misc, OEMTEXT(" (Volume: %d%%, Mouse speed: %d%%)"), np2cfg.vol_master, 100 * np2oscfg.mousemul/np2oscfg.mousediv);
+		}else if(sys_miscinfo.showvolume){
+			OEMSPRINTF(misc, OEMTEXT(" (Volume: %d%%)"), np2cfg.vol_master);
+		}else if(sys_miscinfo.showmousespeed){
+			OEMSPRINTF(misc, OEMTEXT(" (Mouse speed: %d%%)"), 100 * np2oscfg.mousemul/np2oscfg.mousediv);
+		}
+	}
+
 	milstr_ncpy(work, np2oscfg.titles, NELEMENTS(work));
+	milstr_ncat(work, misc, NELEMENTS(work));
 	milstr_ncat(work, title, NELEMENTS(work));
 	milstr_ncat(work, clock, NELEMENTS(work));
 	SetWindowText(g_hWndMain, work);

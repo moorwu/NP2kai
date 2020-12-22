@@ -48,12 +48,16 @@
 #include "sysmng.h"
 #include "taskmng.h"
 
+#if defined(SUPPORT_IA32_HAXM)
+#include	"i386hax/haxfunc.h"
+#include	"i386hax/haxcore.h"
+#endif
 
 NP2OSCFG np2oscfg = {
 #if !defined(CPUCORE_IA32)		/* titles */
-	"Neko Project II",
+	"Neko Project II kai",
 #else
-	"Neko Project II + IA32",
+	"Neko Project II kai + IA32",
 #endif
 
 	0, 			/* paddingx */
@@ -82,11 +86,15 @@ NP2OSCFG np2oscfg = {
 	},
 	{ "", "" },		/* JOYDEV */
 
-	{ COMPORT_MIDI, 0, 0x3e, 19200, "", "", "", "" },	/* mpu */
+	{ FALSE, COMPORT_MIDI, 0, 0x3e, 19200, "", "", "", "" },	/* mpu */
+#if defined(SUPPORT_SMPU98)
+	{ FALSE, COMPORT_MIDI, 0, 0x3e, 19200, "", "", "", "" },	/* s-mpu */
+	{ FALSE, COMPORT_MIDI, 0, 0x3e, 19200, "", "", "", "" },	/* s-mpu */
+#endif
 	{
-		{ COMPORT_NONE, 0, 0x3e, 19200, "", "", "", "" },/* com1 */
-		{ COMPORT_NONE, 0, 0x3e, 19200, "", "", "", "" },/* com2 */
-		{ COMPORT_NONE, 0, 0x3e, 19200, "", "", "", "" },/* com3 */
+		{ TRUE, COMPORT_NONE, 0, 0x3e, 19200, "", "", "", "" },/* com1 */
+		{ TRUE, COMPORT_NONE, 0, 0x3e, 19200, "", "", "", "" },/* com2 */
+		{ TRUE, COMPORT_NONE, 0, 0x3e, 19200, "", "", "", "" },/* com3 */
 	},
 
 	0,			/* confirm */
@@ -100,18 +108,23 @@ NP2OSCFG np2oscfg = {
 	0,			/* hostdrv_write */
 	0,			/* jastsnd */
 	0,			/* I286SAVE */
+	1,			/* xrollkey */
 
 	SNDDRV_SDL,		/* snddrv */
 	{ "", "" }, 		/* MIDIDEV */
+#if defined(SUPPORT_SMPU98)
+	{ "", "" }, 		/* MIDIDEVA */
+	{ "", "" }, 		/* MIDIDEVB */
+#endif
 	0,			/* MIDIWAIT */
 
 	MOUSE_RATIO_100,	/* mouse_move_ratio */
 
-	MMXFLAG_DISABLE,	/* disablemmx */
+	0,			/* disablemmx */
 	INTERP_NEAREST,		/* drawinterp */
 	0,			/* F11KEY */
 
-	FALSE,			/* cfgreadonly */
+	0,			/* readonly */
 };
 
 volatile sig_atomic_t np2running = 0;
@@ -143,6 +156,7 @@ char timidity_cfgfile_path[MAX_PATH];
 
 int verbose = 0;
 
+static  UINT		lateframecount; // フレーム遅れ数
 
 UINT32
 gettick(void)
@@ -185,6 +199,9 @@ flagsave(const char* ext)
 	if (ret) {
 		file_delete(path);
 	}
+	else {
+		ret = statsave_save_hdd(ext);
+	}
 	soundmng_play();
 
 	return ret;
@@ -221,6 +238,7 @@ flagload(const char* ext, const char* title, BOOL force)
 		}
 	}
 	if (rv == 0) {
+		statsave_load_hdd(ext);
 		statsave_load(path);
 		toolwin_setfdd(0, fdd_diskname(0));
 		toolwin_setfdd(1, fdd_diskname(1));
@@ -301,9 +319,27 @@ processwait(UINT cnt)
 {
 
 	if (timing_getcount() >= cnt) {
+#if defined(SUPPORT_IA32_HAXM)
+		if (np2hax.enable) {
+			np2haxcore.hltflag = 0;
+			if(lateframecount > 0 && np2haxcore.I_ratio < 254){
+				np2haxcore.I_ratio++;
+			}else if(np2haxcore.I_ratio > 1){
+				//np2haxcore.I_ratio--;
+			}
+			lateframecount = 0;
+		}
+#endif
 		timing_setcount(0);
 		framereset(cnt);
 	} else {
+#if defined(SUPPORT_IA32_HAXM)
+		if (np2hax.enable) {
+			if(np2haxcore.I_ratio > 1){
+				np2haxcore.I_ratio--;
+			}
+		}
+#endif
 		taskmng_sleep(1);
 	}
 }

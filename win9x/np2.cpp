@@ -8,7 +8,7 @@
 
 #include "compiler.h"
 
-// Win2000‚Å“®‚­‚æ‚¤‚É‚·‚é
+// Win2000ã§å‹•ãã‚ˆã†ã«ã™ã‚‹
 #if defined(SUPPORT_WIN2000HOST)
 #ifdef _WINDOWS
 #ifndef _WIN64
@@ -30,7 +30,9 @@
 #include "misc\WndProc.h"
 #include "debuguty\viewer.h"
 #include "np2arg.h"
+#include "codecnv/codecnv.h"
 #include "dosio.h"
+#include "font/font.h"
 #include "misc\tstring.h"
 #include "commng.h"
 #include "commng\cmmidiin32.h"
@@ -46,6 +48,8 @@
 #include "ini.h"
 #include "menu.h"
 #include "winloc.h"
+#include "sstp.h"
+#include "sstpmsg.h"
 #include "dialog\np2class.h"
 #include "dialog\dialog.h"
 #include "cpucore.h"
@@ -54,6 +58,9 @@
 #include "iocore.h"
 #include "pc9861k.h"
 #include "mpu98ii.h"
+#if defined(SUPPORT_SMPU98)
+#include "smpu98.h"
+#endif
 #include "scrndraw.h"
 #include "sound.h"
 #include "beep.h"
@@ -96,6 +103,17 @@
 #include "Dbt.h"
 #endif
 
+#if defined(SUPPORT_IA32_HAXM)
+#include	"i386hax/haxfunc.h"
+#include	"i386hax/haxcore.h"
+#endif
+
+#include	<process.h>
+
+#ifdef SUPPORT_WACOM_TABLET
+void cmwacom_setNCControl(bool enable);
+#endif
+
 #ifdef BETA_RELEASE
 #define		OPENING_WAIT		1500
 #endif
@@ -113,36 +131,73 @@ static	TCHAR		szClassName[] = _T("NP2-MainWindow");
 		NP2OSCFG	np2oscfg = {
 						OEMTEXT(PROJECTNAME) OEMTEXT(PROJECTSUBNAME),
 						OEMTEXT("NP2"),
-						CW_USEDEFAULT, CW_USEDEFAULT, 1, 1, 0, 0, 0, 1, 0, 0,
-						0, 0, KEY_UNKNOWN, 0,
+						CW_USEDEFAULT, CW_USEDEFAULT, 1, 1, 0, 0, 0, 1, 0, 1,
+						0, 0, KEY_UNKNOWN, 0, 0,
 						0, 0, 0, {1, 2, 2, 1},
 						{5, 0, 0x3e, 19200,
-						 OEMTEXT(""), OEMTEXT(""), OEMTEXT(""), OEMTEXT("")},
+						 OEMTEXT(""), OEMTEXT(""), OEMTEXT(""), OEMTEXT(""), 0, 
+#if defined(SUPPORT_NAMED_PIPE)
+						 OEMTEXT("NP2-NamedPipe"), OEMTEXT("."),
+#endif
+						},
+#if defined(SUPPORT_SMPU98)
+						{5, 0, 0x3e, 19200,
+						 OEMTEXT(""), OEMTEXT(""), OEMTEXT(""), OEMTEXT(""), 0, 
+#if defined(SUPPORT_NAMED_PIPE)
+						 OEMTEXT("NP2-NamedPipe"), OEMTEXT("."),
+#endif
+						},
+						{5, 0, 0x3e, 19200,
+						 OEMTEXT(""), OEMTEXT(""), OEMTEXT(""), OEMTEXT(""), 0, 
+#if defined(SUPPORT_NAMED_PIPE)
+						 OEMTEXT("NP2-NamedPipe"), OEMTEXT("."),
+#endif
+						},
+#endif
 						{0, 0, 0x3e, 19200,
-						 OEMTEXT(""), OEMTEXT(""), OEMTEXT(""), OEMTEXT("")},
+						 OEMTEXT(""), OEMTEXT(""), OEMTEXT(""), OEMTEXT(""), 0, 
+#if defined(SUPPORT_NAMED_PIPE)
+						 OEMTEXT("NP2-NamedPipe"), OEMTEXT("."),
+#endif
+						},
 						{0, 0, 0x3e, 19200,
-						 OEMTEXT(""), OEMTEXT(""), OEMTEXT(""), OEMTEXT("")},
+						 OEMTEXT(""), OEMTEXT(""), OEMTEXT(""), OEMTEXT(""), 0, 
+#if defined(SUPPORT_NAMED_PIPE)
+						 OEMTEXT("NP2-NamedPipe"), OEMTEXT("."),
+#endif
+						},
 						{0, 0, 0x3e, 19200,
-						 OEMTEXT(""), OEMTEXT(""), OEMTEXT(""), OEMTEXT("")},
+						 OEMTEXT(""), OEMTEXT(""), OEMTEXT(""), OEMTEXT(""), 0, 
+#if defined(SUPPORT_NAMED_PIPE)
+						 OEMTEXT("NP2-NamedPipe"), OEMTEXT("."),
+#endif
+						},
 						0xffffff, 0xffbf6a, 0, 0,
-						0, 1,
+						0, 1, 0, 9801,
 						0, 0,
 #if !defined(_WIN64)
 						0,
 #endif
-						0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-						FSCRNMOD_SAMEBPP | FSCRNMOD_SAMERES | FSCRNMOD_ASPECTFIX8,
+						0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, FSCRNMOD_SAMEBPP | FSCRNMOD_SAMERES | FSCRNMOD_ASPECTFIX8, 0,
+
+#if defined(SUPPORT_SCRN_DIRECT3D)
+						0, 0,
+#endif
 
 						CSoundMng::kDSound3, TEXT(""),
 
 #if defined(SUPPORT_VSTi)
 						TEXT("%ProgramFiles%\\Roland\\Sound Canvas VA\\SOUND Canvas VA.dll"),
 #endif	// defined(SUPPORT_VSTi)
-						0, 0, 0, 1, 0, 1, 1, 
+						0, 0, 
+						0, 0, 1, 0, 1, 1, 
 						0, 0, 
 						0, 8, 
-						0, 
-						0
+						0, 0, 0, TCMODE_DEFAULT, 0, 1, 
+						0,
+#if defined(SUPPORT_WACOM_TABLET)
+						0,
+#endif	// defined(SUPPORT_WACOM_TABLET)
 					};
 
 		OEMCHAR		fddfolder[MAX_PATH];
@@ -160,27 +215,114 @@ static	int			np2opening = 1;
 static	int			np2quitmsg = 0;
 static	WINLOCEX	smwlex;
 static	HMODULE		s_hModResource;
-static  UINT		lateframecount; // ƒtƒŒ[ƒ€’x‚ê”
+static  UINT		lateframecount; // ãƒ•ãƒ¬ãƒ¼ãƒ é…ã‚Œæ•°
 
 static const OEMCHAR np2help[] = OEMTEXT("np2.chm");
 static const OEMCHAR np2flagext[] = OEMTEXT("S%02d");
 #if defined(_WIN64)
-static const OEMCHAR szNp2ResDll[] = OEMTEXT("np2x64_%u.dll");
+static const OEMCHAR szNp2ResDll[] = OEMTEXT("np2kai_%u_x86_64.dll");
 #else	// defined(_WIN64)
-static const OEMCHAR szNp2ResDll[] = OEMTEXT("np2_%u.dll");
+static const OEMCHAR szNp2ResDll[] = OEMTEXT("np2kai_%u_i386.dll");
 #endif	// defined(_WIN64)
 
-// ASCII -> 98ƒL[ƒR[ƒh•\(np21w ver0.86 rev22)
+// ASCII -> 98ã‚­ãƒ¼ã‚³ãƒ¼ãƒ‰è¡¨(np21w ver0.86 rev22)
 char vkeylist[256] = {0};
 char shift_on[256] = {0};
 
-// ƒRƒsƒy—p(np21w ver0.86 rev22)
+// ã‚³ãƒ”ãƒšç”¨(np21w ver0.86 rev22)
 char *autokey_sendbuffer = NULL;
 int autokey_sendbufferlen = 0;
 int autokey_sendbufferpos = 0;
 
-// ƒI[ƒgƒ‰ƒ“—}§—p
+// ã‚ªãƒ¼ãƒˆãƒ©ãƒ³æŠ‘åˆ¶ç”¨
 static int WM_QueryCancelAutoPlay;
+
+// ã‚·ã‚¹ãƒ†ãƒ ã‚­ãƒ¼ãƒ•ãƒƒã‚¯ç”¨
+#ifdef HOOK_SYSKEY
+static HANDLE	np2_hThreadKeyHook = NULL; // ã‚­ãƒ¼ãƒ•ãƒƒã‚¯ç”¨ã‚¹ãƒ¬ãƒƒãƒ‰
+static int		np2_hThreadKeyHookexit = 0; // ã‚¹ãƒ¬ãƒƒãƒ‰çµ‚äº†ãƒ•ãƒ©ã‚°
+static HWND		np2_hThreadKeyHookhWnd = 0;
+LRESULT CALLBACK LowLevelKeyboardProc(INT nCode, WPARAM wParam, LPARAM lParam);
+HHOOK hHook = NULL;
+LRESULT CALLBACK np2_ThreadFuncKeyHook_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam){
+	switch(msg){
+	case WM_CLOSE:
+		if(!np2_hThreadKeyHookexit) return 0;
+		break;
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		return 0;
+	}
+	return DefWindowProc(hWnd, msg, wParam, lParam);
+}
+static unsigned int __stdcall np2_ThreadFuncKeyHook(LPVOID vdParam) 
+{
+	MSG msg;
+	LPCTSTR wndclassname = _T("NP2 Key Hook");
+
+	WNDCLASSEX wcex ={sizeof(WNDCLASSEX), CS_HREDRAW | CS_VREDRAW, np2_ThreadFuncKeyHook_WndProc, 0, 0, g_hInstance, NULL, NULL, (HBRUSH)(COLOR_WINDOW), NULL, wndclassname, NULL};
+
+	if(!RegisterClassEx(&wcex)) return 0;
+
+	if(!(np2_hThreadKeyHookhWnd = CreateWindow(wndclassname, _T("NP2 Key Hook"), WS_POPUPWINDOW, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, g_hInstance, NULL))) return 0;
+
+	ShowWindow( np2_hThreadKeyHookhWnd, SW_HIDE ); // å¿µã®ãŸã‚
+
+	if(!hHook){
+		hHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, g_hInstance, 0);
+	}
+	// ãƒ¡ã‚¤ãƒ³ ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ ãƒ«ãƒ¼ãƒ—
+	while( GetMessage(&msg, NULL, 0, 0) > 0 ) {
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+	if(hHook){
+		UnhookWindowsHookEx(hHook);
+		hHook = NULL;
+	}
+	np2_hThreadKeyHookhWnd = NULL;
+	np2_hThreadKeyHook = NULL;
+	UnregisterClass(wndclassname, g_hInstance);
+	return 0;
+}
+static void start_hook_systemkey()
+{
+	unsigned int dwID;
+	if(!np2_hThreadKeyHook){
+		np2_hThreadKeyHook = (HANDLE)_beginthreadex(NULL, 0, np2_ThreadFuncKeyHook, NULL, 0, &dwID);
+	}
+	//if(!hHook){
+	//	hHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, g_hInstance, 0);
+	//}
+}
+static void stop_hook_systemkey()
+{
+	if(np2_hThreadKeyHook && np2_hThreadKeyHookhWnd){
+		np2_hThreadKeyHookexit = 1;
+		SendMessage(np2_hThreadKeyHookhWnd , WM_CLOSE , 0 , 0);
+		WaitForSingleObject(np2_hThreadKeyHook, INFINITE);
+		CloseHandle(np2_hThreadKeyHook);
+		np2_hThreadKeyHook = NULL;
+		np2_hThreadKeyHookexit = 0;
+	}
+	//if(hHook){
+	//	UnhookWindowsHookEx(hHook);
+	//	hHook = NULL;
+	//}
+}
+#endif
+
+// ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ã®éŸ³é‡ãƒ»ãƒã‚¦ã‚¹é€Ÿåº¦ è‡ªå‹•éè¡¨ç¤ºç”¨
+#define TMRSYSMNG_ID	9898 // ä»–ã¨è¢«ã‚‰ãªã„ã‚ˆã†ã«ã™ã‚‹ã“ã¨
+UINT_PTR tmrSysMngHide = 0;
+VOID CALLBACK SysMngHideTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
+	sys_miscinfo.showvolume = 0;
+	sys_miscinfo.showmousespeed = 0;
+	sysmng_updatecaption(SYS_UPDATECAPTION_MISC);
+	KillTimer(hwnd , tmrSysMngHide);
+	tmrSysMngHide = 0;
+}
+
 
 // ----
 
@@ -195,9 +337,9 @@ static int messagebox(HWND hWnd, LPCTSTR lpcszText, UINT uType)
 // ----
 
 /**
- * ƒŠƒ\[ƒX DLL ‚ğƒ[ƒh
- * @param[in] hInstance Œ³‚ÌƒCƒ“ƒXƒ^ƒ“ƒX
- * @return ƒCƒ“ƒXƒ^ƒ“ƒX
+ * ãƒªã‚½ãƒ¼ã‚¹ DLL ã‚’ãƒ­ãƒ¼ãƒ‰
+ * @param[in] hInstance å…ƒã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹
+ * @return ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹
  */
 static HINSTANCE LoadExternalResource(HINSTANCE hInstance)
 {
@@ -219,7 +361,7 @@ static HINSTANCE LoadExternalResource(HINSTANCE hInstance)
 }
 
 /**
- * ƒŠƒ\[ƒX‚ÌƒAƒ“ƒ[ƒh
+ * ãƒªã‚½ãƒ¼ã‚¹ã®ã‚¢ãƒ³ãƒ­ãƒ¼ãƒ‰
  */
 static void UnloadExternalResource()
 {
@@ -268,7 +410,7 @@ WINLOCEX np2_winlocexallwin(HWND base) {
 			list[i] = NULL;
 		}
 	}
-	if (base != g_hWndMain) {		// hWndMain‚Ì‚İ‘S‘ÌˆÚ“®
+	if (base != g_hWndMain) {		// hWndMainã®ã¿å…¨ä½“ç§»å‹•
 		base = NULL;
 	}
 	return(winlocex_create(base, list, cnt));
@@ -303,10 +445,19 @@ static void changescreen(UINT8 newmode) {
 		soundmng_stop();
 		mousemng_disable(MOUSEPROC_WINUI);
 		scrnmng_destroy();
+		if((newmode & SCRNMODE_FULLSCREEN)==0){
+			DEVMODE devmode;
+			if (EnumDisplaySettings(NULL, ENUM_REGISTRY_SETTINGS, &devmode)) {
+				while ((DWORD)((scrnstat.width * scrnstat.multiple) >> 3) >= devmode.dmPelsWidth-64 || (DWORD)((scrnstat.height * scrnstat.multiple) >> 3) >= devmode.dmPelsHeight-64){
+					scrnstat.multiple--;
+					if(scrnstat.multiple==1) break;
+				}
+			}
+		}
 		if (scrnmng_create(newmode) == SUCCESS) {
 			g_scrnmode = newmode;
 			if(np2oscfg.scrnmode != g_scrnmode){
-				np2oscfg.scrnmode = g_scrnmode; // Screenó‘Ô•Û‘¶
+				np2oscfg.scrnmode = g_scrnmode; // ScreençŠ¶æ…‹ä¿å­˜
 				sysmng_update(SYS_UPDATEOSCFG);
 			}
 		}
@@ -453,15 +604,15 @@ static int flagload(HWND hWnd, const OEMCHAR *ext, LPCTSTR title, BOOL force)
 		toolwin_setfdd(1, fdd_diskname(1));
 	}
 	sysmng_workclockreset();
-	sysmng_updatecaption(1);
+	sysmng_updatecaption(SYS_UPDATECAPTION_FDD);
 	winuileave();
 	return nID;
 }
 #endif
 
 /**
- * ƒTƒEƒ“ƒhƒfƒoƒCƒX‚ÌÄƒI[ƒvƒ“
- * @param[in] hWnd ƒEƒBƒ“ƒhƒE ƒnƒ“ƒhƒ‹
+ * ã‚µã‚¦ãƒ³ãƒ‰ãƒ‡ãƒã‚¤ã‚¹ã®å†ã‚ªãƒ¼ãƒ—ãƒ³
+ * @param[in] hWnd ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ ãƒãƒ³ãƒ‰ãƒ«
  */
 static void OpenSoundDevice(HWND hWnd)
 {
@@ -474,6 +625,7 @@ static void OpenSoundDevice(HWND hWnd)
 		pSoundMng->SetPCMVolume(SOUND_PCMSEEK, np2cfg.MOTORVOL);
 		pSoundMng->SetPCMVolume(SOUND_PCMSEEK1, np2cfg.MOTORVOL);
 		pSoundMng->SetPCMVolume(SOUND_RELAY1, np2cfg.MOTORVOL);
+		pSoundMng->SetMasterVolume(np2cfg.vol_master);
 	}
 }
 
@@ -507,8 +659,8 @@ static void np2popup(HWND hWnd, LPARAM lp) {
 
 #ifdef SUPPORT_PHYSICAL_CDDRV
 static void np2updatemenu() {
-	static char drvMenuVisible[4][26] = {0}; // Àƒhƒ‰ƒCƒuƒƒjƒ…[‚Ì•\¦ó‘Ô
-	char drvAvailable[26] = {0}; // g‚¦‚éÀƒhƒ‰ƒCƒu
+	static char drvMenuVisible[4][26] = {0}; // å®Ÿãƒ‰ãƒ©ã‚¤ãƒ–ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã®è¡¨ç¤ºçŠ¶æ…‹
+	char drvAvailable[26] = {0}; // ä½¿ãˆã‚‹å®Ÿãƒ‰ãƒ©ã‚¤ãƒ–
 	
 	REG8 drv;
 	HMENU hMenu = np2class_gethmenu(g_hWndMain);
@@ -520,7 +672,7 @@ static void np2updatemenu() {
 	int nDrive;
 	TCHAR szBuff2[] = OEMTEXT("A:\\");
 
-	// —LŒø‚ÈCDƒhƒ‰ƒCƒu‚Ìƒhƒ‰ƒCƒu•¶š‚ğ’²‚×‚é
+	// æœ‰åŠ¹ãªCDãƒ‰ãƒ©ã‚¤ãƒ–ã®ãƒ‰ãƒ©ã‚¤ãƒ–æ–‡å­—ã‚’èª¿ã¹ã‚‹
 	dwDrive = GetLogicalDrives();
 	for ( nDrive = 0 ; nDrive < 26 ; nDrive++ ){
 		if ( dwDrive & (1 << nDrive) ){
@@ -536,7 +688,7 @@ static void np2updatemenu() {
 	{
 		int mnupos = 1;
 		if(menu_searchmenu(hMenu, IDM_IDE0OPEN+drv, &hMenuTgt, &hMenuTgtPos)){
-			// ˆê’U‘S•”Á‚·
+			// ä¸€æ—¦å…¨éƒ¨æ¶ˆã™
 			for ( nDrive = 0 ; nDrive < 26 ; nDrive++ ){
 				if(drvMenuVisible[drv][nDrive]){
 					DeleteMenu(hMenuTgt, IDM_IDE0PHYSICALDRV_ID0 + 26*drv + nDrive, MF_BYCOMMAND);
@@ -544,7 +696,7 @@ static void np2updatemenu() {
 				}
 			}
 			if(np2cfg.idetype[drv]==SXSIDEV_CDROM){
-				// Ä’Ç‰Á
+				// å†è¿½åŠ 
 				for ( nDrive = 0 ; nDrive < 26 ; nDrive++ ){
 					if(drvAvailable[nDrive]){
 						TCHAR mnuText[200] = {0};
@@ -602,7 +754,7 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 			{
 				b = TRUE;
 			}
-			else
+			else if (sstpconfirm_reset())
 			{
 				winuienter();
 				if (messagebox(hWnd, MAKEINTRESOURCE(IDS_CONFIRM_RESET), MB_ICONQUESTION | MB_YESNO) == IDYES)
@@ -618,17 +770,24 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 					sys_updates &= ~SYS_UPDATESNDDEV;
 					OpenSoundDevice(hWnd);
 				}
+#ifdef HOOK_SYSKEY
+				stop_hook_systemkey();
+#endif
+				sstpmsg_reset();
 				pccore_cfgupdate();
 				pccore_reset();
-				sysmng_updatecaption(1);
+				sysmng_updatecaption(SYS_UPDATECAPTION_FDD);
 #ifdef SUPPORT_PHYSICAL_CDDRV
 				np2updatemenu();
 #endif
+#ifdef HOOK_SYSKEY
+				start_hook_systemkey();
+#endif
 			}
 			break;
-
 		case IDM_CONFIG:
 			winuienter();
+			sstpmsg_config();
 			dialog_configure(hWnd);
 			if (!scrnmng_isfullscreen()) {
 				UINT8 thick;
@@ -648,6 +807,18 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 		case IDM_NEWDISK:
 			winuienter();
 			dialog_newdisk(hWnd);
+			winuileave();
+			break;
+			
+		case IDM_NEWDISKFD:
+			winuienter();
+			dialog_newdisk_ex(hWnd, NEWDISKMODE_FD);
+			winuileave();
+			break;
+
+		case IDM_NEWDISKHD:
+			winuienter();
+			dialog_newdisk_ex(hWnd, NEWDISKMODE_HD);
 			winuileave();
 			break;
 
@@ -722,24 +893,24 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 			winuienter();
 			dialog_changehdd(hWnd, 0x00);
 			winuileave();
-			sysmng_updatecaption(1);
+			sysmng_updatecaption(SYS_UPDATECAPTION_FDD);
 			break;
 
 		case IDM_IDE0EJECT:
 			diskdrv_setsxsi(0x00, NULL);
-			sysmng_updatecaption(1);
+			sysmng_updatecaption(SYS_UPDATECAPTION_FDD);
 			break;
 
 		case IDM_IDE1OPEN:
 			winuienter();
 			dialog_changehdd(hWnd, 0x01);
 			winuileave();
-			sysmng_updatecaption(1);
+			sysmng_updatecaption(SYS_UPDATECAPTION_FDD);
 			break;
 
 		case IDM_IDE1EJECT:
 			diskdrv_setsxsi(0x01, NULL);
-			sysmng_updatecaption(1);
+			sysmng_updatecaption(SYS_UPDATECAPTION_FDD);
 			break;
 
 #if defined(SUPPORT_IDEIO)
@@ -747,31 +918,31 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 			winuienter();
 			dialog_changehdd(hWnd, 0x02);
 			winuileave();
-			sysmng_updatecaption(1);
+			sysmng_updatecaption(SYS_UPDATECAPTION_FDD);
 			break;
 
 		case IDM_IDE2EJECT:
 			diskdrv_setsxsi(0x02, NULL);
-			sysmng_updatecaption(1);
+			sysmng_updatecaption(SYS_UPDATECAPTION_FDD);
 			break;
 			
 		case IDM_IDE3OPEN:
 			winuienter();
 			dialog_changehdd(hWnd, 0x03);
 			winuileave();
-			sysmng_updatecaption(1);
+			sysmng_updatecaption(SYS_UPDATECAPTION_FDD);
 			break;
 
 		case IDM_IDE3EJECT:
 			diskdrv_setsxsi(0x03, NULL);
-			sysmng_updatecaption(1);
+			sysmng_updatecaption(SYS_UPDATECAPTION_FDD);
 			break;
 			
 		case IDM_IDEOPT:
 			winuienter();
 			dialog_ideopt(hWnd);
 			winuileave();
-			sysmng_updatecaption(1);
+			sysmng_updatecaption(SYS_UPDATECAPTION_FDD);
 			break;
 #endif
 			
@@ -908,7 +1079,7 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 			np2oscfg.NOWAIT = !np2oscfg.NOWAIT;
 			update |= SYS_UPDATECFG;
 			break;
-
+			
 		case IDM_CPUSTABILIZER:
 			if(np2oscfg.cpustabf == 0){
 				np2oscfg.cpustabf = oldcpustabf;
@@ -918,6 +1089,13 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 			}
 			update |= SYS_UPDATECFG;
 			break;
+			
+#if defined(SUPPORT_ASYNC_CPU)
+		case IDM_ASYNCCPU:
+			np2cfg.asynccpu = !np2cfg.asynccpu;
+			update |= SYS_UPDATECFG;
+			break;
+#endif
 
 		case IDM_AUTOFPS:
 			np2oscfg.DRAW_SKIP = 0;
@@ -994,6 +1172,17 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 			keystat_senddata(0x74 | 0x80);
 			keystat_senddata(0x39 | 0x80);
 			break;
+			
+		case IDM_USENUMLOCK:
+			np2oscfg.USENUMLOCK = !np2oscfg.USENUMLOCK;
+			update |= SYS_UPDATEOSCFG;
+			break;
+			
+		case IDM_SWAPPAGEUPDOWN:
+			np2oscfg.xrollkey = !np2oscfg.xrollkey;
+			winkbd_roll(np2oscfg.KEYBOARD==KEY_PC98 ? np2oscfg.xrollkey : !np2oscfg.xrollkey);
+			update |= SYS_UPDATEOSCFG;
+			break;
 
 		case IDM_F12MOUSE:
 			np2oscfg.F12COPY = 0;
@@ -1057,6 +1246,13 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 			winkbd_setf12(8);
 			update |= SYS_UPDATEOSCFG;
 			break;
+			
+		case IDM_F12WABRELAY:
+			np2oscfg.F12COPY = 9;
+			winkbd_resetf12();
+			winkbd_setf12(9);
+			update |= SYS_UPDATEOSCFG;
+			break;
 
 		case IDM_BEEPOFF:
 			np2cfg.BEEP_VOL = 0;
@@ -1083,42 +1279,47 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 			break;
 
 		case IDM_NOSOUND:
-			np2cfg.SOUND_SW = 0x00;
+			np2cfg.SOUND_SW = SOUNDID_NONE;
 			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
 			break;
 
 		case IDM_PC9801_14:
-			np2cfg.SOUND_SW = 0x01;
+			np2cfg.SOUND_SW = SOUNDID_PC_9801_14;
 			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
 			break;
 
 		case IDM_PC9801_26K:
-			np2cfg.SOUND_SW = 0x02;
+			np2cfg.SOUND_SW = SOUNDID_PC_9801_26K;
 			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
 			break;
 
 		case IDM_PC9801_86:
-			np2cfg.SOUND_SW = 0x04;
+			np2cfg.SOUND_SW = SOUNDID_PC_9801_86;
 			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
 			break;
 
 		case IDM_PC9801_26_86:
-			np2cfg.SOUND_SW = 0x06;
+			np2cfg.SOUND_SW = SOUNDID_PC_9801_86_26K;
 			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
 			break;
 
 		case IDM_PC9801_86_CB:
-			np2cfg.SOUND_SW = 0x14;
+			np2cfg.SOUND_SW = SOUNDID_PC_9801_86_ADPCM;
 			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
 			break;
 
 		case IDM_PC9801_118:
-			np2cfg.SOUND_SW = 0x08;
+			np2cfg.SOUND_SW = SOUNDID_PC_9801_118;
 			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
 			break;
 			
 		case IDM_PC9801_86_WSS:
 			np2cfg.SOUND_SW = SOUNDID_PC_9801_86_WSS;
+			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
+			break;
+			
+		case IDM_PC9801_86_118:
+			np2cfg.SOUND_SW = SOUNDID_PC_9801_86_118;
 			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
 			break;
 			
@@ -1128,12 +1329,17 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 			break;
 
 		case IDM_SPEAKBOARD:
-			np2cfg.SOUND_SW = 0x20;
+			np2cfg.SOUND_SW = SOUNDID_SPEAKBOARD;
+			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
+			break;
+			
+		case IDM_86SPEAKBOARD:
+			np2cfg.SOUND_SW = SOUNDID_86_SPEAKBOARD;
 			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
 			break;
 
 		case IDM_SPARKBOARD:
-			np2cfg.SOUND_SW = 0x40;
+			np2cfg.SOUND_SW = SOUNDID_SPARKBOARD;
 			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
 			break;
 			
@@ -1142,32 +1348,72 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 			np2cfg.SOUND_SW = SOUNDID_SB16;
 			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
 			break;
+			
+		case IDM_PC9801_86_SB16:
+			np2cfg.SOUND_SW = SOUNDID_PC_9801_86_SB16;
+			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
+			break;
+			
+		case IDM_WSS_SB16:
+			np2cfg.SOUND_SW = SOUNDID_WSS_SB16;
+			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
+			break;
+			
+		case IDM_PC9801_86_WSS_SB16:
+			np2cfg.SOUND_SW = SOUNDID_PC_9801_86_WSS_SB16;
+			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
+			break;
+			
+		case IDM_PC9801_118_SB16:
+			np2cfg.SOUND_SW = SOUNDID_PC_9801_118_SB16;
+			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
+			break;
+			
+		case IDM_PC9801_86_118_SB16:
+			np2cfg.SOUND_SW = SOUNDID_PC_9801_86_118_SB16;
+			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
+			break;
 #endif	// defined(SUPPORT_SOUND_SB16)
 
 #if defined(SUPPORT_PX)
 		case IDM_PX1:
-			np2cfg.SOUND_SW = 0x30;
+			np2cfg.SOUND_SW = SOUNDID_PX1;
 			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
 			break;
 
 		case IDM_PX2:
-			np2cfg.SOUND_SW = 0x50;
+			np2cfg.SOUND_SW = SOUNDID_PX2;
 			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
 			break;
 #endif	// defined(SUPPORT_PX)
 
 		case IDM_SOUNDORCHESTRA:
-			np2cfg.SOUND_SW = 0x32;
+			np2cfg.SOUND_SW = SOUNDID_SOUNDORCHESTRA;
 			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
 			break;
 
 		case IDM_SOUNDORCHESTRAV:
-			np2cfg.SOUND_SW = 0x82;
+			np2cfg.SOUND_SW = SOUNDID_SOUNDORCHESTRAV;
+			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
+			break;
+
+		case IDM_LITTLEORCHESTRAL:
+			np2cfg.SOUND_SW = SOUNDID_LITTLEORCHESTRAL;
+			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
+			break;
+
+		case IDM_MMORCHESTRA:
+			np2cfg.SOUND_SW = SOUNDID_MMORCHESTRA;
 			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
 			break;
 
 		case IDM_AMD98:
-			np2cfg.SOUND_SW = 0x80;
+			np2cfg.SOUND_SW = SOUNDID_AMD98;
+			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
+			break;
+			
+		case IDM_WAVESTAR:
+			np2cfg.SOUND_SW = SOUNDID_WAVESTAR;
 			update |= SYS_UPDATECFG | SYS_UPDATESBOARD;
 			break;
 
@@ -1235,7 +1481,17 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 			np2cfg.EXTMEM = 230;
 			update |= SYS_UPDATECFG | SYS_UPDATEMEMORY;
 			break;
-
+			
+		case IDM_MEM5126:
+			np2cfg.EXTMEM = 512;
+			update |= SYS_UPDATECFG | SYS_UPDATEMEMORY;
+			break;
+			
+		case IDM_MEM10246:
+			np2cfg.EXTMEM = 1024;
+			update |= SYS_UPDATECFG | SYS_UPDATEMEMORY;
+			break;
+			
 		case IDM_FPU80:
 			np2cfg.fpu_type = FPU_TYPE_SOFTFLOAT;
 			update |= SYS_UPDATECFG;
@@ -1261,8 +1517,8 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 			np2oscfg.mouse_nc = !np2oscfg.mouse_nc;
 			if(np2oscfg.mouse_nc){
 				SetClassLong(g_hWndMain, GCL_STYLE, GetClassLong(g_hWndMain, GCL_STYLE) & ~CS_DBLCLKS);
-				if (np2oscfg.mouse_nc && np2oscfg.wintype != 0) {
-					// XXX: ƒƒjƒ…[‚ªo‚¹‚È‚­‚È‚Á‚Ä‹l‚Ş‚Ì‚ğ‰ñ”ğib’èj
+				if (np2oscfg.wintype != 0) {
+					// XXX: ãƒ¡ãƒ‹ãƒ¥ãƒ¼ãŒå‡ºã›ãªããªã£ã¦è©°ã‚€ã®ã‚’å›é¿ï¼ˆæš«å®šï¼‰
 					if (!scrnmng_isfullscreen()) {
 						WINLOCEX	wlex;
 						np2oscfg.wintype = 0;
@@ -1277,46 +1533,56 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 			}else{
 				SetClassLong(g_hWndMain, GCL_STYLE, GetClassLong(g_hWndMain, GCL_STYLE) | CS_DBLCLKS);
 			}
+#ifdef SUPPORT_WACOM_TABLET
+			cmwacom_setNCControl(!!np2oscfg.mouse_nc);
+#endif
 			break;
 
 		case IDM_MOUSERAW:
 			np2oscfg.rawmouse = !np2oscfg.rawmouse;
-			mousemng_updateclip(); // ƒLƒƒƒvƒ`ƒƒ‚µ’¼‚·
+			mousemng_updateclip(); // ã‚­ãƒ£ãƒ—ãƒãƒ£ã—ç›´ã™
 			break;
 			
 		case IDM_MOUSE30X:
 			np2oscfg.mousemul = 3;
 			np2oscfg.mousediv = 1;
+			mousemng_updatespeed();
 			break;
 
 		case IDM_MOUSE20X:
 			np2oscfg.mousemul = 2;
 			np2oscfg.mousediv = 1;
+			mousemng_updatespeed();
 			break;
 
 		case IDM_MOUSE15X:
 			np2oscfg.mousemul = 3;
 			np2oscfg.mousediv = 2;
+			mousemng_updatespeed();
 			break;
 
 		case IDM_MOUSE10X:
 			np2oscfg.mousemul = 1;
 			np2oscfg.mousediv = 1;
+			mousemng_updatespeed();
 			break;
 
 		case IDM_MOUSED2X:
 			np2oscfg.mousemul = 1;
 			np2oscfg.mousediv = 2;
+			mousemng_updatespeed();
 			break;
 
 		case IDM_MOUSED3X:
 			np2oscfg.mousemul = 1;
 			np2oscfg.mousediv = 3;
+			mousemng_updatespeed();
 			break;
 
 		case IDM_MOUSED4X:
 			np2oscfg.mousemul = 1;
 			np2oscfg.mousediv = 4;
+			mousemng_updatespeed();
 			break;
 
 		case IDM_SERIAL1:
@@ -1334,6 +1600,9 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 		case IDM_MIDIPANIC:
 			rs232c_midipanic();
 			mpu98ii_midipanic();
+#if defined(SUPPORT_SMPU98)
+			smpu98_midipanic();
+#endif
 			pc9861k_midipanic();
 			break;
 
@@ -1362,7 +1631,14 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 			winuienter();
 			dialog_hostdrvopt(hWnd);
 			winuileave();
-			sysmng_updatecaption(1);
+			sysmng_updatecaption(SYS_UPDATECAPTION_FDD);
+			break;
+#endif
+#if defined(SUPPORT_PCI)
+		case IDM_PCIOPT:
+			winuienter();
+			dialog_pciopt(hWnd);
+			winuileave();
 			break;
 #endif
 
@@ -1371,7 +1647,16 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 			dialog_writebmp(hWnd);
 			winuileave();
 			break;
-			
+
+		case IDM_HF_ENABLE:
+			hf_enable ^= 1;
+			if(hf_enable) {
+				hook_fontrom_defenable();
+			} else {
+				hook_fontrom_defdisable();
+			}
+			break;
+
 		case IDM_TXTSAVE:
 			winuienter();
 			dialog_writetxt(hWnd);
@@ -1400,23 +1685,30 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 			update |= SYS_UPDATECFG;
 			break;
 			
+#ifdef HOOK_SYSKEY
 		case IDM_SYSKHOOK:
 			np2oscfg.syskhook = !np2oscfg.syskhook;
+			if(np2oscfg.syskhook){
+				start_hook_systemkey();
+			}else{
+				stop_hook_systemkey();
+			}
 			update |= SYS_UPDATECFG;
 			break;
+#endif
 
 		case IDM_DISPCLOCK:
 			np2oscfg.DISPCLK ^= 1;
 			update |= SYS_UPDATECFG;
 			sysmng_workclockrenewal();
-			sysmng_updatecaption(3);
+			sysmng_updatecaption(SYS_UPDATECAPTION_CLK);
 			break;
 
 		case IDM_DISPFRAME:
 			np2oscfg.DISPCLK ^= 2;
 			update |= SYS_UPDATECFG;
 			sysmng_workclockrenewal();
-			sysmng_updatecaption(3);
+			sysmng_updatecaption(SYS_UPDATECAPTION_CLK);
 			break;
 
 		case IDM_JOYX:
@@ -1434,6 +1726,11 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 			update |= SYS_UPDATECFG;
 			break;
 
+		case IDM_SSTP:
+			np2oscfg.sstp = !np2oscfg.sstp;
+			update |= SYS_UPDATEOSCFG;
+			break;
+
 		case IDM_CPUSAVE:
 			debugsub_status();
 			break;
@@ -1443,9 +1740,12 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 			break;
 
 		case IDM_ABOUT:
-			winuienter();
-			dialog_about(hWnd);
-			winuileave();
+			sstpmsg_about();
+			if (sstp_result() != SSTP_SENDING) {
+				winuienter();
+				dialog_about(hWnd);
+				winuileave();
+			}
 			break;
 
 		case IDM_ITFWORK:
@@ -1467,21 +1767,45 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 			update |= SYS_UPDATECFG;
 			break;
 			
+		case IDM_FASTMEMCHK:
+#if defined(SUPPORT_FAST_MEMORYCHECK)
+			if(np2cfg.memcheckspeed==1){
+				np2cfg.memcheckspeed = 8;
+			}else{
+				np2cfg.memcheckspeed = 1;
+			}
+			update |= SYS_UPDATECFG;
+#endif
+			break;
+			
+		case IDM_RESTOREBORDER:
+			if(np2oscfg.wintype!=0){
+				WINLOCEX	wlex;
+				np2oscfg.wintype = 0;
+				wlex = np2_winlocexallwin(hWnd);
+				winlocex_setholdwnd(wlex, hWnd);
+				np2class_windowtype(hWnd, np2oscfg.wintype);
+				winlocex_move(wlex);
+				winlocex_destroy(wlex);
+				sysmng_update(SYS_UPDATEOSCFG);
+			}
+			break;
+			
 		case IDM_COPYPASTE_COPYTVRAM:
 			{
 				HGLOBAL hMem;
 				OEMCHAR *lpMem;
-				hMem = GlobalAlloc(GHND,0x4000); // ƒAƒgƒŠƒrƒ…[ƒg•ª¬‚³‚­‚È‚é‚Ì‚Å0x4000‚Å\•ª
+				hMem = GlobalAlloc(GHND,0x4000); // ã‚¢ãƒˆãƒªãƒ“ãƒ¥ãƒ¼ãƒˆåˆ†å°ã•ããªã‚‹ã®ã§0x4000ã§ååˆ†
 				lpMem = (OEMCHAR*)GlobalLock(hMem);
 				dialog_getTVRAM(lpMem);
 				GlobalUnlock(hMem);
 				if(OpenClipboard(hWnd)){
-					// ƒNƒŠƒbƒvƒ{[ƒh’Dæ¬Œ÷
+					// ã‚¯ãƒªãƒƒãƒ—ãƒœãƒ¼ãƒ‰å¥ªå–æˆåŠŸ
 					EmptyClipboard();
 					SetClipboardData(CF_TEXT, hMem);
 					CloseClipboard();
 				}else{
-					// ƒNƒŠƒbƒvƒ{[ƒh’Dæ¸”s¥¥¥
+					// ã‚¯ãƒªãƒƒãƒ—ãƒœãƒ¼ãƒ‰å¥ªå–å¤±æ•—ï½¥ï½¥ï½¥
 					GlobalFree(hMem);
 				}
 				pcm86_setnextintr();
@@ -1517,16 +1841,16 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 					hBmp = CreateDIBitmap(hDC, &(lpbinfo->bmiHeader), CBM_INIT, lppixels, lpbinfo, DIB_RGB_COLORS);
 				}
 				ReleaseDC(NULL, hDC);
-				_MFREE(lppal);
-				_MFREE(lppixels);
-				_MFREE(lpbinfo);
+				free(lppal);
+				free(lppixels);
+				free(lpbinfo);
 				if(OpenClipboard(hWnd)){
-					// ƒNƒŠƒbƒvƒ{[ƒh’Dæ¬Œ÷
+					// ã‚¯ãƒªãƒƒãƒ—ãƒœãƒ¼ãƒ‰å¥ªå–æˆåŠŸ
 					EmptyClipboard();
 					SetClipboardData(CF_BITMAP,hBmp);
 					CloseClipboard();
 				}else{
-					// ƒNƒŠƒbƒvƒ{[ƒh’Dæ¸”s¥¥¥
+					// ã‚¯ãƒªãƒƒãƒ—ãƒœãƒ¼ãƒ‰å¥ªå–å¤±æ•—ï½¥ï½¥ï½¥
 					DeleteObject(hBmp);
 				}
 				scrnsave_destroy(ss);
@@ -1542,7 +1866,7 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 				//char *strText;
 				if(autokey_sendbuffer==NULL){
 					if (OpenClipboard(hWnd)){
-						if(hg = GetClipboardData(CF_TEXT)) {
+						if((hg = GetClipboardData(CF_TEXT))!=NULL) {
 							txtlen = (int)GlobalSize(hg);
 							autokey_sendbufferlen = 0;
 							autokey_sendbuffer = (char*)malloc(txtlen);
@@ -1558,7 +1882,7 @@ static void OnCommand(HWND hWnd, WPARAM wParam)
 						}
 					}
 				}else{
-					// ‹­§I—¹
+					// å¼·åˆ¶çµ‚äº†
 					autokey_sendbufferpos = autokey_sendbufferlen;
 				}
 			}
@@ -1599,12 +1923,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	static int lastbtn = -1;
 
 	switch (msg) {
-		//	ƒCƒ[ƒWƒtƒ@ƒCƒ‹‚Ì‚c•‚c‚É‘Î‰(Kai1)
+		//	ã‚¤ãƒ¡ãƒ¼ã‚¸ãƒ•ã‚¡ã‚¤ãƒ«ã®ï¼¤ï¼†ï¼¤ã«å¯¾å¿œ(Kai1)
 		case WM_DROPFILES:
 			if(np2oscfg.dragdrop){
-				int		files;				//	Kai1’Ç‰Á
-				OEMCHAR	fname[MAX_PATH];	//	Kai1’Ç‰Á
-				const OEMCHAR	*ext;		//	Kai1’Ç‰Á
+				int		files;				//	Kai1è¿½åŠ 
+				OEMCHAR	fname[MAX_PATH];	//	Kai1è¿½åŠ 
+				const OEMCHAR	*ext;		//	Kai1è¿½åŠ 
    				files = DragQueryFile((HDROP)wParam, (UINT)-1, NULL, 0);
 				REG8	hddrv_IDE = 0x00;
 				REG8	hddrv_IDECD = 0x00;
@@ -1618,15 +1942,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 #endif	//	SUPPORT_IDEIO
 				for (i = 0; i < files; i++) {
 #if defined(OSLANG_UTF8)
-					TCHAR tchr[MAX_PATH];
-					DragQueryFile((HDROP)wParam, i, tchr, NELEMENTS(tchr));
-					tchartooem(fname, NELEMENTS(fname), tchr, -1);
+					wchar_t wchr[MAX_PATH];
+					DragQueryFileW((HDROP)wParam, i, wchr, NELEMENTS(wchr));
+					codecnv_ucs2toutf8(fname, MAX_PATH, (UINT16*)wchr, -1);
 #else
 					DragQueryFile((HDROP)wParam, i, fname, NELEMENTS(fname));
 #endif
 					ext = file_getext(fname);
 #if defined(SUPPORT_IDEIO)
-					//	CDƒCƒ[ƒWH
+					//	CDã‚¤ãƒ¡ãƒ¼ã‚¸ï¼Ÿ
 					if ((!file_cmpname(ext, OEMTEXT("iso"))) ||
 						(!file_cmpname(ext, OEMTEXT("cue"))) ||
 						(!file_cmpname(ext, OEMTEXT("ccd"))) ||
@@ -1638,7 +1962,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 						continue;
 					}
 #endif	//	SUPPORT_IDEIO
-					//	HDƒCƒ[ƒWH
+					//	HDã‚¤ãƒ¡ãƒ¼ã‚¸ï¼Ÿ
 					if ((!file_cmpname(ext, str_hdi)) ||
 						(!file_cmpname(ext, str_thd)) ||
 						(!file_cmpname(ext, str_nhd))) {
@@ -1662,7 +1986,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 						}
 						continue;
 					}
-					//	FDƒCƒ[ƒWcH
+					//	FDã‚¤ãƒ¡ãƒ¼ã‚¸â€¦ï¼Ÿ
 					if (fddrv <= 0x02) {
 						diskdrv_setfdd(fddrv, fname, 0);
 						sysmng_update(SYS_UPDATEOSCFG);
@@ -1672,16 +1996,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 				}
 				DragFinish((HDROP)wParam);
 				if (GetKeyState(VK_SHIFT) & 0x8000) {
-					//	ShiftƒL[‚ª‰Ÿ‰º‚³‚ê‚Ä‚¢‚ê‚ÎƒŠƒZƒbƒg
+					//	Shiftã‚­ãƒ¼ãŒæŠ¼ä¸‹ã•ã‚Œã¦ã„ã‚Œã°ãƒªã‚»ãƒƒãƒˆ
 					pccore_cfgupdate();
+#ifdef HOOK_SYSKEY
+					stop_hook_systemkey();
+#endif
 					pccore_reset();
+#ifdef HOOK_SYSKEY
+					start_hook_systemkey();
+#endif
 				}
 			}
 			break;
 
 		case WM_CREATE:
+			g_hWndMain = hWnd;
 			np2class_wmcreate(hWnd);
 			np2class_windowtype(hWnd, np2oscfg.wintype);
+			sstp_construct(hWnd);
 #ifndef __GNUC__
 			WINNLSEnableIME(hWnd, FALSE);
 #endif
@@ -1754,6 +2086,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 				case IDM_BGSOUND:
 					np2oscfg.background ^= 2;
 					update |= SYS_UPDATEOSCFG;
+					break;
+
+				case IDM_RESTOREBORDER:
+					if(np2oscfg.wintype!=0){
+						WINLOCEX	wlex;
+						np2oscfg.wintype = 0;
+						wlex = np2_winlocexallwin(hWnd);
+						winlocex_setholdwnd(wlex, hWnd);
+						np2class_windowtype(hWnd, np2oscfg.wintype);
+						winlocex_move(wlex);
+						winlocex_destroy(wlex);
+						sysmng_update(SYS_UPDATEOSCFG);
+					}
 					break;
 
 				case IDM_MEMORYDUMP:
@@ -1917,7 +2262,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			break;
 
 		case WM_KEYDOWN:
-			autokey_sendbufferpos = autokey_sendbufferlen; // ƒRƒsƒy‹­§I—¹ np21w ver0.86 rev22
+			autokey_sendbufferpos = autokey_sendbufferlen; // ã‚³ãƒ”ãƒšå¼·åˆ¶çµ‚äº† np21w ver0.86 rev22
 			if (wParam == VK_F11) {
 				np2class_enablemenu(g_hWndMain, TRUE);
 				return(DefWindowProc(hWnd, WM_SYSKEYDOWN, VK_F10, lParam));
@@ -1925,6 +2270,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			if ((wParam == VK_F12) && (!np2oscfg.F12COPY)) {
 				mousemng_toggle(MOUSEPROC_SYSTEM);
 				np2oscfg.MOUSE_SW = !np2oscfg.MOUSE_SW;
+				if(!np2oscfg.mouse_nc){
+					SetClassLong(g_hWndMain, GCL_STYLE, GetClassLong(g_hWndMain, GCL_STYLE) | CS_DBLCLKS);
+				}else/* if (!scrnmng_isfullscreen())*/ {
+					SetClassLong(g_hWndMain, GCL_STYLE, GetClassLong(g_hWndMain, GCL_STYLE) & ~CS_DBLCLKS);
+					if (np2oscfg.wintype != 0) {
+						// XXX: ãƒ¡ãƒ‹ãƒ¥ãƒ¼ãŒå‡ºã›ãªããªã£ã¦è©°ã‚€ã®ã‚’å›é¿ï¼ˆæš«å®šï¼‰
+						if (!scrnmng_isfullscreen()) {
+							WINLOCEX	wlex;
+							np2oscfg.wintype = 0;
+							wlex = np2_winlocexallwin(hWnd);
+							winlocex_setholdwnd(wlex, hWnd);
+							np2class_windowtype(hWnd, np2oscfg.wintype);
+							winlocex_move(wlex);
+							winlocex_destroy(wlex);
+							sysmng_update(SYS_UPDATEOSCFG);
+						}
+					}
+				}
 				sysmng_update(SYS_UPDATECFG);
 			}
 			else if ((wParam == VK_F12) && (np2oscfg.F12COPY==7)) {
@@ -1935,6 +2298,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 				np2oscfg.NOWAIT = !np2oscfg.NOWAIT;
 				update |= SYS_UPDATECFG;
 			}
+#if defined(SUPPORT_CL_GD5430) && defined(SUPPORT_WAB)
+			else if ((wParam == VK_F12) && (np2oscfg.F12COPY==9)) {
+				if(np2clvga.enabled && cirrusvga_opaque){
+					np2wab_setRelayState(np2wab.relay ? 0 : 1);
+				}
+			}
+#endif
+#ifdef HOOK_SYSKEY
+			else if ((wParam == VK_SNAPSHOT) && (np2oscfg.syskhook)) {
+				// nothing to do
+			}
+#endif
 			else {
 				winkbd_keydown(wParam, lParam);
 			}
@@ -1954,7 +2329,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			break;
 
 		case WM_SYSKEYDOWN:
-			autokey_sendbufferpos = autokey_sendbufferlen; // ƒRƒsƒy‹­§I—¹ np21w ver0.86 rev22
+			autokey_sendbufferpos = autokey_sendbufferlen; // ã‚³ãƒ”ãƒšå¼·åˆ¶çµ‚äº† np21w ver0.86 rev22
 #ifdef HOOK_SYSKEY
 			if (GetAsyncKeyState (VK_RMENU) >> ((sizeof(SHORT) * 8) - 1)) {	// np21w ver0.86 rev6	
 #else
@@ -1969,7 +2344,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 					break;
 				}
 				if (np2oscfg.mouse_nc && np2oscfg.wintype != 0) {
-					// XXX: ƒƒjƒ…[‚ªo‚¹‚È‚­‚È‚Á‚Ä‹l‚Ş‚Ì‚ğ‰ñ”ğib’èj
+					// XXX: ãƒ¡ãƒ‹ãƒ¥ãƒ¼ãŒå‡ºã›ãªããªã£ã¦è©°ã‚€ã®ã‚’å›é¿ï¼ˆæš«å®šï¼‰
 					if (!scrnmng_isfullscreen()) {
 						np2oscfg.wintype = 0;
 						wlex = np2_winlocexallwin(hWnd);
@@ -1995,10 +2370,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 				if (GetCursorPos(&p)) {
 					scrnmng_fullscrnmenu(p.y);
 				}
-			}else{
-				if(np2oscfg.mouse_nc){
+			}/*else*/{
+				if(np2oscfg.mouse_nc/* && !scrnmng_isfullscreen()*/){
+					static int mousebufX = 0; // ãƒã‚¦ã‚¹ç§»å‹•ãƒãƒƒãƒ•ã‚¡(X)
+					static int mousebufY = 0; // ãƒã‚¦ã‚¹ç§»å‹•ãƒãƒƒãƒ•ã‚¡(Y)
 					int x = LOWORD(lParam);
 					int y = HIWORD(lParam);
+
 					SINT16 dx, dy;
 					UINT8 btn;
 					btn = mousemng_getstat(&dx, &dy, 0);
@@ -2014,9 +2392,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 						GetClientRect(hWnd, &r);
 						mouse_edge_sh_x = (r.right-r.left)/8;
 						mouse_edge_sh_y = (r.bottom-r.top)/8;
-						dx += (x-lastmx);
-						dy += (y-lastmy);
-						// XXX: ’[ÀŒ±
+						mousebufX += ((x-lastmx)*np2oscfg.mousemul);
+						mousebufY += ((y-lastmy)*np2oscfg.mousemul);
+						if(mousebufX >= np2oscfg.mousediv || mousebufX <= -np2oscfg.mousediv){
+							dx += (SINT16)(mousebufX / np2oscfg.mousediv);
+							mousebufX   = mousebufX % np2oscfg.mousediv;
+						}
+						if(mousebufY >= np2oscfg.mousediv || mousebufY <= -np2oscfg.mousediv){
+							dy += (SINT16)(mousebufY / np2oscfg.mousediv);
+							mousebufY   = mousebufY % np2oscfg.mousediv;
+						}
+						// XXX: ç«¯å®Ÿé¨“
 #define MOUSE_EDGE_ACM	4
 						if(x<mouse_edge_sh_x && dx < 0){
 							dxmul = 1+(mouse_edge_sh_x - x)*MOUSE_EDGE_ACM/mouse_edge_sh_x;
@@ -2049,7 +2435,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			break;
 
 		case WM_LBUTTONDOWN:
-			autokey_sendbufferpos = autokey_sendbufferlen; // ƒRƒsƒy‹­§I—¹ np21w ver0.86 rev22
+			autokey_sendbufferpos = autokey_sendbufferlen; // ã‚³ãƒ”ãƒšå¼·åˆ¶çµ‚äº† np21w ver0.86 rev22
 			if (!mousemng_buttonevent(MOUSEMNG_LEFTDOWN)) {
 				if (!scrnmng_isfullscreen()) {
 					if (np2oscfg.wintype == 2) {
@@ -2079,14 +2465,36 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			break;
 
 		case WM_MBUTTONDOWN:
-			autokey_sendbufferpos = autokey_sendbufferlen; // ƒRƒsƒy‹­§I—¹ np21w ver0.86 rev22
+			autokey_sendbufferpos = autokey_sendbufferlen; // ã‚³ãƒ”ãƒšå¼·åˆ¶çµ‚äº† np21w ver0.86 rev22
 			mousemng_toggle(MOUSEPROC_SYSTEM);
 			np2oscfg.MOUSE_SW = !np2oscfg.MOUSE_SW;
 			sysmng_update(SYS_UPDATECFG);
+			if (!np2oscfg.MOUSE_SW) {
+				if(!np2oscfg.mouse_nc){
+					SetClassLong(g_hWndMain, GCL_STYLE, GetClassLong(g_hWndMain, GCL_STYLE) | CS_DBLCLKS);
+				}else/* if (!scrnmng_isfullscreen())*/ {
+					SetClassLong(g_hWndMain, GCL_STYLE, GetClassLong(g_hWndMain, GCL_STYLE) & ~CS_DBLCLKS);
+					if (np2oscfg.wintype != 0) {
+						// XXX: ãƒ¡ãƒ‹ãƒ¥ãƒ¼ãŒå‡ºã›ãªããªã£ã¦è©°ã‚€ã®ã‚’å›é¿ï¼ˆæš«å®šï¼‰
+						if (!scrnmng_isfullscreen()) {
+							WINLOCEX	wlex;
+							np2oscfg.wintype = 0;
+							wlex = np2_winlocexallwin(hWnd);
+							winlocex_setholdwnd(wlex, hWnd);
+							np2class_windowtype(hWnd, np2oscfg.wintype);
+							winlocex_move(wlex);
+							winlocex_destroy(wlex);
+							sysmng_update(SYS_UPDATEOSCFG);
+						}
+					}
+				}
+			}else{
+				SetClassLong(g_hWndMain, GCL_STYLE, GetClassLong(g_hWndMain, GCL_STYLE) & ~CS_DBLCLKS);
+			}
 			break;
 
 		case WM_RBUTTONDOWN:
-			autokey_sendbufferpos = autokey_sendbufferlen; // ƒRƒsƒy‹­§I—¹ np21w ver0.86 rev22
+			autokey_sendbufferpos = autokey_sendbufferlen; // ã‚³ãƒ”ãƒšå¼·åˆ¶çµ‚äº† np21w ver0.86 rev22
 			if (!mousemng_buttonevent(MOUSEMNG_RIGHTDOWN)) {
 				if (!scrnmng_isfullscreen()) {
 					np2popup(hWnd, lParam);
@@ -2114,28 +2522,142 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			break;
 
 		case WM_LBUTTONDBLCLK:
-			if(!np2oscfg.mouse_nc){
-				if (!scrnmng_isfullscreen()) {
-					np2oscfg.wintype++;
-					if (np2oscfg.wintype >= 3) {
-						np2oscfg.wintype = 0;
+			if (!np2oscfg.MOUSE_SW) {
+				if(!np2oscfg.mouse_nc){
+					if (!scrnmng_isfullscreen()) {
+						np2oscfg.wintype++;
+						if (np2oscfg.wintype >= 3) {
+							np2oscfg.wintype = 0;
+						}
+						wlex = np2_winlocexallwin(hWnd);
+						winlocex_setholdwnd(wlex, hWnd);
+						np2class_windowtype(hWnd, np2oscfg.wintype);
+						winlocex_move(wlex);
+						winlocex_destroy(wlex);
+						sysmng_update(SYS_UPDATEOSCFG);
 					}
-					wlex = np2_winlocexallwin(hWnd);
-					winlocex_setholdwnd(wlex, hWnd);
-					np2class_windowtype(hWnd, np2oscfg.wintype);
-					winlocex_move(wlex);
-					winlocex_destroy(wlex);
-					sysmng_update(SYS_UPDATEOSCFG);
+				}else if (!scrnmng_isfullscreen()) {
+					SetClassLong(g_hWndMain, GCL_STYLE, GetClassLong(g_hWndMain, GCL_STYLE) & ~CS_DBLCLKS);
+					if (np2oscfg.wintype != 0) {
+						// XXX: ãƒ¡ãƒ‹ãƒ¥ãƒ¼ãŒå‡ºã›ãªããªã£ã¦è©°ã‚€ã®ã‚’å›é¿ï¼ˆæš«å®šï¼‰
+						if (!scrnmng_isfullscreen()) {
+							WINLOCEX	wlex;
+							np2oscfg.wintype = 0;
+							wlex = np2_winlocexallwin(hWnd);
+							winlocex_setholdwnd(wlex, hWnd);
+							np2class_windowtype(hWnd, np2oscfg.wintype);
+							winlocex_move(wlex);
+							winlocex_destroy(wlex);
+							sysmng_update(SYS_UPDATEOSCFG);
+						}
+					}
+				}
+			}else{
+				SetClassLong(g_hWndMain, GCL_STYLE, GetClassLong(g_hWndMain, GCL_STYLE) & ~CS_DBLCLKS);
+			}
+			break;
+
+		case WM_RBUTTONDBLCLK:
+			if (!np2oscfg.MOUSE_SW) {
+				if(!np2oscfg.mouse_nc){
+				}else/* if (!scrnmng_isfullscreen())*/ {
+					SetClassLong(g_hWndMain, GCL_STYLE, GetClassLong(g_hWndMain, GCL_STYLE) & ~CS_DBLCLKS);
+					if (np2oscfg.wintype != 0) {
+						// XXX: ãƒ¡ãƒ‹ãƒ¥ãƒ¼ãŒå‡ºã›ãªããªã£ã¦è©°ã‚€ã®ã‚’å›é¿ï¼ˆæš«å®šï¼‰
+						if (!scrnmng_isfullscreen()) {
+							WINLOCEX	wlex;
+							np2oscfg.wintype = 0;
+							wlex = np2_winlocexallwin(hWnd);
+							winlocex_setholdwnd(wlex, hWnd);
+							np2class_windowtype(hWnd, np2oscfg.wintype);
+							winlocex_move(wlex);
+							winlocex_destroy(wlex);
+							sysmng_update(SYS_UPDATEOSCFG);
+						}
+					}
+				}
+			}else{
+				SetClassLong(g_hWndMain, GCL_STYLE, GetClassLong(g_hWndMain, GCL_STYLE) & ~CS_DBLCLKS);
+			}
+			break;
+
+		case WM_MOUSEWHEEL:
+			if(np2oscfg.usewheel){
+				if ((wParam & (MK_CONTROL|MK_SHIFT)) == (MK_CONTROL|MK_SHIFT)) {
+					int mmul = np2oscfg.mousemul;
+					int mdiv = np2oscfg.mousediv;
+					// é¢å€’ãªã®ã§ x/2ã«ã™ã‚‹
+					if(mdiv == 1) {
+						mdiv *= 2;
+						mmul *= 2;
+					}
+					if(GET_WHEEL_DELTA_WPARAM(wParam) > 0){
+						if(mdiv <= 2){
+							mdiv = 2;
+							mmul++;
+						}else{
+							mdiv--;
+						}
+					}else{
+						if(mmul <= 2){
+							mmul = 2;
+							mdiv++;
+						}else{
+							mmul--;
+						}
+					}
+					if(mmul > 8) mmul = 8;
+					if(mdiv > 8) mdiv = 8;
+					// 2ã§å‰²ã‚Œã‚‹ãªã‚‰å‰²ã£ã¦ãŠã
+					if(mdiv == 2 && mmul%2 == 0) {
+						mdiv /= 2;
+						mmul /= 2;
+					}
+					np2oscfg.mousemul = mmul;
+					np2oscfg.mousediv = mdiv;
+					mousemng_updatespeed();
+					sys_miscinfo.showmousespeed = 1;
+					sysmng_updatecaption(SYS_UPDATECAPTION_MISC);
+					tmrSysMngHide = SetTimer(hWnd, TMRSYSMNG_ID, 5000, SysMngHideTimerProc);
+				}else{
+					if(np2oscfg.usemastervolume){
+						int cMaster = np2cfg.vol_master;
+						cMaster += GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA * 2;
+						if(cMaster < 0) cMaster = 0;
+						if(cMaster > 100) cMaster = 100;
+						if (np2cfg.vol_master != cMaster)
+						{
+							np2cfg.vol_master = cMaster;
+							soundmng_setvolume(cMaster);
+						}
+						sys_miscinfo.showvolume = 1;
+						sysmng_updatecaption(SYS_UPDATECAPTION_MISC);
+						tmrSysMngHide = SetTimer(hWnd, TMRSYSMNG_ID, 5000, SysMngHideTimerProc);
+					}
 				}
 			}
 			break;
+			
+#if defined(SUPPORT_SCRN_DIRECT3D)
+		case WM_SETFOCUS:
+			if (scrnmng_isfullscreen() && scrnmng_current_drawtype==DRAWTYPE_DIRECT3D && !np2oscfg.d3d_exclusive && !winui_en) {
+				ShowWindow( hWnd, SW_RESTORE );
+			}
+			break;
+
+		case WM_KILLFOCUS:
+			if (scrnmng_isfullscreen() && scrnmng_current_drawtype==DRAWTYPE_DIRECT3D && !np2oscfg.d3d_exclusive && !winui_en) {
+				ShowWindow( hWnd, SW_MINIMIZE );
+			}
+			break;
+#endif
 
 		case WM_CLOSE:
 			b = FALSE;
 			if (!np2oscfg.comfirm) {
 				b = TRUE;
 			}
-			else
+			else if (sstpconfirm_exit())
 			{
 				winuienter();
 				if (messagebox(hWnd, MAKEINTRESOURCE(IDS_CONFIRM_EXIT),
@@ -2147,6 +2669,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			}
 			if (b) {
 				CDebugUtyView::AllClose();
+				CDebugUtyView::DisposeAllClosedWindow();
 				DestroyWindow(hWnd);
 			}
 			break;
@@ -2170,7 +2693,38 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 				case NP2CMD_RESET:
 					pccore_cfgupdate();
+#ifdef HOOK_SYSKEY
+					stop_hook_systemkey();
+#endif
 					pccore_reset();
+#ifdef HOOK_SYSKEY
+					start_hook_systemkey();
+#endif
+					break;
+			}
+			break;
+
+		case WM_SSTP:
+			switch(LOWORD(lParam)) {
+				case FD_CONNECT:
+					if (!HIWORD(lParam)) {
+						sstp_connect();
+					}
+					break;
+				case FD_READ:
+					if (!HIWORD(lParam)) {
+						sstp_readSocket();
+					}
+					break;
+				case FD_WRITE:
+					if (!HIWORD(lParam)) {
+//						sstp_writeSokect();
+					}
+					break;
+				case FD_CLOSE:
+					if (!HIWORD(lParam)) {
+						sstp_disconnect();
+					}
 					break;
 			}
 			break;
@@ -2220,12 +2774,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 										if(_tcsicmp(fname, drvstr)==0){
 											_tcscpy(fnamebuf, np2cfg.idecd[i]);
 											if(wParam == DBT_DEVICEARRIVAL){
-												// CD‘}“ü
-												diskdrv_setsxsi(0x02, fnamebuf);
+												// CDæŒ¿å…¥
+												diskdrv_setsxsi(i, fnamebuf);
 											}else{
-												// CDæo XXX: ’†g‚ª‹ó‚Å‚àƒ}ƒEƒ“ƒg‚ÍŒp‘±
-												diskdrv_setsxsi(0x02, fnamebuf);
+												// CDå–å‡º XXX: ä¸­èº«ãŒç©ºã§ã‚‚ãƒã‚¦ãƒ³ãƒˆã¯ç¶™ç¶š
+												diskdrv_setsxsi(i, NULL);
+												_tcscpy(np2cfg.idecd[i], fnamebuf);
 											}
+											sysmng_updatecaption(SYS_UPDATECAPTION_FDD);
 										}
 									}
 								}
@@ -2267,10 +2823,10 @@ void autoSendKey(){
 	//int i;
 	DWORD curtime = 0;
 	
-	// ‘—‚é‚à‚Ì‚È‚µ
+	// é€ã‚‹ã‚‚ã®ãªã—
 	if(autokey_sendbufferlen==0) return;
 	
-	// 10•¶š‚¾‚¯‘—‚é(“ü—Í‘¬“x§Œä•t‚«)
+	// 10æ–‡å­—ã ã‘é€ã‚‹(å…¥åŠ›é€Ÿåº¦åˆ¶å¾¡ä»˜ã)
 	curtime = GetTickCount();
 	if(curtime - lastsendtime > 256/pccore.multiple+8){
 		int i;
@@ -2295,10 +2851,10 @@ void autoSendKey(){
 							keystat_senddata(0x80|vkeylist[sendchar]);
 						}
 					}else if(0xA1 <= sendchar && sendchar <= 0xDF){
-						// ”¼Šp¶Å‚¾‚¯‚Ç‚Ü‚¾–¢À‘•
+						// åŠè§’ï½¶ï¾…ã ã‘ã©ã¾ã æœªå®Ÿè£…
 						i--;
 					}else if(0x80 <= sendchar){
-						// ‘½•ª2byte•¶š
+						// å¤šåˆ†2byteæ–‡å­—
 						autokey_sendbufferpos++;
 						i--;
 					}
@@ -2309,7 +2865,7 @@ void autoSendKey(){
 		lastsendtime = curtime;
 	}
 
-	// ‘—MŠ®—¹‚µ‚½‚ç
+	// é€ä¿¡å®Œäº†ã—ãŸã‚‰
 	if(autokey_sendbufferpos >= autokey_sendbufferlen){
 		keystat_senddata(0x80|0x70);
 		autokey_sendbufferlen = 0;
@@ -2320,10 +2876,10 @@ void autoSendKey(){
 	}
 }
 
-// ƒL[ƒR[ƒh•\ì¬
+// ã‚­ãƒ¼ã‚³ãƒ¼ãƒ‰è¡¨ä½œæˆ
 void createAsciiTo98KeyCodeList(){
 	int i;
-	// ƒL[ƒR[ƒh•\ì¬ib’èj
+	// ã‚­ãƒ¼ã‚³ãƒ¼ãƒ‰è¡¨ä½œæˆï¼ˆæš«å®šï¼‰
 	char numkeys[] = {0,'!', '"','#','$','%','&','\'','(',')'};
 	for(i='0';i<='9';i++){
 		vkeylist[i] = i-'0';
@@ -2351,9 +2907,8 @@ void createAsciiTo98KeyCodeList(){
 }
 
 #ifdef HOOK_SYSKEY
-HHOOK hHook = NULL;
-// ƒVƒXƒeƒ€ƒVƒ‡[ƒgƒJƒbƒgƒL[
-LRESULT CALLBACK LowLevelKeyboardProc (INT nCode, WPARAM wParam, LPARAM lParam)
+// ã‚·ã‚¹ãƒ†ãƒ ã‚·ãƒ§ãƒ¼ãƒˆã‚«ãƒƒãƒˆã‚­ãƒ¼
+LRESULT CALLBACK LowLevelKeyboardProc(INT nCode, WPARAM wParam, LPARAM lParam)
 {
 	if(np2oscfg.syskhook){
 		// By returning a non-zero value from the hook procedure, the
@@ -2394,7 +2949,7 @@ LRESULT CALLBACK LowLevelKeyboardProc (INT nCode, WPARAM wParam, LPARAM lParam)
 						return 1;
 					}
 					if(pkbhs->vkCode == VK_SCROLL && bAltKeyDown && bControlKeyDown){
-						// Ctrl+Alt+ScrollLock ¨ Ctrl+Alt+Delete
+						// Ctrl+Alt+ScrollLock â†’ Ctrl+Alt+Delete
 						switch((int)wParam){
 						case WM_KEYDOWN:
 						case WM_SYSKEYDOWN:
@@ -2407,6 +2962,21 @@ LRESULT CALLBACK LowLevelKeyboardProc (INT nCode, WPARAM wParam, LPARAM lParam)
 						}
 						return 1;
 					}
+#ifdef HOOK_SYSKEY
+					else if ((pkbhs->vkCode == VK_SNAPSHOT) && (np2oscfg.syskhook)) {
+						// PrintScreen -> COPY
+						switch((int)wParam){
+						case WM_KEYDOWN:
+						case WM_SYSKEYDOWN:
+							keystat_keydown(0x61);
+							break;
+						case WM_KEYUP:
+						case WM_SYSKEYUP:
+							keystat_keyup(0x61);
+							break;
+						}
+					}
+#endif
 				}
 				break;
 			}
@@ -2420,8 +2990,8 @@ LRESULT CALLBACK LowLevelKeyboardProc (INT nCode, WPARAM wParam, LPARAM lParam)
 #endif
 
 /**
- * 1ƒtƒŒ[ƒ€Às
- * @param[in] bDraw •`‰æƒtƒ‰ƒO
+ * 1ãƒ•ãƒ¬ãƒ¼ãƒ å®Ÿè¡Œ
+ * @param[in] bDraw æç”»ãƒ•ãƒ©ã‚°
  */
 static void ExecuteOneFrame(BOOL bDraw)
 {
@@ -2455,7 +3025,7 @@ static void framereset(UINT cnt) {
 	CDebugUtyView::AllUpdate(false);
 	if (np2oscfg.DISPCLK & 3) {
 		if (sysmng_workclockrenewal()) {
-			sysmng_updatecaption(3);
+			sysmng_updatecaption(SYS_UPDATECAPTION_CLK);
 		}
 	}
 }
@@ -2465,6 +3035,12 @@ static void processwait(UINT cnt) {
 	UINT count = timing_getcount();
 	if (count+lateframecount >= cnt) {
 		lateframecount = lateframecount + count - cnt;
+#if defined(SUPPORT_IA32_HAXM)
+		if (np2hax.enable) {
+			np2haxcore.hurryup = 0;
+			lateframecount = 0;
+		}
+#endif
 		if(lateframecount > np2oscfg.cpustabf) lateframecount = np2oscfg.cpustabf;
 		timing_setcount(0);
 		framereset(cnt);
@@ -2480,13 +3056,10 @@ static void processwait(UINT cnt) {
 }
 
 void unloadNP2INI(){
-	// ‹ŒINI•Ğ•t‚¯
+	// æ—§INIç‰‡ä»˜ã‘
 
-	// ‰æ–Ê•\¦”{—¦‚ğ•Û‘¶
+	// ç”»é¢è¡¨ç¤ºå€ç‡ã‚’ä¿å­˜
 	np2oscfg.scrn_mul = scrnmng_getmultiple();
-#ifdef HOOK_SYSKEY
-	UnhookWindowsHookEx(hHook);
-#endif
 	toolwin_destroy();
 	kdispwin_destroy();
 	skbdwin_destroy();
@@ -2517,7 +3090,7 @@ void unloadNP2INI(){
 #endif
 	
 	sxsi_alltrash();
-	//pccore_term();
+	pccore_term();
 
 	CSoundMng::GetInstance()->Close();
 	CSoundMng::Deinitialize();
@@ -2557,11 +3130,15 @@ void loadNP2INI(const OEMCHAR *fname){
 	DWORD		tick;
 #endif
 	
+#ifdef HOOK_SYSKEY
+	stop_hook_systemkey();
+#endif
+
 	LPTSTR lpFilenameBuf = (LPTSTR)malloc((_tcslen(fname)+1)*sizeof(TCHAR));
 	_tcscpy(lpFilenameBuf, fname);
 	hInstance = g_hInstance;
 
-	// VINI“Ç‚İ‚İ
+	// æ–°INIèª­ã¿è¾¼ã¿
 	Np2Arg::GetInstance()->setiniFilename(lpFilenameBuf);
 
 	initload();
@@ -2571,6 +3148,7 @@ void loadNP2INI(const OEMCHAR *fname){
 	mdbgwin_readini();
 #if defined(SUPPORT_WAB)
 	wabwin_readini();
+	np2wabcfg.readonly = np2oscfg.readonly;
 #endif	// defined(SUPPORT_WAB)
 #if defined(SUPPORT_HOSTDRV)
 	hostdrv_readini();
@@ -2624,7 +3202,7 @@ void loadNP2INI(const OEMCHAR *fname){
 	scrnmng_initialize();
 
 	if(np2oscfg.dragdrop)
-		DragAcceptFiles(hWnd, TRUE);	//	ƒCƒ[ƒWƒtƒ@ƒCƒ‹‚Ì‚c•‚c‚É‘Î‰(Kai1)
+		DragAcceptFiles(hWnd, TRUE);	//	ã‚¤ãƒ¡ãƒ¼ã‚¸ãƒ•ã‚¡ã‚¤ãƒ«ã®ï¼¤ï¼†ï¼¤ã«å¯¾å¿œ(Kai1)
 	else
 		DragAcceptFiles(hWnd, FALSE);
 
@@ -2635,10 +3213,10 @@ void loadNP2INI(const OEMCHAR *fname){
 #endif
 	
 	HMENU hSysMenu = GetSystemMenu(hWnd, FALSE);
-	//sysmenu_initialize(hSysMenu); // ‘Î‰–Ê“|‚­‚³‚¢
+	//sysmenu_initialize(hSysMenu); // å¯¾å¿œé¢å€’ãã•ã„
 	
 	HMENU hMenu = np2class_gethmenu(hWnd);
-	//xmenu_initialize(hMenu); // ‘Î‰–Ê“|‚­‚³‚¢
+	//xmenu_initialize(hMenu); // å¯¾å¿œé¢å€’ãã•ã„
 	xmenu_update(hMenu);
 	if (file_attr_c(np2help) == -1)								// ver0.30
 	{
@@ -2707,17 +3285,15 @@ void loadNP2INI(const OEMCHAR *fname){
 #ifdef SUPPORT_CL_GD5430
 	//pc98_cirrus_vga_init();
 #endif
-#ifdef HOOK_SYSKEY
-	hHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, hInstance, 0);
-#endif
 	
 #ifdef SUPPORT_PHYSICAL_CDDRV
 	np2updatemenu();
 #endif
-
+	
+	SetTickCounterMode(np2oscfg.tickmode);
 	pccore_reset();
 
-	// ‚ê‚¶‚¤‚Ş
+	// ã‚Œã˜ã†ã‚€
 #if defined(SUPPORT_RESUME)
 	if (np2oscfg.resume) {
 		int		id;
@@ -2743,13 +3319,14 @@ void loadNP2INI(const OEMCHAR *fname){
 		}
 	}
 #endif
+	soundmng_setvolume(np2cfg.vol_master);
 	
-	// ‰æ–Ê•\¦”{—¦‚ğ•œŒ³
+	// ç”»é¢è¡¨ç¤ºå€ç‡ã‚’å¾©å…ƒ
 	if(np2oscfg.svscrmul){
 		scrnmng_setmultiple(np2oscfg.scrn_mul);
 	}
-//	ƒŠƒZƒbƒg‚µ‚Ä‚©‚çc 
-	// INI‚É‹L˜^‚³‚ê‚½ƒfƒBƒXƒN‚ğ‘}“ü
+//	ãƒªã‚»ãƒƒãƒˆã—ã¦ã‹ã‚‰â€¦ 
+	// INIã«è¨˜éŒ²ã•ã‚ŒãŸãƒ‡ã‚£ã‚¹ã‚¯ã‚’æŒ¿å…¥
 	if(np2cfg.savefddfile){
 		for (i = 0; i < 4; i++)
 		{
@@ -2761,7 +3338,7 @@ void loadNP2INI(const OEMCHAR *fname){
 			}
 		}
 	}
-	// ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“‚ÌƒfƒBƒXƒN‘}“üB
+	// ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã®ãƒ‡ã‚£ã‚¹ã‚¯æŒ¿å…¥ã€‚
 	for (i = 0; i < 4; i++)
 	{
 		LPCTSTR lpDisk = Np2Arg::GetInstance()->disk(i);
@@ -2770,7 +3347,22 @@ void loadNP2INI(const OEMCHAR *fname){
 			diskdrv_readyfdd((REG8)i, lpDisk, 0);
 		}
 	}
-
+#if defined(SUPPORT_IDEIO)
+	// INIã«è¨˜éŒ²ã•ã‚ŒãŸCDã‚’æŒ¿å…¥
+	if(np2cfg.savecdfile){
+		for (i = 0; i < 4; i++)
+		{
+			if(np2cfg.idetype[i]==IDETYPE_CDROM){
+				LPCTSTR lpDisk = np2cfg.idecd[i];
+				if (lpDisk)
+				{
+					diskdrv_setsxsi(i, lpDisk);
+				}
+			}
+		}
+	}
+#endif
+	
 	if (!(g_scrnmode & SCRNMODE_FULLSCREEN)) {
 		if (np2oscfg.toolwin) {
 			toolwin_create();
@@ -2788,7 +3380,11 @@ void loadNP2INI(const OEMCHAR *fname){
 	np2opening = 0;
 
 	sysmng_workclockreset();
-	sysmng_updatecaption(3);
+	sysmng_updatecaption(SYS_UPDATECAPTION_ALL);
+	
+#ifdef HOOK_SYSKEY
+	start_hook_systemkey();
+#endif
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst,
@@ -2803,8 +3399,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst,
 #endif
 	BOOL		xrollkey;
 	
+#ifdef _DEBUG
+	// ä½¿ã†ã¨ãã¯stdlib.hã¨crtdbg.hã‚’ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰ã™ã‚‹
+	_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	//_CrtSetBreakAlloc(499);
+#endif
+
 #if defined(SUPPORT_WIN2000HOST)
+#ifdef _WINDOWS
+#ifndef _WIN64
+#define WINVER2 0x0500
 	initialize_findacx();
+#endif
+#endif
 #endif
 
 	winloc_InitDwmFunc();
@@ -2831,6 +3438,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst,
 	mdbgwin_readini();
 #if defined(SUPPORT_WAB)
 	wabwin_readini();
+	np2wabcfg.readonly = np2oscfg.readonly;
 #endif	// defined(SUPPORT_WAB)
 #if defined(SUPPORT_HOSTDRV)
 	hostdrv_readini();
@@ -2844,6 +3452,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst,
 	
 #ifndef ALLOW_MULTIRUN
 	if ((hWnd = FindWindow(szClassName, NULL)) != NULL) {
+		sstpmsg_running();
 		ShowWindow(hWnd, SW_RESTORE);
 		SetForegroundWindow(hWnd);
 		dosio_term();
@@ -2851,7 +3460,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst,
 	}
 #else
 	if ((hWnd = FindWindow(szClassName, NULL)) != NULL && np2oscfg.resume) {
-		// ƒŒƒWƒ…[ƒ€‚Ì‚Í•¡”‹N“®‚·‚é‚Æ‚â‚Î‚¢‚Ì‚Å¥¥¥
+		// ãƒ¬ã‚¸ãƒ¥ãƒ¼ãƒ ã®æ™‚ã¯è¤‡æ•°èµ·å‹•ã™ã‚‹ã¨ã‚„ã°ã„ã®ã§ï½¥ï½¥ï½¥
 		ShowWindow(hWnd, SW_RESTORE);
 		SetForegroundWindow(hWnd);
 		dosio_term();
@@ -2888,7 +3497,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst,
 
 	np2class_initialize(hInstance);
 	if (!hPrevInst) {
-		if(np2oscfg.mouse_nc){
+		if(np2oscfg.mouse_nc/* && !scrnmng_isfullscreen()*/){
 			wc.style = CS_BYTEALIGNCLIENT | CS_HREDRAW | CS_VREDRAW;
 		}else{
 			wc.style = CS_BYTEALIGNCLIENT | CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
@@ -2924,12 +3533,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst,
 						NULL, NULL, hInstance, NULL);
 	g_hWndMain = hWnd;
 
-	mousemng_initialize(); // êŠˆÚ“® np21w ver0.96 rev13
+	mousemng_initialize(); // å ´æ‰€ç§»å‹• np21w ver0.96 rev13
 
 	scrnmng_initialize();
 
 	if(np2oscfg.dragdrop)
-		DragAcceptFiles(hWnd, TRUE);	//	ƒCƒ[ƒWƒtƒ@ƒCƒ‹‚Ì‚c•‚c‚É‘Î‰(Kai1)
+		DragAcceptFiles(hWnd, TRUE);	//	ã‚¤ãƒ¡ãƒ¼ã‚¸ãƒ•ã‚¡ã‚¤ãƒ«ã®ï¼¤ï¼†ï¼¤ã«å¯¾å¿œ(Kai1)
 	
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
@@ -2964,13 +3573,33 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst,
 	if (scrnmng_create(g_scrnmode) != SUCCESS) {
 		g_scrnmode ^= SCRNMODE_FULLSCREEN;
 		if (scrnmng_create(g_scrnmode) != SUCCESS) {
+			if (sstpmsg_dxerror())
+			{
 			messagebox(hWnd, MAKEINTRESOURCE(IDS_ERROR_DIRECTDRAW), MB_OK | MB_ICONSTOP);
+			}
 			UnloadExternalResource();
 			TRACETERM();
 			dosio_term();
 			return(FALSE);
 		}
 	}
+	/*
+	// XXX: Direct3Dçµ¡ã¿ã®ã‚¨ãƒ©ãƒ¼å¯¾ç­–
+	{
+		MSG msg;
+		while(PeekMessage(&msg, 0, 0, 0, PM_NOREMOVE))
+		{
+			if (!GetMessage(&msg, NULL, 0, 0)) {
+				break;
+			}
+			if ((msg.hwnd != hWnd) ||
+				((msg.message != WM_SYSKEYDOWN) &&
+				(msg.message != WM_SYSKEYUP))) {
+				TranslateMessage(&msg);
+			}
+			DispatchMessage(&msg);
+		}
+	}*/
 
 	CSoundMng::Initialize();
 	OpenSoundDevice(hWnd);
@@ -2986,7 +3615,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst,
 	}
 
 	if (np2oscfg.MOUSE_SW) {										// ver0.30
-		mousemng_enable(MOUSEPROC_SYSTEM);
+		if(GetForegroundWindow() == hWnd){
+			mousemng_enable(MOUSEPROC_SYSTEM);
+		}else{
+			np2oscfg.MOUSE_SW = 0;
+		}
 	}
 
 	commng_initialize();
@@ -2995,6 +3628,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst,
 	joymng_initialize();
 	pccore_init();
 	S98_init();
+
+	sstpmsg_welcome();
 
 #ifdef SUPPORT_NET
 	np2net_init();
@@ -3005,17 +3640,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst,
 #ifdef SUPPORT_CL_GD5430
 	pc98_cirrus_vga_init();
 #endif
-#ifdef HOOK_SYSKEY
-	hHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, hInstance, 0);
-#endif
 	
 #ifdef SUPPORT_PHYSICAL_CDDRV
 	np2updatemenu();
 #endif
 
+	SetTickCounterMode(np2oscfg.tickmode);
 	pccore_reset();
 
-	// ‚ê‚¶‚¤‚Ş
+	// ã‚Œã˜ã†ã‚€
 #if defined(SUPPORT_RESUME)
 	if (np2oscfg.resume) {
 		int		id;
@@ -3030,6 +3663,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst,
 			mousemng_disable(MOUSEPROC_WINUI);
 			S98_trash();
 			pccore_term();
+			sstp_destruct();
 			CSoundMng::GetInstance()->Close();
 			CSoundMng::Deinitialize();
 			scrnmng_destroy();
@@ -3040,13 +3674,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst,
 		}
 	}
 #endif
+	soundmng_setvolume(np2cfg.vol_master);
 	
-	// ‰æ–Ê•\¦”{—¦‚ğ•œŒ³
+	// ç”»é¢è¡¨ç¤ºå€ç‡ã‚’å¾©å…ƒ
 	if(np2oscfg.svscrmul){
 		scrnmng_setmultiple(np2oscfg.scrn_mul);
 	}
-//	ƒŠƒZƒbƒg‚µ‚Ä‚©‚çc 
-	// INI‚É‹L˜^‚³‚ê‚½ƒfƒBƒXƒN‚ğ‘}“ü
+//	ãƒªã‚»ãƒƒãƒˆã—ã¦ã‹ã‚‰â€¦ 
+	// INIã«è¨˜éŒ²ã•ã‚ŒãŸãƒ‡ã‚£ã‚¹ã‚¯ã‚’æŒ¿å…¥
 	if(np2cfg.savefddfile){
 		for (i = 0; i < 4; i++)
 		{
@@ -3058,7 +3693,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst,
 			}
 		}
 	}
-	// ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“‚ÌƒfƒBƒXƒN‘}“üB
+	// ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã®ãƒ‡ã‚£ã‚¹ã‚¯æŒ¿å…¥ã€‚
 	for (i = 0; i < 4; i++)
 	{
 		LPCTSTR lpDisk = Np2Arg::GetInstance()->disk(i);
@@ -3089,8 +3724,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst,
 	}
 
 	sysmng_workclockreset();
-	sysmng_updatecaption(3);
+	sysmng_updatecaption(SYS_UPDATECAPTION_ALL);
 	
+#ifdef HOOK_SYSKEY
+	start_hook_systemkey();
+#endif
 
 	lateframecount = 0;
 	while(1) {
@@ -3162,7 +3800,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst,
 					}
 				}
 				if(autokey_sendbufferlen > 0) 
-					autoSendKey(); // ©“®ƒL[‘—M
+					autoSendKey(); // è‡ªå‹•ã‚­ãƒ¼é€ä¿¡
 			}
 		}
 		else if ((np2stopemulate == 1) ||				// background sleep
@@ -3179,11 +3817,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst,
 		}
 	}
 	
-	// ‰æ–Ê•\¦”{—¦‚ğ•Û‘¶
-	np2oscfg.scrn_mul = scrnmng_getmultiple();
 #ifdef HOOK_SYSKEY
-	UnhookWindowsHookEx(hHook);
+	stop_hook_systemkey();
 #endif
+
+	// ç”»é¢è¡¨ç¤ºå€ç‡ã‚’ä¿å­˜
+	np2oscfg.scrn_mul = scrnmng_getmultiple();
+
 	toolwin_destroy();
 	kdispwin_destroy();
 	skbdwin_destroy();
@@ -3215,13 +3855,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst,
 
 	pccore_term();
 
+	sstp_destruct();
+
 	CSoundMng::GetInstance()->Close();
 	CSoundMng::Deinitialize();
+	scrnmng_shutdown();
 	scrnmng_destroy();
+	commng_finalize();
 	recvideo_close();
-
 	mousemng_destroy();
-
+	
 	if (sys_updates	& (SYS_UPDATECFG | SYS_UPDATEOSCFG)) {
 		initsave();
 		toolwin_writeini();
@@ -3237,6 +3880,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst,
 #endif	// defined(SUPPORT_WAB)
 	skbdwin_deinitialize();
 	
+	CSubWndBase::Deinitialize();
+	CWndProc::Deinitialize();
+	
 	winloc_DisposeDwmFunc();
 
 	UnloadExternalResource();
@@ -3245,5 +3891,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst,
 	_MEM_USED(TEXT("report.txt"));
 	dosio_term();
 
+	Np2Arg::Release();
+
+	//_CrtDumpMemoryLeaks();
+
 	return((int)msg.wParam);
+}
+
+int
+havemmx(void)
+{
+	return 1;
 }

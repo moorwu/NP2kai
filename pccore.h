@@ -33,7 +33,8 @@ enum {
 	PCROM_BIOS9821		= 0x10,
 
 	PCCBUS_PC9861K		= 0x0001,
-	PCCBUS_MPU98		= 0x0002
+	PCCBUS_MPU98		= 0x0002,
+	PCCBUS_SMPU98		= 0x0004
 };
 
 /**
@@ -41,27 +42,38 @@ enum {
  */
 enum tagSoundId
 {
-	SOUNDID_NONE				= 0,		/*!< No boards */
-	SOUNDID_PC_9801_14			= 0x01,		/*!< PC-9801-14 */ 
-	SOUNDID_PC_9801_26K			= 0x02,		/*!< PC-9801-26K */ 
-	SOUNDID_PC_9801_86			= 0x04,		/*!< PC-9801-86 */ 
-	SOUNDID_PC_9801_86_26K		= 0x06,		/*!< PC-9801-86 + 26K */ 
-	SOUNDID_PC_9801_118			= 0x08,		/*!< PC-9801-118 */
-	SOUNDID_PC_9801_86_ADPCM	= 0x14,		/*!< PC-9801-86 with ADPCM */
-	SOUNDID_SPEAKBOARD			= 0x20,		/*!< Speak board */
-	SOUNDID_SPARKBOARD			= 0x40,		/*!< Spark board */
-	SOUNDID_SB16				= 0x41,		/*!< Sound Blaster 16 */
-	SOUNDID_MATE_X_PCM			= 0x60,		/*!< Mate-X PCM */
-	SOUNDID_PC_9801_86_WSS		= 0x64,		/*!< PC-9801-86 + Mate-X PCM(B460) */
-	SOUNDID_PC_9801_86_118		= 0x68,		/*!< PC-9801-86 + PC-9801-118(B460) */
-	SOUNDID_AMD98				= 0x80,		/*!< AMD-98 */
-	SOUNDID_SOUNDORCHESTRA		= 0x32,		/*!< SOUND ORCHESTRA */
-	SOUNDID_SOUNDORCHESTRAV		= 0x82,		/*!< SOUND ORCHESTRA-V */
+	SOUNDID_NONE				= 0,		//!< No boards
+	SOUNDID_PC_9801_14			= 0x01,		//!< PC-9801-14
+	SOUNDID_PC_9801_26K			= 0x02,		//!< PC-9801-26K
+	SOUNDID_PC_9801_86			= 0x04,		//!< PC-9801-86
+	SOUNDID_PC_9801_86_26K		= 0x06,		//!< PC-9801-86 + 26K
+	SOUNDID_PC_9801_118			= 0x08,		//!< PC-9801-118
+	SOUNDID_PC_9801_86_ADPCM	= 0x14,		//!< PC-9801-86 with ADPCM
+	SOUNDID_SPEAKBOARD			= 0x20,		//!< Speak board
+	SOUNDID_86_SPEAKBOARD		= 0x24,		//!< PC-9801-86 + Speak board
+	SOUNDID_SPARKBOARD			= 0x40,		//!< Spark board
+#if defined(SUPPORT_SOUND_SB16)
+	SOUNDID_SB16				= 0x41,		//!< Sound Blaster 16
+	SOUNDID_PC_9801_86_WSS_SB16	= 0x42,		//!< PC-9801-86 + Mate-X PCM(B460) + Sound Blaster 16
+	SOUNDID_WSS_SB16			= 0x43,		//!< Mate-X PCM(B460) + Sound Blaster 16
+	SOUNDID_PC_9801_86_SB16		= 0x44,		//!< PC-9801-86 + Sound Blaster 16
+	SOUNDID_PC_9801_118_SB16	= 0x45,		//!< PC-9801-118 + Sound Blaster 16
+	SOUNDID_PC_9801_86_118_SB16 = 0x46,		//!< PC-9801-86 + PC-9801-118(B460) + Sound Blaster 16
+#endif
+	SOUNDID_MATE_X_PCM			= 0x60,		//!< Mate-X PCM
+	SOUNDID_PC_9801_86_WSS		= 0x64,		//!< PC-9801-86 + Mate-X PCM(B460)
+	SOUNDID_PC_9801_86_118		= 0x68,		//!< PC-9801-86 + PC-9801-118(B460)
+	SOUNDID_WAVESTAR			= 0x70,		//!< Wave Star
+	SOUNDID_AMD98				= 0x80,		//!< AMD-98
+	SOUNDID_SOUNDORCHESTRA		= 0x32,		//!< SOUND ORCHESTRA
+	SOUNDID_SOUNDORCHESTRAV		= 0x82,		//!< SOUND ORCHESTRA-V
+	SOUNDID_LITTLEORCHESTRAL	= 0x22,		//!< LITTLE ORCHESTRA L
+	SOUNDID_MMORCHESTRA			= 0x26,		//!< MULTIMEDIA ORCHESTRA
 
 #if defined(SUPPORT_PX)
 	SOUNDID_PX1					= 0x30,
 	SOUNDID_PX2					= 0x50,
-#endif	/* defined(SUPPORT_PX) */
+#endif
 };
 typedef enum tagSoundId		SOUNDID;
 
@@ -76,7 +88,7 @@ enum {
  */
 struct tagNP2Config
 {
-	// ƒGƒ~ƒ…ƒŒ[ƒg’†‚É‚æ‚­ŽQÆ‚³‚ê‚é“z
+	// ã‚¨ãƒŸãƒ¥ãƒ¬ãƒ¼ãƒˆä¸­ã«ã‚ˆãå‚ç…§ã•ã‚Œã‚‹å¥´
 	UINT8	uPD72020;
 	UINT8	DISPSYNC;
 	UINT8	RASTER;
@@ -102,7 +114,14 @@ struct tagNP2Config
 
 	UINT8	timerfix;
 	
-	// ƒŠƒZƒbƒgŽž‚Æ‚©‚ ‚ñ‚Ü‚èŽQÆ‚³‚ê‚È‚¢“z
+#if defined(SUPPORT_ASYNC_CPU)
+	UINT8	asynccpu; // éžåŒæœŸCPUãƒ¢ãƒ¼ãƒ‰æœ‰åŠ¹
+#endif
+#if defined(SUPPORT_IDEIO)
+	UINT8	idebaddr; // IDE BIOS ã‚¢ãƒ‰ãƒ¬ã‚¹ï¼ˆãƒ‡ãƒ•ã‚©ãƒ«ãƒˆï¼šD8h(D8000h)ï¼‰
+#endif
+	
+	// ãƒªã‚»ãƒƒãƒˆæ™‚ã¨ã‹ã‚ã‚“ã¾ã‚Šå‚ç…§ã•ã‚Œãªã„å¥´
 	OEMCHAR	model[8];
 	UINT	baseclock;
 	UINT	multiple;
@@ -112,7 +131,11 @@ struct tagNP2Config
 	UINT8	memsw[8];
 
 	UINT8	ITF_WORK;
+#if defined(SUPPORT_LARGE_MEMORY)
+	UINT16	EXTMEM;
+#else
 	UINT8	EXTMEM;
+#endif
 	UINT8	grcg;
 	UINT8	color16;
 	UINT32	BG_COLOR;
@@ -137,6 +160,7 @@ struct tagNP2Config
 	UINT8	snd118irqf;
 	UINT8	snd118irqp;
 	UINT8	snd118irqm;
+	UINT8	snd118rom;
 	
 	UINT8	sndwssid;
 	UINT8	sndwssdma;
@@ -146,10 +170,12 @@ struct tagNP2Config
 	UINT8	sndsb16io;
 	UINT8	sndsb16dma;
 	UINT8	sndsb16irq;
+	UINT8	sndsb16at;
 #endif	/* SUPPORT_SOUND_SB16 */
 
 	UINT8	BEEP_VOL;
 	UINT8	vol14[6];
+	UINT8	vol_master;
 	UINT8	vol_fm;
 	UINT8	vol_ssg;
 	UINT8	vol_adpcm;
@@ -159,6 +185,12 @@ struct tagNP2Config
 	UINT8	mpuenable;
 	UINT8	mpuopt;
 	UINT8	mpu_at;
+	
+#if defined(SUPPORT_SMPU98)
+	UINT8	smpuenable;
+	UINT8	smpuopt;
+	UINT8	smpumuteB;
+#endif	/* SUPPORT_SMPU98 */
 
 	UINT8	pc9861enable;
 	UINT8	pc9861sw[3];
@@ -184,9 +216,13 @@ struct tagNP2Config
 	OEMCHAR	idecd[4][MAX_PATH];										// ver0.85w
 	UINT8	idebios;												// ver0.86w rev20
 	UINT8	autoidebios;												// ver0.86w rev36
-	UINT32	iderwait; // IDE“Ç‚ÝŽæ‚è‚ÌŠ„‚èž‚Ý’x‰„ŽžŠÔ(clock)B  np21w ver0.86 rev19
-	UINT32	idewwait; // IDE‘‚«ž‚Ý‚ÌŠ„‚èž‚Ý’x‰„ŽžŠÔ(clock)B  np21w ver0.86 rev18
-	UINT32	idemwait; // IDE BIOS‚ª‚ ‚éê‡‚ÌŠ„‚èž‚Ý’x‰„Å¬’l  np21w ver0.86 rev26
+	UINT32	iderwait; // IDEèª­ã¿å–ã‚Šã®å‰²ã‚Šè¾¼ã¿é…å»¶æ™‚é–“(clock)ã€‚  np21w ver0.86 rev19
+	UINT32	idewwait; // IDEæ›¸ãè¾¼ã¿ã®å‰²ã‚Šè¾¼ã¿é…å»¶æ™‚é–“(clock)ã€‚  np21w ver0.86 rev18
+	UINT32	idemwait; // IDE BIOSãŒã‚ã‚‹å ´åˆã®å‰²ã‚Šè¾¼ã¿é…å»¶æœ€å°å€¤  np21w ver0.86 rev26 å»ƒæ­¢
+	UINT8	savecdfile;	
+	UINT8	useasynccd;
+	UINT8	allowcdtraycmd;	
+	UINT8	useasynchd;
 #else
 	OEMCHAR	sasihdd[2][MAX_PATH];									// ver0.74
 #endif
@@ -214,6 +250,23 @@ struct tagNP2Config
 	UINT8	usegd5430;
 	UINT16	gd5430type;
 	UINT8	gd5430fakecur;
+	UINT8	gd5430melofs;
+	UINT8	ga98nb_bigscrn_ex;
+#endif
+#if defined(SUPPORT_VGA_MODEX)
+	UINT8	usemodex;
+#endif
+#if defined(SUPPORT_GPIB)
+	UINT8	usegpib; // GPIBä½¿ç”¨
+	UINT8	gpibirq; // GPIB IRQ
+	UINT8	gpibmode; // GPIB Master/Slave
+	UINT8	gpibaddr; // GPIB Address
+	UINT8	gpibexio; // GPIB custom I/O port base
+#endif
+#if defined(SUPPORT_PCI)
+	UINT8	usepci; // PCI Busä½¿ç”¨
+	UINT8	pci_bios32; // BIOS32ä½¿ç”¨
+	UINT8	pci_pcmc; // PCMCé¸æŠž
 #endif
 
 #if defined(SUPPORT_STATSAVE)
@@ -228,18 +281,37 @@ struct tagNP2Config
 	UINT8	memchkmx;
 	UINT8	sbeeplen;
 	UINT8	sbeepadj;
-
-	char	cpu_vendor[16]; // ƒxƒ“ƒ_[i12bytej
-	UINT32	cpu_family; // ƒtƒ@ƒ~ƒŠ
-	UINT32	cpu_model; // ƒ‚ƒfƒ‹
-	UINT32	cpu_stepping; // ƒXƒeƒbƒsƒ“ƒO
-	UINT32	cpu_feature; // ‹@”\ƒtƒ‰ƒO
-	UINT32	cpu_feature_ex; // Šg’£‹@”\ƒtƒ‰ƒO
-	char	cpu_brandstring[64]; // ƒuƒ‰ƒ“ƒh–¼i48bytej
-	OEMCHAR	cpu_vendor_o[16]; // ƒxƒ“ƒ_[i12bytejOEMCHAR
-	OEMCHAR	cpu_brandstring_o[64]; // ƒuƒ‰ƒ“ƒh–¼i48bytejOEMCHAR
 	
-	UINT8	fpu_type; // FPUŽí—Þi0=Berkeley SoftFloat, 1=DOSBox FPU, 2=DOSBox FPU+INT64j
+	UINT8	biosioemu;
+
+	char	cpu_vendor[16]; // ãƒ™ãƒ³ãƒ€ãƒ¼ï¼ˆ12byteï¼‰
+	UINT32	cpu_family; // ãƒ•ã‚¡ãƒŸãƒª
+	UINT32	cpu_model; // ãƒ¢ãƒ‡ãƒ«
+	UINT32	cpu_stepping; // ã‚¹ãƒ†ãƒƒãƒ”ãƒ³ã‚°
+	UINT32	cpu_feature; // æ©Ÿèƒ½ãƒ•ãƒ©ã‚°
+	UINT32	cpu_feature_ex; // æ‹¡å¼µæ©Ÿèƒ½ãƒ•ãƒ©ã‚°
+	char	cpu_brandstring[64]; // ãƒ–ãƒ©ãƒ³ãƒ‰åï¼ˆ48byteï¼‰
+	OEMCHAR	cpu_vendor_o[16]; // ãƒ™ãƒ³ãƒ€ãƒ¼ï¼ˆ12byteï¼‰OEMCHAR
+	OEMCHAR	cpu_brandstring_o[64]; // ãƒ–ãƒ©ãƒ³ãƒ‰åï¼ˆ48byteï¼‰OEMCHAR
+	UINT32	cpu_brandid; // ãƒ–ãƒ©ãƒ³ãƒ‰ID
+	UINT32  cpu_feature_ecx; // ECXæ©Ÿèƒ½ãƒ•ãƒ©ã‚°
+	UINT32  cpu_eflags_mask; // EFLAGSãƒžã‚¹ã‚¯
+	
+	UINT8	fpu_type; // FPUç¨®é¡žï¼ˆ0=Berkeley SoftFloat, 1=DOSBox FPU, 2=DOSBox FPU+INT64ï¼‰
+	
+#if defined(SUPPORT_FAST_MEMORYCHECK)
+	UINT8	memcheckspeed; // ãƒ¡ãƒ¢ãƒªãƒã‚§ãƒƒã‚¯é€Ÿåº¦
+#endif
+	
+	UINT8	useram_d; // EPSONã§ãªãã¦ã‚‚D0000h-DFFFFhã‚’RAMã«ï¼ˆãŸã ã—IDE BIOS D8000h-DBFFFhã¯é§„ç›®ï¼‰
+	UINT8	usepegcplane; // PEGC ãƒ—ãƒ¬ãƒ¼ãƒ³ãƒ¢ãƒ¼ãƒ‰ã‚µãƒãƒ¼ãƒˆ
+	
+	UINT8	usecdecc; // CD-ROM EDC/ECC ã‚¨ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ã‚µãƒãƒ¼ãƒˆ
+	UINT8	cddtskip; // CD-ROM ã‚ªãƒ¼ãƒ‡ã‚£ã‚ªå†ç”Ÿæ™‚ã«ãƒ‡ãƒ¼ã‚¿ãƒˆãƒ©ãƒƒã‚¯ã‚’ã‚¹ã‚­ãƒƒãƒ—
+
+#if defined(SUPPORT_GAMEPORT)
+	UINT8	gameport; // 118éŸ³æºã®ã‚²ãƒ¼ãƒ ãƒãƒ¼ãƒˆã‚’ä½¿ç”¨ã™ã‚‹
+#endif
 };
 typedef struct tagNP2Config  NP2CFG;		/*!< The define of config */
 
@@ -250,14 +322,20 @@ typedef struct {
 	UINT8	cpumode;
 	UINT8	model;
 	UINT8	hddif;
-	UINT8	extmem; // LARGEMEM // UINT16	extmem;
-	UINT8	dipsw[3];		// ƒŠƒZƒbƒgŽž‚ÌDIPSW
+#if defined(SUPPORT_LARGE_MEMORY)
+	UINT16	extmem;
+#else
+	UINT8	extmem;
+#endif
+	UINT8	dipsw[3];		// ãƒªã‚»ãƒƒãƒˆæ™‚ã®DIPSW
 	UINT8	rom;
 
 	SOUNDID sound;
 	UINT32	device;
 
 	UINT32	realclock;
+
+	UINT	maxmultiple;
 } PCCORE;
 
 enum {
@@ -297,12 +375,34 @@ void screenvsync(NEVENTITEM item);
 
 void pccore_cfgupdate(void);
 
+#if defined(SUPPORT_IA32_HAXM)
+void pccore_mem_malloc(void);
+void pccore_mem_free(void);
+#endif
 void pccore_init(void);
 void pccore_term(void);
 void pccore_reset(void);
 void pccore_exec(BOOL draw);
 
 void pccore_postevent(UINT32 event);
+
+#ifdef SUPPORT_ASYNC_CPU
+extern int asynccpu_lateflag;
+extern int asynccpu_fastflag;
+extern LARGE_INTEGER asynccpu_lastclock;
+extern LARGE_INTEGER asynccpu_clockpersec;
+extern LARGE_INTEGER asynccpu_clockcount;
+#endif
+
+#if defined(CPUCORE_IA32)
+extern int GetCpuTypeIndex();
+extern int SetCpuTypeIndex(UINT index);
+#endif
+
+#if !defined(_WINDOWS) && !defined(__MINGW32__) && !defined(__CYGWIN__)
+extern BOOL QueryPerformanceCounter(LARGE_INTEGER* count);
+extern BOOL QueryPerformanceFrequency(LARGE_INTEGER* freq);
+#endif
 
 #ifdef __cplusplus
 }

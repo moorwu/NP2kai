@@ -25,8 +25,12 @@
 
 #include "compiler.h"
 
+#include "pccore.h"
 #include "np2.h"
 #include "commng.h"
+#if defined(SUPPORT_NP2_TICKCOUNT)
+#include <np2_tickcount.h>
+#endif
 
 #include <sys/ioctl.h>
 #include <stdio.h>
@@ -76,12 +80,43 @@ serialwrite(COMMNG self, UINT8 data)
 	size_t size;
 
 	size = write(serial->hdl, &data, 1);
+	self->lastdata = data;
+#if defined(SUPPORT_NP2_TICKCOUNT)
+	self->lastdatatime = (UINT)NP2_TickCount_GetCount();
+#else
+	self->lastdatatime = 0;
+#endif
 	if (size == 1) {
 		VERBOSE(("serialwrite: data = %02x", data));
 		return 1;
 	}
+	self->lastdatafail = 1;
 	VERBOSE(("serialwrite: write failure (%s)", strerror(errno)));
 	return 0;
+}
+
+static UINT
+serialwriteretry(COMMNG self)
+{
+	CMSER serial = (CMSER)(self + 1);
+	size_t size;
+
+	if(self->lastdatafail) {
+		size = write(serial->hdl, &self->lastdata, 1);
+		if (size == 0) {
+			VERBOSE(("serialwriteretry: write failure (%s)", strerror(errno)));
+			return 0;
+		}
+		self->lastdatafail = 0;
+		VERBOSE(("serialwriteretry: data = %02x", data));
+	}
+	return 1;
+}
+
+static UINT
+seriallastwritesuccess(COMMNG self)
+{
+	return self->lastdatafail;
 }
 
 static UINT8
@@ -232,11 +267,71 @@ print_status(const struct termios *tio)
 }
 #endif
 
+convert_np2tocm(UINT port, UINT8* param, UINT32* speed) {
+	static const int cmserial_pc98_ch1_speed[] = {
+		0, 75, 150, 300, 600, 1200, 2400, 4800, 9600
+	};
+	static const int cmserial_pc98_ch23_speed[] = {
+		75, 150, 300, 600, 1200, 2400, 4800, 9600, 19200
+	};
+
+	switch(port) {
+	case 0:
+		*speed = cmserial_pc98_ch1_speed[np2cfg.memsw[1] & 0xF];
+		break;
+	case 1:
+		if(!(np2cfg.pc9861sw[0] & 0x2)) {	// Sync
+			*speed = cmserial_pc98_ch23_speed[7 - ((np2cfg.pc9861sw[0] >> 2) & 0x7) + 1];
+		} else {	// Async
+			*speed = cmserial_pc98_ch23_speed[8 - (((np2cfg.pc9861sw[0] >> 2) & 0xF) - 4)];
+		}
+		break;
+	case 2:
+		if(!(np2cfg.pc9861sw[2] & 0x2)) {	// Sync
+			*speed = cmserial_pc98_ch23_speed[7 - ((np2cfg.pc9861sw[2] >> 2) & 0x7) + 1];
+		} else {	// Async
+			*speed = cmserial_pc98_ch23_speed[8 - (((np2cfg.pc9861sw[2] >> 2) & 0xF) - 4)];
+		}
+		break;
+	}
+
+	*param = 0;
+	switch(port) {
+	case 0:
+		*param |= np2cfg.memsw[0] & 0xC;
+		switch((np2cfg.memsw[0] & 0x30) >> 4) {
+		case 1:
+			*param |= 0x10;
+			break;
+		case 3:
+			*param |= 0x30;
+			break;
+		default:
+			break;
+		}
+		switch((np2cfg.memsw[0] & 0xC0) >> 6) {
+		case 2:
+			*param |= 0x80;
+			break;
+		case 3:
+			*param |= 0xC0;
+			break;
+		default:
+			break;
+		}
+		break;
+	case 1:
+	case 2:
+		*param |= 0xC;
+		break;
+	}
+}
+
 COMMNG
 cmserial_create(UINT port, UINT8 param, UINT32 speed)
 {
-	static const int cmserial_cflag[10] = {
-		B110, B300, B1200, B2400, B4800,
+	static const int cmserial_cflag[] = {
+		B75, B110, B300, B600, B1200, B2400, B4800,
 		B9600, B19200, B38400, B57600, B115200
 	};
 	static const int csize[] = { CS5, CS6, CS7, CS8 };
@@ -245,6 +340,10 @@ cmserial_create(UINT port, UINT8 param, UINT32 speed)
 	CMSER serial;
 	int hdl;
 	UINT i;
+
+	if(np2oscfg.com[port].direct) {
+		convert_np2tocm(port, &param, &speed);
+	}
 
 	VERBOSE(("cmserial_create: port = %d, param = %02x, speed = %d", port, param, speed));
 
@@ -357,6 +456,8 @@ cmserial_create(UINT port, UINT8 param, UINT32 speed)
 #endif
 	ret->read = serialread;
 	ret->write = serialwrite;
+	ret->writeretry = serialwriteretry;
+	ret->lastwritesuccess = seriallastwritesuccess;
 	ret->getstat = serialgetstat;
 	ret->msg = serialmsg;
 	ret->release = serialrelease;

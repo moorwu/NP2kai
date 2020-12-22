@@ -1,20 +1,20 @@
 /**
  *	@file	np2arg.cpp
- *	@brief	ˆø”î•ñƒNƒ‰ƒX‚Ì“®ì‚Ì’è‹`‚ğs‚¢‚Ü‚·
+ *	@brief	å¼•æ•°æƒ…å ±ã‚¯ãƒ©ã‚¹ã®å‹•ä½œã®å®šç¾©ã‚’è¡Œã„ã¾ã™
  */
 
 #include "compiler.h"
 #include "np2arg.h"
 #include "dosio.h"
 
-#define	MAXARG		32				//!< Å‘åˆø”ƒGƒ“ƒgƒŠ”
-#define	ARG_BASE	1				//!< win32 ‚Ì lpszCmdLine ‚Ìê‡‚ÌŠJnƒGƒ“ƒgƒŠ
+#define	MAXARG		32				//!< æœ€å¤§å¼•æ•°ã‚¨ãƒ³ãƒˆãƒªæ•°
+#define	ARG_BASE	1				//!< win32 ã® lpszCmdLine ã®å ´åˆã®é–‹å§‹ã‚¨ãƒ³ãƒˆãƒª
 
-//! —Bˆê‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚Å‚·
+//! å”¯ä¸€ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã§ã™
 Np2Arg Np2Arg::sm_instance;
 
 /**
- * ƒRƒ“ƒXƒgƒ‰ƒNƒ^
+ * ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
  */
 Np2Arg::Np2Arg()
 {
@@ -22,21 +22,31 @@ Np2Arg::Np2Arg()
 }
 
 /**
- * ƒfƒXƒgƒ‰ƒNƒ^
+ * ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
  */
 Np2Arg::~Np2Arg()
 {
-	free(m_lpArg);
-	if(m_lpIniFile) free((TCHAR*)m_lpIniFile); // np21w ver0.86 rev8
+	if(m_lpArg){
+		free(m_lpArg);
+		m_lpArg = NULL;
+	}
+	if(m_lpIniFile){
+		free(m_lpIniFile); // np21w ver0.86 rev8
+		m_lpIniFile = NULL;
+	}
 }
 
 /**
- * ƒp[ƒX
+ * ãƒ‘ãƒ¼ã‚¹
  */
 void Np2Arg::Parse()
 {
-	// ˆø”“Ç‚İo‚µ
-	free(m_lpArg);
+	LPCTSTR lpIniFile = NULL;
+
+	// å¼•æ•°èª­ã¿å‡ºã—
+	if(m_lpArg) {
+		free(m_lpArg);
+	}
 	m_lpArg = _tcsdup(::GetCommandLine());
 
 	LPTSTR argv[MAXARG];
@@ -56,7 +66,7 @@ void Np2Arg::Parse()
 					break;
 
 				case 'i':
-					m_lpIniFile = &lpArg[2];
+					lpIniFile = &lpArg[2];
 					break;
 			}
 		}
@@ -65,7 +75,7 @@ void Np2Arg::Parse()
 			LPCTSTR lpExt = ::file_getext(lpArg);
 			if (::file_cmpname(lpExt, TEXT("ini")) == 0 || ::file_cmpname(lpExt, TEXT("npc")) == 0 || ::file_cmpname(lpExt, TEXT("npcfg")) == 0 || ::file_cmpname(lpExt, TEXT("np2cfg")) == 0 || ::file_cmpname(lpExt, TEXT("np21cfg")) == 0 || ::file_cmpname(lpExt, TEXT("np21wcfg")) == 0)
 			{
-				m_lpIniFile = lpArg;
+				lpIniFile = lpArg;
 			}
 			else if (nDrive < _countof(m_lpDisk))
 			{
@@ -73,24 +83,24 @@ void Np2Arg::Parse()
 			}
 		}
 	}
-	if(m_lpIniFile){ // np21w ver0.86 rev8
+	if(lpIniFile){ // np21w ver0.86 rev8
 		LPTSTR strbuf;
 		strbuf = (LPTSTR)calloc(500, sizeof(TCHAR));
-		if(!(_tcsstr(m_lpIniFile,_T(":"))!=NULL || (m_lpIniFile[0]=='\\'))){
-			// ƒtƒ@ƒCƒ‹–¼‚Ì‚İ‚Ìw’è‚Á‚Û‚©‚Á‚½‚çŒ»İ‚ÌƒfƒBƒŒƒNƒgƒŠ‚ğŒ‹‡
+		if(!(_tcsstr(lpIniFile,_T(":"))!=NULL || (lpIniFile[0]=='Â¥Â¥'))){
+			// ãƒ•ã‚¡ã‚¤ãƒ«åã®ã¿ã®æŒ‡å®šã£ã½ã‹ã£ãŸã‚‰ç¾åœ¨ã®ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚’çµåˆ
 			//getcwd(pathname, 300);
 			GetCurrentDirectory(500, strbuf);
-			if(strbuf[_tcslen(strbuf)-1]!='\\'){
-				_tcscat(strbuf, _T("\\")); // XXX: Linux‚Æ‚©‚¾‚Á‚½‚çƒXƒ‰ƒbƒVƒ…‚¶‚á‚È‚¢‚Æ‘Ê–Ú‚¾‚æ‚ËH
+			if(strbuf[_tcslen(strbuf)-1]!='Â¥Â¥'){
+				_tcscat(strbuf, _T("Â¥Â¥")); // XXX: Linuxã¨ã‹ã ã£ãŸã‚‰ã‚¹ãƒ©ãƒƒã‚·ãƒ¥ã˜ã‚ƒãªã„ã¨é§„ç›®ã ã‚ˆã­ï¼Ÿ -> Winå°‚ç”¨ã ã‹ã‚‰å•é¡Œãªã„
 			}
 		}
-		_tcscat(strbuf, m_lpIniFile);
+		_tcscat(strbuf, lpIniFile);
 		m_lpIniFile = strbuf;
 	}
 }
 
 /**
- * ƒfƒBƒXƒNî•ñ‚ğƒNƒŠƒA
+ * ãƒ‡ã‚£ã‚¹ã‚¯æƒ…å ±ã‚’ã‚¯ãƒªã‚¢
  */
 void Np2Arg::ClearDisk()
 {

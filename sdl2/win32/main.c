@@ -1,6 +1,6 @@
 /**
  * @file	main.c
- * @brief	ƒƒCƒ“
+ * @brief	ãƒ¡ã‚¤ãƒ³
  */
 
 #include "compiler.h"
@@ -9,17 +9,16 @@
 
 #pragma comment(lib, "SDL2.lib")
 #pragma comment(lib, "SDL2main.lib")
-#pragma comment(lib, "zlib.lib")
 
 #if !defined(RESOURCE_US)
 #pragma comment(lib, "SDL2_ttf.lib")
 #endif
 
 /**
- * ƒƒCƒ“
- * @param[in] argc ˆø”
- * @param[in] argv ˆø”
- * @return ƒŠƒUƒ‹ƒg ƒR[ƒh
+ * ãƒ¡ã‚¤ãƒ³
+ * @param[in] argc å¼•æ•°
+ * @param[in] argv å¼•æ•°
+ * @return ãƒªã‚¶ãƒ«ãƒˆ ã‚³ãƒ¼ãƒ‰
  */
 int main(int argc, char *argv[])
 {

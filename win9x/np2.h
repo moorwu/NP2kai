@@ -1,8 +1,8 @@
 
 #if !defined(SUPPORT_PC9821)
-#define PROJECTNAME			"Neko Project II/W"
+#define PROJECTNAME			"Neko Project II kai"
 #else
-#define PROJECTNAME			"Neko Project 21/W"
+#define PROJECTNAME			"Neko Project 21 kai"
 #endif
 
 #if !defined(_WIN64)
@@ -20,6 +20,11 @@ typedef struct {
 	OEMCHAR	min[MAXPNAMELEN];
 	OEMCHAR	mdl[64];
 	OEMCHAR	def[MAX_PATH];
+	UINT8	fixedspeed;
+#if defined(SUPPORT_NAMED_PIPE)
+	OEMCHAR	pipename[MAX_PATH]; // The name of the named-pipe
+	OEMCHAR	pipeserv[MAX_PATH]; // The server name of the named-pipe
+#endif
 } COMCFG;
 
 typedef struct {
@@ -36,17 +41,12 @@ typedef struct {
 	UINT8	WINSNAP;
 	UINT8	NOWAIT;
 	UINT8	DRAW_SKIP;
-//	WindowSizeを保持するために追加(k8)
-	UINT8	SCRN_MUL;
-//
-//	DrawTypeを保持するために追加(k9)
-	BOOL	bDrawType;
-//
 
 	UINT8	background;
 	UINT8	DISPCLK;
 	UINT8	KEYBOARD;
 	UINT8	F12COPY;
+	UINT8	USENUMLOCK;
 
 	UINT8	MOUSE_SW;
 	UINT8	JOYPAD1;
@@ -54,6 +54,10 @@ typedef struct {
 	UINT8	JOY1BTN[4];
 
 	COMCFG	mpu;
+#if defined(SUPPORT_SMPU98)
+	COMCFG	smpuA;
+	COMCFG	smpuB;
+#endif
 	COMCFG	com1;
 	COMCFG	com2;
 	COMCFG	com3;
@@ -65,6 +69,9 @@ typedef struct {
 
 	UINT8	comfirm;
 	UINT8	shortcut;												// ver0.30
+
+	UINT8	sstp;
+	UINT16	sstpport;
 
 	UINT8	resume;													// ver0.30
 	UINT8	statsave;
@@ -83,6 +90,12 @@ typedef struct {
 	UINT8	xrollkey;
 	UINT8	fscrnbpp;
 	UINT8	fscrnmod;
+	UINT8	fsrescfg;
+
+#if defined(SUPPORT_SCRN_DIRECT3D)
+	UINT8	d3d_imode; // Direct3D interpolation mode
+	UINT8	d3d_exclusive; // Direct3D fullscreen exclusive mode
+#endif
 
 	UINT8	cSoundDeviceType;
 	TCHAR	szSoundDeviceName[MAX_PATH];
@@ -92,6 +105,7 @@ typedef struct {
 #endif	// defined(SUPPORT_VSTi)
 
 	UINT8	emuddraw; // DirectDraw Emulation Only
+	UINT8	drawtype; // Screen renderer type (0: DirectDraw, 1: reserved(DirecrDraw), 2: Direct3D)
 	UINT8	dragdrop; // Drag and drop support
 	UINT8	makelhdd; // Large HDD creation support
 	UINT8	syskhook; // Low-level keyboard hook support
@@ -103,11 +117,20 @@ typedef struct {
 	UINT8	savescrn; // Save ScreenMode
 	
 	UINT8	svscrmul; // Save Screen Size Multiplying Value 
-	UINT8	scrn_mul; // Screen Size Multiplying Value
+	UINT8	scrn_mul; // Screen Size Multiplying Value (8: default)
 	
 	UINT8	mouse_nc; // Always notify mouse event
-	
 	UINT16	cpustabf; // CPU clock stabilizer frame
+	UINT8	readonly; // No save changed settings
+	UINT8	usewheel; // Use mouse wheel
+	UINT8	tickmode; // Force Set Tick Counter Mode
+	UINT8	usemastervolume; // Use Master Volume
+	
+	UINT8	toolwndhistory; // Number of data of recently opened FD image list in Tool Window
+	
+#ifdef SUPPORT_WACOM_TABLET
+	UINT8	pentabfa; // Pen tablet fixed aspect mode
+#endif	// defined(SUPPORT_WACOM_TABLET)
 } NP2OSCFG;
 
 
@@ -122,7 +145,8 @@ enum {
 };
 
 enum {
-	WM_NP2CMD			= (WM_USER + 200)
+	WM_NP2CMD			= (WM_USER + 200),
+	WM_SSTP				= (WM_USER + 201)
 };
 
 enum {

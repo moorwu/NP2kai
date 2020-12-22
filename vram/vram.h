@@ -12,8 +12,8 @@ typedef struct {
 	UINT	grcgwait;
 #endif
 #if defined(SUPPORT_PC9821)
-	UINT8	mio1[4];
-	UINT8	mio2[0x40];
+	UINT8	mio1[4]; // PEGC Packed-pixel Mode バンク切り替え(mio1[0〜1] E0004H, mio1[2〜3] E0006H)
+	UINT8	mio2[0x100]; // PEGC MMIOレジスタ(mio2[0〜1] E0100H 〜 E0200H)
 #endif
 } _VRAMOP, *VRAMOP;
 
@@ -51,7 +51,12 @@ extern	_VRAMOP	vramop;
 extern	UINT8	tramupdate[0x1000];
 extern	UINT8	vramupdate[0x8000];
 #if defined(SUPPORT_PC9821)
+#if defined(SUPPORT_IA32_HAXM)
+extern	UINT8	vramex_base[0x80000];
+extern	UINT8	*vramex; // PEGC VRAM  Alloc in pccore_mem_malloc()
+#else
 extern	UINT8	vramex[0x80000];
+#endif
 #endif
 
 void vram_initialize(void);

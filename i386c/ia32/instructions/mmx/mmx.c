@@ -32,19 +32,19 @@
 
 #if defined(USE_MMX) && defined(USE_FPU)
 
-#define CPU_MMXWORKCLOCK(a)	CPU_WORKCLOCK(6)
+#define CPU_MMXWORKCLOCK	CPU_WORKCLOCK(6)
 
 static INLINE void
 MMX_check_NM_EXCEPTION(){
-	// MMX‚È‚µ‚È‚çUD(–³ŒøƒIƒyƒR[ƒh—áŠO)‚ğ”­¶‚³‚¹‚é
+	// MMXãªã—ãªã‚‰UD(ç„¡åŠ¹ã‚ªãƒšã‚³ãƒ¼ãƒ‰ä¾‹å¤–)ã‚’ç™ºç”Ÿã•ã›ã‚‹
 	if(!(i386cpuid.cpu_feature & CPU_FEATURE_MMX)){
 		EXCEPTION(UD_EXCEPTION, 0);
 	}
-	// ƒGƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“‚È‚çUD(–³ŒøƒIƒyƒR[ƒh—áŠO)‚ğ”­¶‚³‚¹‚é
+	// ã‚¨ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ãªã‚‰UD(ç„¡åŠ¹ã‚ªãƒšã‚³ãƒ¼ãƒ‰ä¾‹å¤–)ã‚’ç™ºç”Ÿã•ã›ã‚‹
 	if(CPU_CR0 & CPU_CR0_EM){
 		EXCEPTION(UD_EXCEPTION, 0);
 	}
-	// ƒ^ƒXƒNƒXƒCƒbƒ`‚ÉNM(ƒfƒoƒCƒXg—p•s‰Â—áŠO)‚ğ”­¶‚³‚¹‚é
+	// ã‚¿ã‚¹ã‚¯ã‚¹ã‚¤ãƒƒãƒæ™‚ã«NM(ãƒ‡ãƒã‚¤ã‚¹ä½¿ç”¨ä¸å¯ä¾‹å¤–)ã‚’ç™ºç”Ÿã•ã›ã‚‹
 	if (CPU_CR0 & CPU_CR0_TS) {
 		EXCEPTION(NM_EXCEPTION, 0);
 	}
@@ -79,15 +79,15 @@ MMX_EMMS(void)
 {
 	int i;
 	
-	// MMX‚È‚µ‚È‚çUD(–³ŒøƒIƒyƒR[ƒh—áŠO)‚ğ”­¶‚³‚¹‚é
+	// MMXãªã—ãªã‚‰UD(ç„¡åŠ¹ã‚ªãƒšã‚³ãƒ¼ãƒ‰ä¾‹å¤–)ã‚’ç™ºç”Ÿã•ã›ã‚‹
 	if(!(i386cpuid.cpu_feature & CPU_FEATURE_MMX)){
 		EXCEPTION(UD_EXCEPTION, 0);
 	}
-	// ƒGƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“‚È‚çUD(–³ŒøƒIƒyƒR[ƒh—áŠO)‚ğ”­¶‚³‚¹‚é
+	// ã‚¨ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ãªã‚‰UD(ç„¡åŠ¹ã‚ªãƒšã‚³ãƒ¼ãƒ‰ä¾‹å¤–)ã‚’ç™ºç”Ÿã•ã›ã‚‹
 	if(CPU_CR0 & CPU_CR0_EM){
 		EXCEPTION(UD_EXCEPTION, 0);
 	}
-	// ƒ^ƒXƒNƒXƒCƒbƒ`‚ÉNM(ƒfƒoƒCƒXg—p•s‰Â—áŠO)‚ğ”­¶‚³‚¹‚é
+	// ã‚¿ã‚¹ã‚¯ã‚¹ã‚¤ãƒƒãƒæ™‚ã«NM(ãƒ‡ãƒã‚¤ã‚¹ä½¿ç”¨ä¸å¯ä¾‹å¤–)ã‚’ç™ºç”Ÿã•ã›ã‚‹
 	if ((CPU_CR0 & (CPU_CR0_TS)) || (CPU_CR0 & CPU_CR0_EM)) {
 		EXCEPTION(NM_EXCEPTION, 0);
 	}
@@ -111,7 +111,7 @@ void MMX_MOVD_mm_rm32(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -132,7 +132,7 @@ void MMX_MOVD_rm32_mm(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -152,7 +152,7 @@ void MMX_MOVQ_mm_mmm64(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -173,7 +173,7 @@ void MMX_MOVQ_mmm64_mm(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -204,7 +204,7 @@ void MMX_PACKSSWB(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -256,7 +256,7 @@ void MMX_PACKSSDW(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -309,7 +309,7 @@ void MMX_PACKUSWB(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -362,7 +362,7 @@ void MMX_PADDB(void)
 
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -373,7 +373,7 @@ void MMX_PADDB(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+4)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT8*)(&srcregbuf);
+		srcreg = (UINT8*)(srcregbuf);
 	}
 	dstreg = (UINT8*)(&(FPU_STAT.reg[idx]));
 	
@@ -392,7 +392,7 @@ void MMX_PADDW(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -403,7 +403,7 @@ void MMX_PADDW(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+2)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT16*)(&srcregbuf);
+		srcreg = (UINT16*)(srcregbuf);
 	}
 	dstreg = (UINT16*)(&(FPU_STAT.reg[idx]));
 	
@@ -422,7 +422,7 @@ void MMX_PADDD(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -433,7 +433,7 @@ void MMX_PADDD(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+1)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT32*)(&srcregbuf);
+		srcreg = (UINT32*)(srcregbuf);
 	}
 	dstreg = (UINT32*)(&(FPU_STAT.reg[idx]));
 	
@@ -453,7 +453,7 @@ void MMX_PADDSB(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -464,7 +464,7 @@ void MMX_PADDSB(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+4)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (INT8*)(&srcregbuf);
+		srcreg = (INT8*)(srcregbuf);
 	}
 	dstreg = (INT8*)(&(FPU_STAT.reg[idx]));
 	
@@ -490,7 +490,7 @@ void MMX_PADDSW(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -501,7 +501,7 @@ void MMX_PADDSW(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+2)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (INT16*)(&srcregbuf);
+		srcreg = (INT16*)(srcregbuf);
 	}
 	dstreg = (INT16*)(&(FPU_STAT.reg[idx]));
 	
@@ -528,7 +528,7 @@ void MMX_PADDUSB(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -539,7 +539,7 @@ void MMX_PADDUSB(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+4)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT8*)(&srcregbuf);
+		srcreg = (UINT8*)(srcregbuf);
 	}
 	dstreg = (UINT8*)(&(FPU_STAT.reg[idx]));
 	
@@ -563,7 +563,7 @@ void MMX_PADDUSW(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -574,7 +574,7 @@ void MMX_PADDUSW(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+2)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT16*)(&srcregbuf);
+		srcreg = (UINT16*)(srcregbuf);
 	}
 	dstreg = (UINT16*)(&(FPU_STAT.reg[idx]));
 	
@@ -600,7 +600,7 @@ void MMX_PAND(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -611,7 +611,7 @@ void MMX_PAND(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+1)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT32*)(&srcregbuf);
+		srcreg = (UINT32*)(srcregbuf);
 	}
 	dstreg = (UINT32*)(&(FPU_STAT.reg[idx]));
 
@@ -628,7 +628,7 @@ void MMX_PANDN(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -639,7 +639,7 @@ void MMX_PANDN(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+1)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT32*)(&srcregbuf);
+		srcreg = (UINT32*)(srcregbuf);
 	}
 	dstreg = (UINT32*)(&(FPU_STAT.reg[idx]));
 
@@ -658,7 +658,7 @@ void MMX_POR(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -669,7 +669,7 @@ void MMX_POR(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+1)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT32*)(&srcregbuf);
+		srcreg = (UINT32*)(srcregbuf);
 	}
 	dstreg = (UINT32*)(&(FPU_STAT.reg[idx]));
 
@@ -686,7 +686,7 @@ void MMX_PXOR(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -697,7 +697,7 @@ void MMX_PXOR(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+1)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT32*)(&srcregbuf);
+		srcreg = (UINT32*)(srcregbuf);
 	}
 	dstreg = (UINT32*)(&(FPU_STAT.reg[idx]));
 
@@ -718,7 +718,7 @@ void MMX_PCMPEQB(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -729,7 +729,7 @@ void MMX_PCMPEQB(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+4)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT8*)(&srcregbuf);
+		srcreg = (UINT8*)(srcregbuf);
 	}
 	dstreg = (UINT8*)(&(FPU_STAT.reg[idx]));
 	
@@ -752,7 +752,7 @@ void MMX_PCMPEQW(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -763,7 +763,7 @@ void MMX_PCMPEQW(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+2)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT16*)(&srcregbuf);
+		srcreg = (UINT16*)(srcregbuf);
 	}
 	dstreg = (UINT16*)(&(FPU_STAT.reg[idx]));
 	
@@ -786,7 +786,7 @@ void MMX_PCMPEQD(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -797,7 +797,7 @@ void MMX_PCMPEQD(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+1)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT32*)(&srcregbuf);
+		srcreg = (UINT32*)(srcregbuf);
 	}
 	dstreg = (UINT32*)(&(FPU_STAT.reg[idx]));
 	
@@ -823,7 +823,7 @@ void MMX_PCMPGTB(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -834,7 +834,7 @@ void MMX_PCMPGTB(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+4)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (INT8*)(&srcregbuf);
+		srcreg = (INT8*)(srcregbuf);
 	}
 	dstreg = (INT8*)(&(FPU_STAT.reg[idx]));
 	
@@ -857,7 +857,7 @@ void MMX_PCMPGTW(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -868,7 +868,7 @@ void MMX_PCMPGTW(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+2)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (INT16*)(&srcregbuf);
+		srcreg = (INT16*)(srcregbuf);
 	}
 	dstreg = (INT16*)(&(FPU_STAT.reg[idx]));
 	
@@ -891,7 +891,7 @@ void MMX_PCMPGTD(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -902,7 +902,7 @@ void MMX_PCMPGTD(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+1)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (INT32*)(&srcregbuf);
+		srcreg = (INT32*)(srcregbuf);
 	}
 	dstreg = (INT32*)(&(FPU_STAT.reg[idx]));
 	
@@ -928,7 +928,7 @@ void MMX_PMADDWD(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -939,7 +939,7 @@ void MMX_PMADDWD(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+2)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (INT16*)(&srcregbuf);
+		srcreg = (INT16*)(srcregbuf);
 	}
 	dstreg = (INT16*)(&(FPU_STAT.reg[idx]));
 	dstreg32 = (INT32*)(&(FPU_STAT.reg[idx]));
@@ -951,36 +951,6 @@ void MMX_PMADDWD(void)
 }
 
 // *********** PMUL
-void MMX_PMULHUW(void)
-{
-	UINT32 op;
-	UINT idx, sub;
-	UINT16 srcregbuf[4];
-	UINT16 *srcreg;
-	UINT16 *dstreg;
-	int i;
-	
-	MMX_check_NM_EXCEPTION();
-	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
-	GET_PCBYTE((op));
-	idx = (op >> 3) & 7;
-	sub = (op & 7);
-	if ((op) >= 0xc0) {
-		srcreg = (UINT16*)(&(FPU_STAT.reg[sub]));
-	} else {
-		UINT32 maddr;
-		maddr = calc_ea_dst((op));
-		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
-		*((UINT32*)(srcregbuf+2)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT16*)(&srcregbuf);
-	}
-	dstreg = (UINT16*)(&(FPU_STAT.reg[idx]));
-	
-	for(i=0;i<4;i++){
-		dstreg[i] = (UINT16)((((UINT32)srcreg[i] * (UINT32)dstreg[i]) >> 16) & 0xffff);
-	}
-}
 void MMX_PMULHW(void)
 {
 	UINT32 op;
@@ -992,7 +962,7 @@ void MMX_PMULHW(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -1003,7 +973,7 @@ void MMX_PMULHW(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+2)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (INT16*)(&srcregbuf);
+		srcreg = (INT16*)(srcregbuf);
 	}
 	dstreg = (INT16*)(&(FPU_STAT.reg[idx]));
 	
@@ -1022,7 +992,7 @@ void MMX_PMULLW(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -1033,7 +1003,7 @@ void MMX_PMULLW(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+2)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (INT16*)(&srcregbuf);
+		srcreg = (INT16*)(srcregbuf);
 	}
 	dstreg = (INT16*)(&(FPU_STAT.reg[idx]));
 	
@@ -1053,24 +1023,24 @@ void MMX_PSLLW(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
 	if ((op) >= 0xc0) {
 		shift = FPU_STAT.reg[sub].ul.lower;
-		if(FPU_STAT.reg[sub].ul.upper) shift = 0xffffffff; // XXX: ‚Æ‚è‚ ‚¦‚¸ƒŒƒWƒXƒ^“à—e‚ªÁ‚¦‚é‚­‚ç‚¢‘å‚«‚ÈƒVƒtƒg—Ê‚É‚µ‚Ä‚¨‚­
+		if(FPU_STAT.reg[sub].ul.upper) shift = 0xffffffff; // XXX: ã¨ã‚Šã‚ãˆãšãƒ¬ã‚¸ã‚¹ã‚¿å†…å®¹ãŒæ¶ˆãˆã‚‹ãã‚‰ã„å¤§ããªã‚·ãƒ•ãƒˆé‡ã«ã—ã¦ãŠã
 	} else {
 		UINT32 maddr;
 		maddr = calc_ea_dst((op));
 		shift = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
-		if(cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4)) shift = 0xffffffff; // XXX: ‚Æ‚è‚ ‚¦‚¸ƒŒƒWƒXƒ^“à—e‚ªÁ‚¦‚é‚­‚ç‚¢‘å‚«‚ÈƒVƒtƒg—Ê‚É‚µ‚Ä‚¨‚­
+		if(cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4)) shift = 0xffffffff; // XXX: ã¨ã‚Šã‚ãˆãšãƒ¬ã‚¸ã‚¹ã‚¿å†…å®¹ãŒæ¶ˆãˆã‚‹ãã‚‰ã„å¤§ããªã‚·ãƒ•ãƒˆé‡ã«ã—ã¦ãŠã
 	}
 	dstreg = (UINT16*)(&(FPU_STAT.reg[idx]));
 	
 	for(i=0;i<4;i++){
 		//dstreg[i] = (dstreg[i] << shift);
-		dstreg[i] = (shift >= 16 ? 0 : (dstreg[i] << (UINT16)shift)); // XXX: MSB‚ªæ‚èc‚³‚ê‚é‚Ì‚Å‚²‚Ü‚©‚µiŠÂ‹«ˆË‘¶Hj
+		dstreg[i] = (shift >= 16 ? 0 : (dstreg[i] << (UINT16)shift)); // XXX: MSBãŒå–ã‚Šæ®‹ã•ã‚Œã‚‹ã®ã§ã”ã¾ã‹ã—ï¼ˆç’°å¢ƒä¾å­˜ï¼Ÿï¼‰
 	}
 }
 void MMX_PSLLD(void)
@@ -1083,24 +1053,24 @@ void MMX_PSLLD(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
 	if ((op) >= 0xc0) {
 		shift = FPU_STAT.reg[sub].ul.lower;
-		if(FPU_STAT.reg[sub].ul.upper) shift = 0xffffffff; // XXX: ‚Æ‚è‚ ‚¦‚¸ƒŒƒWƒXƒ^“à—e‚ªÁ‚¦‚é‚­‚ç‚¢‘å‚«‚ÈƒVƒtƒg—Ê‚É‚µ‚Ä‚¨‚­
+		if(FPU_STAT.reg[sub].ul.upper) shift = 0xffffffff; // XXX: ã¨ã‚Šã‚ãˆãšãƒ¬ã‚¸ã‚¹ã‚¿å†…å®¹ãŒæ¶ˆãˆã‚‹ãã‚‰ã„å¤§ããªã‚·ãƒ•ãƒˆé‡ã«ã—ã¦ãŠã
 	} else {
 		UINT32 maddr;
 		maddr = calc_ea_dst((op));
 		shift = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
-		if(cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4)) shift = 0xffffffff; // XXX: ‚Æ‚è‚ ‚¦‚¸ƒŒƒWƒXƒ^“à—e‚ªÁ‚¦‚é‚­‚ç‚¢‘å‚«‚ÈƒVƒtƒg—Ê‚É‚µ‚Ä‚¨‚­
+		if(cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4)) shift = 0xffffffff; // XXX: ã¨ã‚Šã‚ãˆãšãƒ¬ã‚¸ã‚¹ã‚¿å†…å®¹ãŒæ¶ˆãˆã‚‹ãã‚‰ã„å¤§ããªã‚·ãƒ•ãƒˆé‡ã«ã—ã¦ãŠã
 	}
 	dstreg = (UINT32*)(&(FPU_STAT.reg[idx]));
 	
 	for(i=0;i<2;i++){
 		//dstreg[i] = (dstreg[i] << shift);
-		dstreg[i] = (shift >= 32 ? 0 : (dstreg[i] << (UINT32)shift)); // XXX: MSB‚ªæ‚èc‚³‚ê‚é‚Ì‚Å‚²‚Ü‚©‚µiŠÂ‹«ˆË‘¶Hj
+		dstreg[i] = (shift >= 32 ? 0 : (dstreg[i] << (UINT32)shift)); // XXX: MSBãŒå–ã‚Šæ®‹ã•ã‚Œã‚‹ã®ã§ã”ã¾ã‹ã—ï¼ˆç’°å¢ƒä¾å­˜ï¼Ÿï¼‰
 	}
 }
 void MMX_PSLLQ(void)
@@ -1112,23 +1082,23 @@ void MMX_PSLLQ(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
 	if ((op) >= 0xc0) {
 		shift = FPU_STAT.reg[sub].ul.lower;
-		if(FPU_STAT.reg[sub].ul.upper) shift = 0xffffffff; // XXX: ‚Æ‚è‚ ‚¦‚¸ƒŒƒWƒXƒ^“à—e‚ªÁ‚¦‚é‚­‚ç‚¢‘å‚«‚ÈƒVƒtƒg—Ê‚É‚µ‚Ä‚¨‚­
+		if(FPU_STAT.reg[sub].ul.upper) shift = 0xffffffff; // XXX: ã¨ã‚Šã‚ãˆãšãƒ¬ã‚¸ã‚¹ã‚¿å†…å®¹ãŒæ¶ˆãˆã‚‹ãã‚‰ã„å¤§ããªã‚·ãƒ•ãƒˆé‡ã«ã—ã¦ãŠã
 	} else {
 		UINT32 maddr;
 		maddr = calc_ea_dst((op));
 		shift = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
-		if(cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4)) shift = 0xffffffff; // XXX: ‚Æ‚è‚ ‚¦‚¸ƒŒƒWƒXƒ^“à—e‚ªÁ‚¦‚é‚­‚ç‚¢‘å‚«‚ÈƒVƒtƒg—Ê‚É‚µ‚Ä‚¨‚­
+		if(cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4)) shift = 0xffffffff; // XXX: ã¨ã‚Šã‚ãˆãšãƒ¬ã‚¸ã‚¹ã‚¿å†…å®¹ãŒæ¶ˆãˆã‚‹ãã‚‰ã„å¤§ããªã‚·ãƒ•ãƒˆé‡ã«ã—ã¦ãŠã
 	}
 	dstreg = (UINT64*)(&(FPU_STAT.reg[idx]));
 	
 	//dstreg[0] = (dstreg[0] << shift);
-	dstreg[0] = (shift >= 64 ? 0 : (dstreg[0] << (UINT64)shift)); // XXX: MSB‚ªæ‚èc‚³‚ê‚é‚Ì‚Å‚²‚Ü‚©‚µiŠÂ‹«ˆË‘¶Hj
+	dstreg[0] = (shift >= 64 ? 0 : (dstreg[0] << (UINT64)shift)); // XXX: MSBãŒå–ã‚Šæ®‹ã•ã‚Œã‚‹ã®ã§ã”ã¾ã‹ã—ï¼ˆç’°å¢ƒä¾å­˜ï¼Ÿï¼‰
 }
 
 // *********** PSRA
@@ -1144,22 +1114,22 @@ void MMX_PSRAW(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
 	if ((op) >= 0xc0) {
 		shift = FPU_STAT.reg[sub].ul.lower;
-		if(FPU_STAT.reg[sub].ul.upper) shift = 0xffffffff; // XXX: ‚Æ‚è‚ ‚¦‚¸ƒŒƒWƒXƒ^“à—e‚ªÁ‚¦‚é‚­‚ç‚¢‘å‚«‚ÈƒVƒtƒg—Ê‚É‚µ‚Ä‚¨‚­
+		if(FPU_STAT.reg[sub].ul.upper) shift = 0xffffffff; // XXX: ã¨ã‚Šã‚ãˆãšãƒ¬ã‚¸ã‚¹ã‚¿å†…å®¹ãŒæ¶ˆãˆã‚‹ãã‚‰ã„å¤§ããªã‚·ãƒ•ãƒˆé‡ã«ã—ã¦ãŠã
 	} else {
 		UINT32 maddr;
 		maddr = calc_ea_dst((op));
 		shift = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
-		if(cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4)) shift = 0xffffffff; // XXX: ‚Æ‚è‚ ‚¦‚¸ƒŒƒWƒXƒ^“à—e‚ªÁ‚¦‚é‚­‚ç‚¢‘å‚«‚ÈƒVƒtƒg—Ê‚É‚µ‚Ä‚¨‚­
+		if(cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4)) shift = 0xffffffff; // XXX: ã¨ã‚Šã‚ãˆãšãƒ¬ã‚¸ã‚¹ã‚¿å†…å®¹ãŒæ¶ˆãˆã‚‹ãã‚‰ã„å¤§ããªã‚·ãƒ•ãƒˆé‡ã«ã—ã¦ãŠã
 	}
 	dstreg = (UINT16*)(&(FPU_STAT.reg[idx]));
 	
-	// –³—‚â‚èZpƒVƒtƒgi‰ö‚µ‚¢j
+	// ç„¡ç†ã‚„ã‚Šç®—è¡“ã‚·ãƒ•ãƒˆï¼ˆæ€ªã—ã„ï¼‰
 	if(16 <= shift){
 		signval = 0xffff;
 	}else{
@@ -1170,7 +1140,7 @@ void MMX_PSRAW(void)
 		if(((INT16*)dstreg)[i] < 0){
 			dstreg[i] = (dstreg[i] >> shift) | signval;
 		}else{
-			dstreg[i] = (dstreg[i] >> shift);
+			dstreg[i] = (shift >= 16 ? 0 : (dstreg[i] >> (UINT16)shift)); // XXX: LSBãŒå–ã‚Šæ®‹ã•ã‚Œã‚‹ã®ã§ã”ã¾ã‹ã—ï¼ˆç’°å¢ƒä¾å­˜ï¼Ÿï¼‰
 		}
 	}
 }
@@ -1185,22 +1155,22 @@ void MMX_PSRAD(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
 	if ((op) >= 0xc0) {
 		shift = FPU_STAT.reg[sub].ul.lower;
-		if(FPU_STAT.reg[sub].ul.upper) shift = 0xffffffff; // XXX: ‚Æ‚è‚ ‚¦‚¸ƒŒƒWƒXƒ^“à—e‚ªÁ‚¦‚é‚­‚ç‚¢‘å‚«‚ÈƒVƒtƒg—Ê‚É‚µ‚Ä‚¨‚­
+		if(FPU_STAT.reg[sub].ul.upper) shift = 0xffffffff; // XXX: ã¨ã‚Šã‚ãˆãšãƒ¬ã‚¸ã‚¹ã‚¿å†…å®¹ãŒæ¶ˆãˆã‚‹ãã‚‰ã„å¤§ããªã‚·ãƒ•ãƒˆé‡ã«ã—ã¦ãŠã
 	} else {
 		UINT32 maddr;
 		maddr = calc_ea_dst((op));
 		shift = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
-		if(cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4)) shift = 0xffffffff; // XXX: ‚Æ‚è‚ ‚¦‚¸ƒŒƒWƒXƒ^“à—e‚ªÁ‚¦‚é‚­‚ç‚¢‘å‚«‚ÈƒVƒtƒg—Ê‚É‚µ‚Ä‚¨‚­
+		if(cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4)) shift = 0xffffffff; // XXX: ã¨ã‚Šã‚ãˆãšãƒ¬ã‚¸ã‚¹ã‚¿å†…å®¹ãŒæ¶ˆãˆã‚‹ãã‚‰ã„å¤§ããªã‚·ãƒ•ãƒˆé‡ã«ã—ã¦ãŠã
 	}
 	dstreg = (UINT32*)(&(FPU_STAT.reg[idx]));
 	
-	// –³—‚â‚èZpƒVƒtƒgi‰ö‚µ‚¢j
+	// ç„¡ç†ã‚„ã‚Šç®—è¡“ã‚·ãƒ•ãƒˆï¼ˆæ€ªã—ã„ï¼‰
 	if(32 <= shift){
 		signval = 0xffffffff;
 	}else{
@@ -1211,7 +1181,7 @@ void MMX_PSRAD(void)
 		if(((INT32*)dstreg)[i] < 0){
 			dstreg[i] = (dstreg[i] >> shift) | signval;
 		}else{
-			dstreg[i] = (dstreg[i] >> shift);
+			dstreg[i] = (shift >= 32 ? 0 : (dstreg[i] >> (UINT32)shift)); // XXX: LSBãŒå–ã‚Šæ®‹ã•ã‚Œã‚‹ã®ã§ã”ã¾ã‹ã—ï¼ˆç’°å¢ƒä¾å­˜ï¼Ÿï¼‰
 		}
 	}
 }
@@ -1227,24 +1197,24 @@ void MMX_PSRLW(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
 	if ((op) >= 0xc0) {
 		shift = FPU_STAT.reg[sub].ul.lower;
-		if(FPU_STAT.reg[sub].ul.upper) shift = 0xffffffff; // XXX: ‚Æ‚è‚ ‚¦‚¸ƒŒƒWƒXƒ^“à—e‚ªÁ‚¦‚é‚­‚ç‚¢‘å‚«‚ÈƒVƒtƒg—Ê‚É‚µ‚Ä‚¨‚­
+		if(FPU_STAT.reg[sub].ul.upper) shift = 0xffffffff; // XXX: ã¨ã‚Šã‚ãˆãšãƒ¬ã‚¸ã‚¹ã‚¿å†…å®¹ãŒæ¶ˆãˆã‚‹ãã‚‰ã„å¤§ããªã‚·ãƒ•ãƒˆé‡ã«ã—ã¦ãŠã
 	} else {
 		UINT32 maddr;
 		maddr = calc_ea_dst((op));
 		shift = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
-		if(cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4)) shift = 0xffffffff; // XXX: ‚Æ‚è‚ ‚¦‚¸ƒŒƒWƒXƒ^“à—e‚ªÁ‚¦‚é‚­‚ç‚¢‘å‚«‚ÈƒVƒtƒg—Ê‚É‚µ‚Ä‚¨‚­
+		if(cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4)) shift = 0xffffffff; // XXX: ã¨ã‚Šã‚ãˆãšãƒ¬ã‚¸ã‚¹ã‚¿å†…å®¹ãŒæ¶ˆãˆã‚‹ãã‚‰ã„å¤§ããªã‚·ãƒ•ãƒˆé‡ã«ã—ã¦ãŠã
 	}
 	dstreg = (UINT16*)(&(FPU_STAT.reg[idx]));
 	
 	for(i=0;i<4;i++){
 		//dstreg[i] = (dstreg[i] >> shift);
-		dstreg[i] = (shift >= 16 ? 0 : (dstreg[i] >> (UINT16)shift)); // XXX: LSB‚ªæ‚èc‚³‚ê‚é‚Ì‚Å‚²‚Ü‚©‚µiŠÂ‹«ˆË‘¶Hj
+		dstreg[i] = (shift >= 16 ? 0 : (dstreg[i] >> (UINT16)shift)); // XXX: LSBãŒå–ã‚Šæ®‹ã•ã‚Œã‚‹ã®ã§ã”ã¾ã‹ã—ï¼ˆç’°å¢ƒä¾å­˜ï¼Ÿï¼‰
 	}
 }
 void MMX_PSRLD(void)
@@ -1257,24 +1227,24 @@ void MMX_PSRLD(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
 	if ((op) >= 0xc0) {
 		shift = FPU_STAT.reg[sub].ul.lower;
-		if(FPU_STAT.reg[sub].ul.upper) shift = 0xffffffff; // XXX: ‚Æ‚è‚ ‚¦‚¸ƒŒƒWƒXƒ^“à—e‚ªÁ‚¦‚é‚­‚ç‚¢‘å‚«‚ÈƒVƒtƒg—Ê‚É‚µ‚Ä‚¨‚­
+		if(FPU_STAT.reg[sub].ul.upper) shift = 0xffffffff; // XXX: ã¨ã‚Šã‚ãˆãšãƒ¬ã‚¸ã‚¹ã‚¿å†…å®¹ãŒæ¶ˆãˆã‚‹ãã‚‰ã„å¤§ããªã‚·ãƒ•ãƒˆé‡ã«ã—ã¦ãŠã
 	} else {
 		UINT32 maddr;
 		maddr = calc_ea_dst((op));
 		shift = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
-		if(cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4)) shift = 0xffffffff; // XXX: ‚Æ‚è‚ ‚¦‚¸ƒŒƒWƒXƒ^“à—e‚ªÁ‚¦‚é‚­‚ç‚¢‘å‚«‚ÈƒVƒtƒg—Ê‚É‚µ‚Ä‚¨‚­
+		if(cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4)) shift = 0xffffffff; // XXX: ã¨ã‚Šã‚ãˆãšãƒ¬ã‚¸ã‚¹ã‚¿å†…å®¹ãŒæ¶ˆãˆã‚‹ãã‚‰ã„å¤§ããªã‚·ãƒ•ãƒˆé‡ã«ã—ã¦ãŠã
 	}
 	dstreg = (UINT32*)(&(FPU_STAT.reg[idx]));
 	
 	for(i=0;i<2;i++){
 		//dstreg[i] = (dstreg[i] >> shift);
-		dstreg[i] = (shift >= 32 ? 0 : (dstreg[i] >> (UINT32)shift)); // XXX: LSB‚ªæ‚èc‚³‚ê‚é‚Ì‚Å‚²‚Ü‚©‚µiŠÂ‹«ˆË‘¶Hj
+		dstreg[i] = (shift >= 32 ? 0 : (dstreg[i] >> (UINT32)shift)); // XXX: LSBãŒå–ã‚Šæ®‹ã•ã‚Œã‚‹ã®ã§ã”ã¾ã‹ã—ï¼ˆç’°å¢ƒä¾å­˜ï¼Ÿï¼‰
 	}
 }
 void MMX_PSRLQ(void)
@@ -1286,23 +1256,23 @@ void MMX_PSRLQ(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
 	if ((op) >= 0xc0) {
 		shift = FPU_STAT.reg[sub].ul.lower;
-		if(FPU_STAT.reg[sub].ul.upper) shift = 0xffffffff; // XXX: ƒVƒtƒg‚µ‚·‚¬
+		if(FPU_STAT.reg[sub].ul.upper) shift = 0xffffffff; // XXX: ã‚·ãƒ•ãƒˆã—ã™ã
 	} else {
 		UINT32 maddr;
 		maddr = calc_ea_dst((op));
 		shift = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
-		if(cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4)) shift = 0xffffffff; // XXX: ƒVƒtƒg‚µ‚·‚¬
+		if(cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4)) shift = 0xffffffff; // XXX: ã‚·ãƒ•ãƒˆã—ã™ã
 	}
 	dstreg = (UINT64*)(&(FPU_STAT.reg[idx]));
 	
 	//dstreg[0] = (dstreg[0] >> shift);
-	dstreg[0] = (shift >= 64 ? 0 : (dstreg[0] >> (UINT64)shift)); // XXX: LSB‚ªæ‚èc‚³‚ê‚é‚Ì‚Å‚²‚Ü‚©‚µiŠÂ‹«ˆË‘¶Hj
+	dstreg[0] = (shift >= 64 ? 0 : (dstreg[0] >> (UINT64)shift)); // XXX: LSBãŒå–ã‚Šæ®‹ã•ã‚Œã‚‹ã®ã§ã”ã¾ã‹ã—ï¼ˆç’°å¢ƒä¾å­˜ï¼Ÿï¼‰
 }
 
 // *********** PSLL(imm8),PSRL(imm8),PSRA(imm8) 
@@ -1317,7 +1287,7 @@ void MMX_PSxxW_imm8(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -1327,11 +1297,11 @@ void MMX_PSxxW_imm8(void)
 	switch(idx){
 	case 2: // PSRLW(imm8)
 		for(i=0;i<4;i++){
-			dstreg[i] = (dstreg[i] >> shift);
+			dstreg[i] = (shift >= 16 ? 0 : (dstreg[i] >> (UINT16)shift)); // XXX: LSBãŒå–ã‚Šæ®‹ã•ã‚Œã‚‹ã®ã§ã”ã¾ã‹ã—ï¼ˆç’°å¢ƒä¾å­˜ï¼Ÿï¼‰
 		}
 		break;
 	case 4: // PSRAW(imm8)
-		// –³—‚â‚èZpƒVƒtƒgi‰ö‚µ‚¢j
+		// ç„¡ç†ã‚„ã‚Šç®—è¡“ã‚·ãƒ•ãƒˆï¼ˆæ€ªã—ã„ï¼‰
 		if(16 <= shift){
 			signval = 0xffff;
 		}else{
@@ -1342,13 +1312,13 @@ void MMX_PSxxW_imm8(void)
 			if(((INT16*)dstreg)[i] < 0){
 				dstreg[i] = (dstreg[i] >> shift) | signval;
 			}else{
-				dstreg[i] = (dstreg[i] >> shift);
+				dstreg[i] = (shift >= 16 ? 0 : (dstreg[i] >> (UINT16)shift)); // XXX: LSBãŒå–ã‚Šæ®‹ã•ã‚Œã‚‹ã®ã§ã”ã¾ã‹ã—ï¼ˆç’°å¢ƒä¾å­˜ï¼Ÿï¼‰
 			}
 		}
 		break;
 	case 6: // PSLLW(imm8)
 		for(i=0;i<4;i++){
-			dstreg[i] = (dstreg[i] << shift);
+			dstreg[i] = (shift >= 16 ? 0 : (dstreg[i] << (UINT16)shift)); // XXX: MSBãŒå–ã‚Šæ®‹ã•ã‚Œã‚‹ã®ã§ã”ã¾ã‹ã—ï¼ˆç’°å¢ƒä¾å­˜ï¼Ÿï¼‰
 		}
 		break;
 	default:
@@ -1366,7 +1336,7 @@ void MMX_PSxxD_imm8(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -1376,11 +1346,11 @@ void MMX_PSxxD_imm8(void)
 	switch(idx){
 	case 2: // PSRLD(imm8)
 		for(i=0;i<2;i++){
-			dstreg[i] = (dstreg[i] >> shift);
+			dstreg[i] = (shift >= 32 ? 0 : (dstreg[i] >> (UINT32)shift)); // XXX: LSBãŒå–ã‚Šæ®‹ã•ã‚Œã‚‹ã®ã§ã”ã¾ã‹ã—ï¼ˆç’°å¢ƒä¾å­˜ï¼Ÿï¼‰
 		}
 		break;
 	case 4: // PSRAD(imm8)
-		// –³—‚â‚èZpƒVƒtƒgi‰ö‚µ‚¢j
+		// ç„¡ç†ã‚„ã‚Šç®—è¡“ã‚·ãƒ•ãƒˆï¼ˆæ€ªã—ã„ï¼‰
 		if(32 <= shift){
 			signval = 0xffffffff;
 		}else{
@@ -1391,13 +1361,13 @@ void MMX_PSxxD_imm8(void)
 			if(((INT32*)dstreg)[i] < 0){
 				dstreg[i] = (dstreg[i] >> shift) | signval;
 			}else{
-				dstreg[i] = (dstreg[i] >> shift);
+				dstreg[i] = (shift >= 32 ? 0 : (dstreg[i] >> (UINT32)shift)); // XXX: LSBãŒå–ã‚Šæ®‹ã•ã‚Œã‚‹ã®ã§ã”ã¾ã‹ã—ï¼ˆç’°å¢ƒä¾å­˜ï¼Ÿï¼‰
 			}
 		}
 		break;
 	case 6: // PSLLD(imm8)
 		for(i=0;i<2;i++){
-			dstreg[i] = (dstreg[i] << shift);
+			dstreg[i] = (shift >= 32 ? 0 : (dstreg[i] << (UINT32)shift)); // XXX: MSBãŒå–ã‚Šæ®‹ã•ã‚Œã‚‹ã®ã§ã”ã¾ã‹ã—ï¼ˆç’°å¢ƒä¾å­˜ï¼Ÿï¼‰
 		}
 		break;
 	default:
@@ -1413,7 +1383,7 @@ void MMX_PSxxQ_imm8(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -1422,12 +1392,13 @@ void MMX_PSxxQ_imm8(void)
 	
 	switch(idx){
 	case 2: // PSRLQ(imm8)
-		dstreg[0] = (dstreg[0] >> shift);
+		dstreg[0] = (shift >= 64 ? 0 : (dstreg[0] >> (UINT64)shift)); // XXX: LSBãŒå–ã‚Šæ®‹ã•ã‚Œã‚‹ã®ã§ã”ã¾ã‹ã—ï¼ˆç’°å¢ƒä¾å­˜ï¼Ÿï¼‰
 		break;
 	case 4: // PSRAQ(imm8)
+		EXCEPTION(UD_EXCEPTION, 0);
 		break;
 	case 6: // PSLLQ(imm8)
-		dstreg[0] = (dstreg[0] << shift);
+		dstreg[0] = (shift >= 64 ? 0 : (dstreg[0] << (UINT64)shift)); // XXX: MSBãŒå–ã‚Šæ®‹ã•ã‚Œã‚‹ã®ã§ã”ã¾ã‹ã—ï¼ˆç’°å¢ƒä¾å­˜ï¼Ÿï¼‰
 		break;
 	default:
 		break;
@@ -1447,7 +1418,7 @@ void MMX_PSUBB(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -1458,7 +1429,7 @@ void MMX_PSUBB(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+4)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT8*)(&srcregbuf);
+		srcreg = (UINT8*)(srcregbuf);
 	}
 	dstreg = (UINT8*)(&(FPU_STAT.reg[idx]));
 	
@@ -1477,7 +1448,7 @@ void MMX_PSUBW(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -1488,7 +1459,7 @@ void MMX_PSUBW(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+2)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT16*)(&srcregbuf);
+		srcreg = (UINT16*)(srcregbuf);
 	}
 	dstreg = (UINT16*)(&(FPU_STAT.reg[idx]));
 	
@@ -1507,7 +1478,7 @@ void MMX_PSUBD(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -1518,7 +1489,7 @@ void MMX_PSUBD(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+1)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT32*)(&srcregbuf);
+		srcreg = (UINT32*)(srcregbuf);
 	}
 	dstreg = (UINT32*)(&(FPU_STAT.reg[idx]));
 	
@@ -1538,7 +1509,7 @@ void MMX_PSUBSB(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -1549,7 +1520,7 @@ void MMX_PSUBSB(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+4)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (INT8*)(&srcregbuf);
+		srcreg = (INT8*)(srcregbuf);
 	}
 	dstreg = (INT8*)(&(FPU_STAT.reg[idx]));
 	
@@ -1575,7 +1546,7 @@ void MMX_PSUBSW(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -1586,7 +1557,7 @@ void MMX_PSUBSW(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+2)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (INT16*)(&srcregbuf);
+		srcreg = (INT16*)(srcregbuf);
 	}
 	dstreg = (INT16*)(&(FPU_STAT.reg[idx]));
 	
@@ -1613,7 +1584,7 @@ void MMX_PSUBUSB(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -1624,7 +1595,7 @@ void MMX_PSUBUSB(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+4)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT8*)(&srcregbuf);
+		srcreg = (UINT8*)(srcregbuf);
 	}
 	dstreg = (UINT8*)(&(FPU_STAT.reg[idx]));
 	
@@ -1650,7 +1621,7 @@ void MMX_PSUBUSW(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -1661,7 +1632,7 @@ void MMX_PSUBUSW(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+2)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT16*)(&srcregbuf);
+		srcreg = (UINT16*)(srcregbuf);
 	}
 	dstreg = (UINT16*)(&(FPU_STAT.reg[idx]));
 	
@@ -1691,7 +1662,7 @@ void MMX_PUNPCKHBW(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -1702,7 +1673,7 @@ void MMX_PUNPCKHBW(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+4)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT8*)(&srcregbuf);
+		srcreg = (UINT8*)(srcregbuf);
 	}
 	dstreg = (UINT8*)(&(FPU_STAT.reg[idx]));
 	
@@ -1726,7 +1697,7 @@ void MMX_PUNPCKHWD(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -1737,7 +1708,7 @@ void MMX_PUNPCKHWD(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+2)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT16*)(&srcregbuf);
+		srcreg = (UINT16*)(srcregbuf);
 	}
 	dstreg = (UINT16*)(&(FPU_STAT.reg[idx]));
 	
@@ -1760,7 +1731,7 @@ void MMX_PUNPCKHDQ(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -1771,7 +1742,7 @@ void MMX_PUNPCKHDQ(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+1)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT32*)(&srcregbuf);
+		srcreg = (UINT32*)(srcregbuf);
 	}
 	dstreg = (UINT32*)(&(FPU_STAT.reg[idx]));
 	
@@ -1792,7 +1763,7 @@ void MMX_PUNPCKLBW(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -1803,7 +1774,7 @@ void MMX_PUNPCKLBW(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+4)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT8*)(&srcregbuf);
+		srcreg = (UINT8*)(srcregbuf);
 	}
 	dstreg = (UINT8*)(&(FPU_STAT.reg[idx]));
 	
@@ -1827,7 +1798,7 @@ void MMX_PUNPCKLWD(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -1838,7 +1809,7 @@ void MMX_PUNPCKLWD(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+2)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT16*)(&srcregbuf);
+		srcreg = (UINT16*)(srcregbuf);
 	}
 	dstreg = (UINT16*)(&(FPU_STAT.reg[idx]));
 	
@@ -1861,7 +1832,7 @@ void MMX_PUNPCKLDQ(void)
 	
 	MMX_check_NM_EXCEPTION();
 	MMX_setTag();
-	CPU_MMXWORKCLOCK(a);
+	CPU_MMXWORKCLOCK;
 	GET_PCBYTE((op));
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
@@ -1872,7 +1843,7 @@ void MMX_PUNPCKLDQ(void)
 		maddr = calc_ea_dst((op));
 		*((UINT32*)(srcregbuf+0)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr);
 		*((UINT32*)(srcregbuf+1)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+4);
-		srcreg = (UINT32*)(&srcregbuf);
+		srcreg = (UINT32*)(srcregbuf);
 	}
 	dstreg = (UINT32*)(&(FPU_STAT.reg[idx]));
 	
@@ -2004,10 +1975,6 @@ void MMX_PMADDWD(void)
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
-void MMX_PMULHUW(void)
-{
-	EXCEPTION(UD_EXCEPTION, 0);
-}
 void MMX_PMULHW(void)
 {
 	EXCEPTION(UD_EXCEPTION, 0);

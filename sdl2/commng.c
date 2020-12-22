@@ -2,7 +2,6 @@
 
 #include "np2.h"
 #include "commng.h"
-#include "cmver.h"
 #include "cmjasts.h"
 
 
@@ -12,6 +11,9 @@ static UINT
 ncread(COMMNG self, UINT8 *data)
 {
 
+	(void)self;
+	(void)data;
+
 	return 0;
 }
 
@@ -19,12 +21,35 @@ static UINT
 ncwrite(COMMNG self, UINT8 data)
 {
 
+	(void)self;
+	(void)data;
+
 	return 0;
+}
+
+static UINT
+ncwriteretry(COMMNG self)
+{
+
+	(void)self;
+
+	return 1;
+}
+
+static UINT
+nclastwritesuccess(COMMNG self)
+{
+
+	(void)self;
+
+	return 1;
 }
 
 static UINT8
 ncgetstat(COMMNG self)
 {
+
+	(void)self;
 
 	return 0xf0;
 }
@@ -32,6 +57,10 @@ ncgetstat(COMMNG self)
 static INTPTR
 ncmsg(COMMNG self, UINT msg, INTPTR param)
 {
+
+	(void)self;
+	(void)msg;
+	(void)param;
 
 	return 0;
 }
@@ -41,10 +70,12 @@ ncrelease(COMMNG self)
 {
 
 	/* Nothing to do */
+
+	(void)self;
 }
 
 static _COMMNG com_nc = {
-	COMCONNECT_OFF, ncread, ncwrite, ncgetstat, ncmsg, ncrelease
+	COMCONNECT_OFF, ncread, ncwrite, ncwriteretry, nclastwritesuccess, ncgetstat, ncmsg, ncrelease
 };
 
 
@@ -54,25 +85,19 @@ void
 commng_initialize(void)
 {
 
-	cmvermouth_initialize();
-#if !defined(__LIBRETRO__)
-#if !defined(_WIN32)
-//	cmmidi_initailize();
-#endif	/* _WIN32 */
-#endif	/* __LIBRETRO__ */
+	cmmidi_initailize();
 }
 
 COMMNG
 commng_create(UINT device)
 {
 	COMMNG ret;
-
-#if !defined(__LIBRETRO__) && !defined(GCW0)
 	COMCFG *cfg;
 
 	ret = NULL;
 
 	switch (device) {
+#if !defined(__LIBRETRO__)
 	case COMCREATE_SERIAL:
 		cfg = &np2oscfg.com[0];
 		break;
@@ -84,17 +109,30 @@ commng_create(UINT device)
 	case COMCREATE_PC9861K2:
 		cfg = &np2oscfg.com[2];
 		break;
+#endif	/* __LIBRETRO__ */
 
 	case COMCREATE_MPU98II:
 		cfg = &np2oscfg.mpu;
 		break;
 
+#if defined(SUPPORT_SMPU98)
+	case COMCREATE_SMPU98_A:
+		cfg = &np2oscfg.smpuA;
+		break;
+
+	case COMCREATE_SMPU98_B:
+		cfg = &np2oscfg.smpuB;
+		break;
+#endif
+
+#if !defined(__LIBRETRO__)
 	case COMCREATE_PRINTER:
 		cfg = NULL;
 		if (np2oscfg.jastsnd) {
 			ret = cmjasts_create();
 		}
 		break;
+#endif	/* __LIBRETRO__ */
 
 	default:
 		cfg = NULL;
@@ -103,37 +141,20 @@ commng_create(UINT device)
 	if (cfg) {
 		if ((cfg->port >= COMPORT_COM1)
 		 && (cfg->port <= COMPORT_COM4)) {
-#if !defined(_WIN32)
-//		 	ret = cmserial_create(cfg->port - COMPORT_COM1 + 1, cfg->param, cfg->speed);
-#endif	/* _WIN32 */
+#if !defined(__LIBRETRO__)
+			ret = cmserial_create(cfg->port - COMPORT_COM1 + 1, cfg->param, cfg->speed);
+#endif	/* __LIBRETRO__ */
 		} else if (cfg->port == COMPORT_MIDI) {
-#if !defined(_WIN32)
-//			ret = cmmidi_create(cfg->mout, cfg->min, cfg->mdl);
-//			if (ret) {
-//				(*ret->msg)(ret, COMMSG_MIMPIDEFFILE, (INTPTR)cfg->def);
-//				(*ret->msg)(ret, COMMSG_MIMPIDEFEN, (INTPTR)cfg->def_en);
-//			}
-#endif	/* _WIN32 */
+			ret = cmmidi_create(device, cfg->mout, cfg->min, cfg->mdl);
+			if (ret) {
+				(*ret->msg)(ret, COMMSG_MIMPIDEFFILE, (INTPTR)cfg->def);
+				(*ret->msg)(ret, COMMSG_MIMPIDEFEN, (INTPTR)cfg->def_en);
+			}
 		}
 	}
 	if (ret)
 		return ret;
 	return (COMMNG)&com_nc;
-#else	/* __LIBRETRO__ */
-	ret = NULL;
-	if (device == COMCREATE_MPU98II) {
-		ret = cmvermouth_create();
-	}
-	else if (device == COMCREATE_PRINTER) {
-		if (np2oscfg.jastsnd) {
-			ret = cmjasts_create();
-		}
-	}
-	if (ret == NULL) {
-		ret = (COMMNG)&com_nc;
-	}
-	return(ret);
-#endif	/* __LIBRETRO__ */
 }
 
 void
@@ -141,6 +162,8 @@ commng_destroy(COMMNG hdl)
 {
 
 	if (hdl) {
-		hdl->release(hdl);
+		if(hdl->release) {
+			hdl->release(hdl);
+		}
 	}
 }
